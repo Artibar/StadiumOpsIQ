@@ -10,7 +10,7 @@ function Navbar() {
   useEffect(() => {
     const checkBackendStatus = async () => {
       try {
-        const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const baseURL = import.meta.env.VITE_API_URL || 'https://stadiumopsiq.onrender.com';
         const res = await fetch(`${baseURL}/api/incidents`, { method: 'GET' });
         setIsOnline(res.status === 200);
       } catch (err) {

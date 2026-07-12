@@ -1,89 +1,89 @@
-import axios from 'axios';
+import axios from 'axios'
+
+const API_BASE_URL = 'https://stadiumopsiq.onrender.com'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000'
-});
+  baseURL: API_BASE_URL,
+  timeout: 60000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
 
-// Export getStadiums(): fetch directly from worldcup26.ir/get/stadiums
-export async function getStadiums() {
+export const getStadiums = async () => {
   try {
-    const response = await axios.get('https://worldcup26.ir/get/stadiums');
-    const data = response.data;
-    const list = Array.isArray(data) ? data : (data.data || []);
-    return { success: true, data: list };
+    const response = await fetch(
+      'https://worldcup26.ir/get/stadiums')
+    const data = await response.json()
+    return data
   } catch (error) {
-    console.error("Failed to fetch stadiums directly from FIFA API:", error.message);
-    return { success: false, error: error.message, data: [] };
+    console.error('getStadiums failed:', error)
+    return []
   }
 }
 
-// Export createIncident(data): POST /api/incidents
-export async function createIncident(data) {
+export const createIncident = async (data) => {
   try {
-    const response = await api.post('/api/incidents', data);
-    return { success: true, incident: response.data.incident };
+    const response = await api.post(
+      '/api/incidents', data)
+    return response.data
   } catch (error) {
-    console.error("createIncident failed:", error.message);
-    const msg = error.response?.data?.error || error.message;
-    return { success: false, error: msg };
+    console.error('createIncident failed:', error)
+    return { success: false, error: error.message }
   }
 }
 
-// Export getIncidents(): GET /api/incidents
-export async function getIncidents() {
+export const getIncidents = async () => {
   try {
-    const response = await api.get('/api/incidents');
-    return { success: true, data: response.data };
+    const response = await api.get('/api/incidents')
+    return response.data
   } catch (error) {
-    console.error("getIncidents failed:", error.message);
-    return { success: false, error: error.message, data: [] };
+    console.error('getIncidents failed:', error)
+    return []
   }
 }
 
-// Export getIncidentById(id): GET /api/incidents/${id}
-export async function getIncidentById(id) {
+export const getIncidentById = async (id) => {
   try {
-    const response = await api.get(`/api/incidents/${id}`);
-    return { success: true, data: response.data };
+    const response = await api.get(
+      `/api/incidents/${id}`)
+    return response.data
   } catch (error) {
-    console.error("getIncidentById failed:", error.message);
-    return { success: false, error: error.message };
+    console.error('getIncidentById failed:', error)
+    return null
   }
 }
 
-// Export confirmIncident(id): PATCH /api/incidents/${id}/confirm
-export async function confirmIncident(id) {
+export const confirmIncident = async (id) => {
   try {
-    const response = await api.patch(`/api/incidents/${id}/confirm`);
-    return { success: true, data: response.data };
+    const response = await api.patch(
+      `/api/incidents/${id}/confirm`)
+    return response.data
   } catch (error) {
-    console.error("confirmIncident failed:", error.message);
-    const msg = error.response?.data?.error || error.message;
-    return { success: false, error: msg };
+    console.error('confirmIncident failed:', error)
+    return { success: false, error: error.message }
   }
 }
 
-// Export overrideIncident(id, data): PATCH /api/incidents/${id}/override
-export async function overrideIncident(id, data) {
+export const overrideIncident = async (id, data) => {
   try {
-    const response = await api.patch(`/api/incidents/${id}/override`, data);
-    return { success: true, data: response.data };
+    const response = await api.patch(
+      `/api/incidents/${id}/override`, data)
+    return response.data
   } catch (error) {
-    console.error("overrideIncident failed:", error.message);
-    const msg = error.response?.data?.error || error.message;
-    return { success: false, error: msg };
+    console.error('overrideIncident failed:', error)
+    return { success: false, error: error.message }
   }
 }
 
-// Export getStats(): GET /api/stats
-export async function getStats() {
+export const getStats = async () => {
   try {
-    const response = await api.get('/api/stats');
-    return { success: true, data: response.data };
+    const response = await api.get('/api/stats')
+    return response.data
   } catch (error) {
-    console.error("getStats failed:", error.message);
-    return { success: false, error: error.message };
+    console.error('getStats failed:', error)
+    return null
   }
 }
 
-export default api;
+export default api

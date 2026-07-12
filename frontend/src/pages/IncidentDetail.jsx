@@ -40,11 +40,11 @@ export default function IncidentDetail() {
   const loadIncident = async () => {
     try {
       const result = await getIncidentById(id);
-      if (result.success) {
-        setIncident(result.data);
+      if (result && !result.error) {
+        setIncident(result);
         setError('');
       } else {
-        setError(result.error || 'Failed to retrieve incident details.');
+        setError(result?.error || 'Failed to retrieve incident details.');
       }
     } catch (err) {
       console.error("Failed to load incident:", err);
@@ -62,10 +62,10 @@ export default function IncidentDetail() {
     if (!window.confirm("Are you sure you want to confirm and execute this action?")) return;
     setLoading(true);
     const result = await confirmIncident(id);
-    if (result.success) {
+    if (result && !result.error) {
       await loadIncident();
     } else {
-      alert(`Confirm failed: ${result.error}`);
+      alert(`Confirm failed: ${result?.error || 'Unknown error'}`);
       setLoading(false);
     }
   };
@@ -82,12 +82,12 @@ export default function IncidentDetail() {
       overrideReason: overrideReason.trim()
     });
     setIsSubmittingOverride(false);
-    if (result.success) {
+    if (result && !result.error) {
       setShowOverrideForm(false);
       setOverrideReason('');
       await loadIncident();
     } else {
-      alert(`Override failed: ${result.error}`);
+      alert(`Override failed: ${result?.error || 'Unknown error'}`);
     }
   };
 

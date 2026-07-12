@@ -20,15 +20,9 @@ export default function Dashboard() {
         getStadiums()
       ]);
 
-      if (incidentsRes.success) {
-        setIncidents(incidentsRes.data || []);
-      }
-      if (statsRes.success) {
-        setStats(statsRes.data || null);
-      }
-      if (stadiumsRes.success) {
-        setStadiums(stadiumsRes.data || []);
-      }
+      setIncidents(Array.isArray(incidentsRes) ? incidentsRes : []);
+      setStats(statsRes || null);
+      setStadiums(Array.isArray(stadiumsRes) ? stadiumsRes : []);
       setLastUpdated(new Date());
       setError('');
     } catch (err) {

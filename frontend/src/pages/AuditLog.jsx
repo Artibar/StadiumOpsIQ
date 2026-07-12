@@ -44,11 +44,7 @@ export default function AuditLog() {
     async function loadIncidents() {
       try {
         const result = await getIncidents();
-        if (result.success) {
-          setIncidents(result.data || []);
-        } else {
-          setError(result.error || 'Failed to fetch incidents.');
-        }
+        setIncidents(Array.isArray(result) ? result : []);
       } catch (err) {
         console.error(err);
         setError('Failed to fetch incidents.');
