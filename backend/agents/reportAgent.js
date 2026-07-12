@@ -1,0 +1,424 @@
+import Groq from 'groq-sdk';
+import nodemailer from 'nodemailer';
+
+const reportTool = {
+  type: "function",
+  function: {
+    name: "generateIncidentReport",
+    description: `Generate a structured, professional incident report for stadium operations records. This report will be saved to the database and sent to the operations manager. Write in clear, professional emergency services language.`,
+    parameters: {
+      type: "object",
+      properties: {
+        executiveSummary: {
+          type: "string",
+          description: `2-3 sentence summary of the incident for senior management. Include: what happened, where, severity, and action taken.`
+        },
+        incidentNarrative: {
+          type: "string",
+          description: `Full professional narrative of the incident from initial report to resolution. Include timeline, actions taken, and current status. 3-5 paragraphs.`
+        },
+        rootCauseAnalysis: {
+          type: "string",
+          description: `Analysis of likely root cause based on available information. What may have caused this incident? What environmental or contextual factors contributed? Consider: weather conditions, match phase, crowd levels, zone location.`
+        },
+        immediateActionsLog: {
+          type: "array",
+          items: { type: "string" },
+          description: `Chronological list of immediate actions taken by the system and operators. Each item = one action with implied timestamp context.`
+        },
+        recommendedFollowUp: {
+          type: "array",
+          items: { type: "string" },
+          description: `List of recommended follow-up actions for ops team: - Medical follow-up if applicable - Security review if applicable - Crowd management adjustments - Zone safety improvements - Staff notifications needed. Minimum 3 recommendations.`
+        },
+        lessonsLearned: {
+          type: "string",
+          description: `What can be learned from this incident to prevent future occurrences or improve response times? 2-3 sentences.`
+        },
+        estimatedResolutionTime: {
+          type: "string",
+          description: `Estimated time to fully resolve this incident. Examples: "15-30 minutes", "1-2 hours", "Immediate - resolved". Base on severity and type.`
+        },
+        riskRating: {
+          type: "string",
+          enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+          description: `Overall risk rating for this incident considering all factors including weather, match phase, and severity.`
+        },
+        preventionMeasures: {
+          type: "array",
+          items: { type: "string" },
+          description: `Specific preventive measures recommended for this zone/stadium to prevent recurrence. Minimum 2 measures.`
+        }
+      },
+      required: [
+        "executiveSummary",
+        "incidentNarrative",
+        "rootCauseAnalysis",
+        "immediateActionsLog",
+        "recommendedFollowUp",
+        "lessonsLearned",
+        "estimatedResolutionTime",
+        "riskRating",
+        "preventionMeasures"
+      ]
+    }
+  }
+};
+
+function buildReportSystemPrompt(intakeOutput, classificationOutput, contextOutput, decisionOutput) {
+  return `You are a professional stadium operations incident report writer for FIFA World Cup 2026. Generate a comprehensive, structured incident report based on the following real incident data.
+
+  INCIDENT DATA:
+  
+  Original Report: 
+  "${intakeOutput.originalText}"
+  
+  ${intakeOutput.wasTranslated ? `Original Language: ${intakeOutput.detectedLanguageName}\nTranslated Report: "${intakeOutput.translatedText}"` : ''}
+  
+  LOCATION:
+  Stadium: ${intakeOutput.stadium.name}
+  City: ${intakeOutput.stadium.city}
+  Capacity: ${intakeOutput.stadium.capacity}
+  Zone: ${intakeOutput.zoneLocation}
+  
+  CLASSIFICATION:
+  Type: ${classificationOutput.type}
+  Severity: ${classificationOutput.severity}
+  Confidence: ${Math.round(classificationOutput.confidence * 100)}%
+  Key Indicators: ${classificationOutput.keyIndicators.join(', ')}
+  AI Reasoning: ${classificationOutput.reasoning}
+  
+  LIVE CONTEXT AT TIME OF INCIDENT:
+  ${contextOutput.contextSummary}
+  Weather Risk Flags: ${contextOutput.weather.riskFlags && contextOutput.weather.riskFlags.length > 0 ? contextOutput.weather.riskFlags.join(', ') : 'None'}
+  
+  ACTIONS TAKEN:
+  ${decisionOutput.actionsTaken.join(', ')}
+  Final Status: ${decisionOutput.finalStatus}
+  AI Decision: ${decisionOutput.finalDecision}
+  
+  Write a professional incident report using the generateIncidentReport tool. Use formal emergency services language. Be specific — reference actual data from above (temperatures, stadium names, zone locations, match phases). Do not use placeholder text.`;
+}
+
+function formatEmailHTML(report, incidentData, incidentId) {
+  const sev = (incidentData.severity || 'medium').toLowerCase();
+  let sevColor = '#3b82f6'; // default blue
+  if (sev === 'critical') sevColor = '#ef4444'; // red
+  else if (sev === 'high') sevColor = '#f97316'; // orange
+  else if (sev === 'medium') sevColor = '#eab308'; // yellow
+  else if (sev === 'low') sevColor = '#22c55e'; // green
+
+  const actionListItems = (report.immediateActionsLog || [])
+    .map(a => `<li>${a}</li>`)
+    .join('');
+
+  const followUpDivs = (report.recommendedFollowUp || [])
+    .map(r => `<div class="recommendation">${r}</div>`)
+    .join('');
+
+  const preventionDivs = (report.preventionMeasures || [])
+    .map(p => `<div class="recommendation">${p}</div>`)
+    .join('');
+
+  const weather = incidentData.weather || {};
+  const matchStatus = incidentData.matchStatus || {};
+
+  let riskFlagsHTML = '';
+  if (weather.riskFlags && weather.riskFlags.length > 0) {
+    riskFlagsHTML = weather.riskFlags
+      .map(flag => `<p style="color: #ef4444; font-weight: bold; margin: 4px 0;">⚠️ Weather Risk Flag: ${flag}</p>`)
+      .join('');
+  }
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+    .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .header { background: #1a1d27; color: white; padding: 24px; text-align: center; }
+    .header h1 { margin: 0; font-size: 24px; }
+    .header p { margin: 8px 0 0; color: #9ca3af; }
+    .severity-banner { padding: 12px 24px; font-weight: bold; font-size: 16px; text-align: center; color: white; }
+    .section { padding: 20px 24px; border-bottom: 1px solid #e5e7eb; }
+    .section h2 { color: #1a1d27; font-size: 16px; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .meta-item label { font-size: 11px; color: #6b7280; text-transform: uppercase; display: block; }
+    .meta-item value { font-size: 14px; color: #111827; font-weight: 500; display: block; margin-top: 2px; }
+    .action-list { list-style: none; padding: 0; margin: 0; }
+    .action-list li { padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+    .action-list li:before { content: "→ "; color: #6366f1; }
+    .recommendation { background: #f0f9ff; border-left: 3px solid #6366f1; padding: 8px 12px; margin: 8px 0; font-size: 14px; border-radius: 0 4px 4px 0; }
+    .footer { background: #f9fafb; padding: 16px 24px; text-align: center; font-size: 12px; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏟️ StadiumOps IQ</h1>
+      <p>Incident Report — FIFA World Cup 2026 Operations</p>
+    </div>
+    
+    <div class="severity-banner" style="background: ${sevColor};">
+      ${incidentData.severity.toUpperCase()} INCIDENT — ${incidentData.type.toUpperCase()} — ${incidentData.stadium.toUpperCase()} — Zone: ${incidentData.zone.toUpperCase()}
+    </div>
+    
+    <div class="section">
+      <h2>Incident Overview</h2>
+      <div class="meta-grid">
+        <div class="meta-item">
+          <label>Incident ID</label>
+          <value>${incidentId}</value>
+        </div>
+        <div class="meta-item">
+          <label>Reported At</label>
+          <value>${incidentData.timestamp}</value>
+        </div>
+        <div class="meta-item">
+          <label>Stadium</label>
+          <value>${incidentData.stadium}</value>
+        </div>
+        <div class="meta-item">
+          <label>Zone</label>
+          <value>${incidentData.zone}</value>
+        </div>
+        <div class="meta-item">
+          <label>AI Confidence</label>
+          <value>${Math.round(incidentData.confidence * 100)}%</value>
+        </div>
+        <div class="meta-item">
+          <label>Est. Resolution</label>
+          <value>${report.estimatedResolutionTime}</value>
+        </div>
+      </div>
+    </div>
+ 
+    <div class="section">
+      <h2>Executive Summary</h2>
+      <p>${report.executiveSummary}</p>
+    </div>
+ 
+    <div class="section">
+      <h2>Live Context at Time of Incident</h2>
+      <p>🌡️ Weather: ${weather.temperature || 'N/A'}°C, ${weather.weatherDescription || 'N/A'}</p>
+      <p>💨 Wind: ${weather.windspeed || 0} km/h | 🌧️ Precipitation: ${weather.precipitation || 0}mm</p>
+      <p>⚽ Match Phase: ${matchStatus.phase || 'N/A'}</p>
+      <p>👥 Crowd Risk: ${matchStatus.crowdRiskLevel || 'N/A'}</p>
+      ${riskFlagsHTML}
+    </div>
+ 
+    <div class="section">
+      <h2>Incident Narrative</h2>
+      <p>${report.incidentNarrative.replace(/\n/g, '<br>')}</p>
+    </div>
+ 
+    <div class="section">
+      <h2>Root Cause Analysis</h2>
+      <p>${report.rootCauseAnalysis}</p>
+    </div>
+ 
+    <div class="section">
+      <h2>Immediate Actions Log</h2>
+      <ul class="action-list">
+        ${actionListItems}
+      </ul>
+    </div>
+ 
+    <div class="section">
+      <h2>Recommended Follow-Up Actions</h2>
+      ${followUpDivs}
+    </div>
+ 
+    <div class="section">
+      <h2>Prevention Measures</h2>
+      ${preventionDivs}
+    </div>
+ 
+    <div class="section">
+      <h2>Lessons Learned</h2>
+      <p>${report.lessonsLearned}</p>
+    </div>
+ 
+    <div class="footer">
+      <p>Generated by StadiumOps IQ — AI-Powered Stadium Operations | FIFA World Cup 2026</p>
+      <p>Report ID: ${incidentId} | Generated: ${incidentData.timestamp}</p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+async function sendReportEmail(htmlContent, incidentData, incidentId) {
+  const from = process.env.REPORT_EMAIL_FROM;
+  const pass = process.env.EMAIL_APP_PASSWORD;
+  const to = process.env.REPORT_EMAIL_TO;
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.SMTP_PORT || '587');
+
+  if (!from || !pass || !to) {
+    console.warn("[REPORT] SMTP email settings are missing. Skipping email dispatch.");
+    return { sent: false, error: "SMTP settings not fully configured in environment" };
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: host,
+      port: port,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: from,
+        pass: pass
+      }
+    });
+
+    const subject = `[${incidentData.severity.toUpperCase()}] Incident Report — ${incidentData.stadium} Zone ${incidentData.zone} — ${new Date().toLocaleString()}`;
+
+    const info = await transporter.sendMail({
+      from: `"StadiumOps IQ" <${from}>`,
+      to: to,
+      subject: subject,
+      html: htmlContent
+    });
+
+    console.log(`[REPORT] Incident report email sent successfully: ${info.messageId}`);
+    return { sent: true, error: null };
+  } catch (error) {
+    console.error("[ERROR] [REPORT] sendReportEmail execution failed:", error.message);
+    return { sent: false, error: error.message };
+  }
+}
+
+let groqInstance = null;
+
+function getGroqInstance() {
+  if (!groqInstance) {
+    groqInstance = new Groq({
+      apiKey: process.env.GROQ_API_KEY || ''
+    });
+  }
+  return groqInstance;
+}
+
+/**
+ * Executes the Report Agent workflow: writes structured incident summaries, root cause analyses,
+ * and follow-up directives, compiling HTML reports and sending SMTP notifications.
+ * @param {Object} intakeOutput - Intake output payload
+ * @param {Object} classificationOutput - Classification output payload
+ * @param {Object} contextOutput - Context output payload
+ * @param {Object} decisionOutput - Decision output payload
+ * @param {string} incidentId - Database ID of the incident record
+ * @returns {Object} Structured report JSON, email success indicators, and reasoning trail.
+ */
+export async function runReportAgent(intakeOutput, classificationOutput, contextOutput, decisionOutput, incidentId) {
+  const startTime = Date.now();
+
+  try {
+    const response = await getGroqInstance().chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.3,
+      max_tokens: 2000,
+      tools: [reportTool],
+      tool_choice: {
+        type: "function",
+        function: { name: "generateIncidentReport" }
+      },
+      messages: [
+        {
+          role: "system",
+          content: buildReportSystemPrompt(
+            intakeOutput,
+            classificationOutput,
+            contextOutput,
+            decisionOutput
+          )
+        },
+        {
+          role: "user",
+          content: `Generate the complete incident report now using the generateIncidentReport tool. Use all the real data provided. Be specific and professional.`
+        }
+      ]
+    });
+
+    const toolCall = response.choices[0]?.message?.tool_calls?.[0];
+    if (!toolCall) {
+      throw new Error("No report generation tool call returned by Groq");
+    }
+
+    const report = JSON.parse(toolCall.function.arguments);
+
+    // Format HTML email
+    const htmlContent = formatEmailHTML(
+      report,
+      {
+        incidentId,
+        stadium: intakeOutput.stadium.name,
+        zone: intakeOutput.zoneLocation,
+        severity: classificationOutput.severity,
+        type: classificationOutput.type,
+        confidence: classificationOutput.confidence,
+        weather: contextOutput.weather,
+        matchStatus: contextOutput.matchStatus,
+        actionsTaken: decisionOutput.actionsTaken,
+        timestamp: new Date().toLocaleString()
+      },
+      incidentId
+    );
+
+    // Send email
+    const emailResult = await sendReportEmail(
+      htmlContent,
+      {
+        stadium: intakeOutput.stadium.name,
+        zone: intakeOutput.zoneLocation,
+        severity: classificationOutput.severity
+      },
+      incidentId
+    );
+
+    // Build reasoning trail entry
+    const reasoningEntry = {
+      agentName: 'Report Agent',
+      step: 5,
+      thought: `[REPORT] Generated structured incident report for ${incidentId}. Risk rating: ${report.riskRating}. Estimated resolution: ${report.estimatedResolutionTime}. ${report.recommendedFollowUp.length} follow-up actions recommended. ${report.preventionMeasures.length} prevention measures identified. Email report ${emailResult.sent ? 'sent successfully to ops manager' : 'failed: ' + emailResult.error}`,
+      action: 'GROQ_REPORT_GENERATION + EMAIL_DISPATCH',
+      result: `Report generated: ${report.riskRating} risk | ${report.estimatedResolutionTime} resolution | Email: ${emailResult.sent ? 'SENT ✓' : 'FAILED ✗'}`,
+      timestamp: new Date()
+    };
+
+    return {
+      report: report,
+      emailSent: emailResult.sent,
+      emailError: emailResult.error || null,
+      reasoningEntry: reasoningEntry,
+      processingTimeMs: Date.now() - startTime
+    };
+
+  } catch (error) {
+    console.error("[ERROR] [REPORT] runReportAgent failed:", error.message);
+    const endTime = Date.now();
+    return {
+      report: {
+        executiveSummary: "Report generation failed due to system crash.",
+        incidentNarrative: `Report generation crashed. Error details: ${error.message}`,
+        rootCauseAnalysis: "Unknown.",
+        immediateActionsLog: ["System error occurred during report generation"],
+        recommendedFollowUp: ["Notify administrator to investigate Groq report generation tool crash"],
+        lessonsLearned: "Ensure fallback logic is robust.",
+        estimatedResolutionTime: "N/A",
+        riskRating: "CRITICAL",
+        preventionMeasures: ["Review Groq API connectivity"]
+      },
+      emailSent: false,
+      emailError: error.message,
+      processingTimeMs: endTime - startTime,
+      reasoningEntry: {
+        agentName: 'Report Agent (Failed)',
+        step: 5,
+        thought: `[REPORT] Report loop crashed due to system error: ${error.message}`,
+        action: 'REPORT_GENERATION_FAILED',
+        result: error.message,
+        timestamp: new Date()
+      }
+    };
+  }
+}
