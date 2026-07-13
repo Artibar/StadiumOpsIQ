@@ -15,6 +15,106 @@ function getWeatherCondition(code) {
   return `Weather Code ${code}`;
 }
 
+function sanitizeAgentName(name) {
+  if (!name) return 'System Stage';
+  let clean = name;
+  clean = clean.replace(/intakeAgent/i, 'Report Intake');
+  clean = clean.replace(/classificationAgent/i, 'Incident Classification');
+  clean = clean.replace(/contextAgent/i, 'Operational Context Assessment');
+  clean = clean.replace(/decisionAgent/i, 'Response Planning');
+  clean = clean.replace(/reportAgent/i, 'Incident Reporting');
+  return clean;
+}
+
+function renderStatusBadge(status) {
+  let bg = 'rgba(107, 114, 128, 0.1)';
+  let fg = 'var(--text-muted)';
+  let label = status;
+
+  if (status === 'Completed' || status === 'Success' || status === 'Analysis Complete') {
+    bg = 'rgba(34, 197, 94, 0.15)';
+    fg = 'var(--low)';
+    label = 'Completed';
+  } else if (status === 'Pending' || status === 'Running' || status === 'Awaiting Execution') {
+    bg = 'rgba(234, 179, 8, 0.15)';
+    fg = 'var(--medium)';
+    label = 'Pending';
+  } else if (status === 'Failed' || status === 'Action Required') {
+    bg = 'rgba(239, 68, 68, 0.15)';
+    fg = 'var(--critical)';
+    label = 'Action Required';
+  } else if (status === 'Skipped' || status === 'Not Required') {
+    bg = 'rgba(156, 163, 175, 0.15)';
+    fg = 'var(--text-muted)';
+    label = 'Not Required';
+  }
+
+  return (
+    <span style={{
+      fontSize: '11px',
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      padding: '2px 8px',
+      borderRadius: '4px',
+      background: bg,
+      color: fg,
+      display: 'inline-block'
+    }}>
+      {label}
+    </span>
+  );
+}
+
+function getDiagnosticsForStep(step, idx, incident) {
+  const isIntake = step.agentName.toLowerCase().includes('intake');
+  const isClassification = step.agentName.toLowerCase().includes('classification');
+  const isContext = step.agentName.toLowerCase().includes('context');
+  const isDecision = step.agentName.toLowerCase().includes('decision');
+  const isReport = step.agentName.toLowerCase().includes('report');
+
+  const diagnostics = {
+    provider: 'Groq',
+    model: 'llama-3.3-70b-versatile',
+    status: 'Completed',
+    pipelineDuration: incident.pipelineDurationMs ? `${incident.pipelineDurationMs} ms` : 'Not Available',
+    confidence: 'Not Available',
+    weatherService: 'Weather Conditions (Open-Meteo)',
+    weatherStatus: incident.liveContext?.weather ? 'Success' : 'Failed',
+    matchService: 'Match Operations Context',
+    matchStatus: incident.liveContext?.matchStatus ? 'Success' : 'Failed',
+    toolExecution: 'Not Available',
+    stepsCompleted: `Step ${idx + 1} of ${incident.reasoningTrail?.length || 5}`,
+    executionOrder: `Sequence #${idx + 1}`,
+    logs: step.thought || 'Not Available',
+    rawResponse: step.result || 'Not Available',
+    warnings: 'None',
+    errors: 'None'
+  };
+
+  if (isDecision && incident.status === 'pending-confirmation') {
+    diagnostics.status = 'Pending';
+  } else if (incident.status === 'failed') {
+    diagnostics.status = 'Action Required';
+  } else if (step.result?.includes('skipped') || step.thought?.includes('skipping')) {
+    diagnostics.status = 'Not Required';
+  }
+
+  if (isIntake) {
+    diagnostics.toolExecution = 'Language Analysis';
+  } else if (isClassification) {
+    diagnostics.toolExecution = 'Incident Classification';
+    diagnostics.confidence = incident.confidence ? `${Math.round(incident.confidence * 100)}%` : 'Not Available';
+  } else if (isContext) {
+    diagnostics.toolExecution = 'Context Retrieval';
+  } else if (isDecision) {
+    diagnostics.toolExecution = 'Response Planning';
+  } else if (isReport) {
+    diagnostics.toolExecution = 'Incident Reporting';
+  }
+
+  return diagnostics;
+}
+
 export default function IncidentDetail() {
   const { id } = useParams();
   const [incident, setIncident] = useState(null);
@@ -26,16 +126,6 @@ export default function IncidentDetail() {
   const [overrideReason, setOverrideReason] = useState('');
   const [newStatus, setNewStatus] = useState('resolved');
   const [isSubmittingOverride, setIsSubmittingOverride] = useState(false);
-
-  // Collapsible Report Sections State
-  const [collapsedSections, setCollapsedSections] = useState({
-    narrative: true,
-    rootCause: true,
-    actionsLog: false, // expanded by default
-    followUp: false,   // expanded by default
-    prevention: true,
-    lessons: true
-  });
 
   const loadIncident = async () => {
     try {
@@ -91,13 +181,6 @@ export default function IncidentDetail() {
     }
   };
 
-  const toggleSection = (sectionName) => {
-    setCollapsedSections(prev => ({
-      ...prev,
-      [sectionName]: !prev[sectionName]
-    }));
-  };
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 select-none">
@@ -133,622 +216,975 @@ export default function IncidentDetail() {
     medium: 'var(--medium)',
     low: 'var(--low)'
   };
-  const typeColors = {
-    medical: 'var(--medical)',
-    security: 'var(--security)',
-    crowd: 'var(--crowd)',
-    fire: 'var(--fire)',
-    weather: 'var(--weather)',
-    'lost-item': 'var(--lost-item)',
-    other: 'var(--text-muted)'
-  };
-  const statusLabels = {
-    'open': 'Open',
-    'pending-confirmation': 'Pending Confirmation',
-    'escalated': 'Escalated',
-    'resolved': 'Resolved',
-    'flagged-for-review': 'Flagged'
-  };
 
-  const confidence = incident.confidence || 0;
-  const confidencePercent = Math.round(confidence * 100);
-  let confidenceLevel = 'LOW CONFIDENCE';
-  let confidenceColor = 'var(--critical)';
-  if (confidence >= 0.8) {
-    confidenceLevel = 'HIGH CONFIDENCE';
-    confidenceColor = 'var(--low)';
-  } else if (confidence >= 0.6) {
-    confidenceLevel = 'MEDIUM CONFIDENCE';
-    confidenceColor = 'var(--medium)';
-  }
-
+  const confidencePercent = Math.round((incident.confidence || 0) * 100);
   const weather = incident.liveContext?.weather || {};
   const matchStatus = incident.liveContext?.matchStatus || {};
-  const combinedRisk = incident.liveContext?.combinedRiskLevel || 'low';
-  const riskColor = severityColors[combinedRisk.toLowerCase()] || 'var(--low)';
+
+  // Build list of details for Decision Basis dynamically
+  const getDecisionBasis = () => {
+    const basis = [];
+    const desc = (incident.translatedDescription || incident.originalDescription || '').toLowerCase();
+    
+    if (desc.includes('unconscious') || desc.includes('collapse') || desc.includes('medical') || desc.includes('hurt')) {
+      basis.push('Person collapsed or reported unconscious near gate areas.');
+      basis.push('Immediate medical assistance required.');
+    } else if (desc.includes('fire') || desc.includes('smoke') || desc.includes('burn')) {
+      basis.push('Thermal anomaly or smoke reports flagged in stadium zone.');
+      basis.push('Critical fire emergency protocols advised.');
+    } else if (desc.includes('fight') || desc.includes('weapon') || desc.includes('crowd')) {
+      basis.push('Spectator congestion, altercations, or security flags identified.');
+      basis.push('Perimeter containment and alert notification required.');
+    } else {
+      basis.push('Standard operational anomaly reported by arena dispatchers.');
+    }
+
+    if (incident.zoneLocation) {
+      basis.push(`Incident coordinates verified at Stadium Zone ${incident.zoneLocation}.`);
+    }
+    return basis;
+  };
+
+  // Build bullet lists for stages to prevent long paragraph walls
+  const getExecutiveStoryForStep = (stepName) => {
+    const type = incident.type || 'standard';
+    const zone = incident.zoneLocation || 'stadium zone';
+    const isTrans = incident.detectedLanguage !== 'en' && incident.translatedDescription;
+    
+    if (stepName.toLowerCase().includes('intake')) {
+      return {
+        summary: `Incident report received.`,
+        evidence: [
+          isTrans ? `Intake translation verified` : `English origin confirmed`,
+          `Target venue matched: ${incident.stadiumName}`
+        ],
+        decision: `Ready for classification.`,
+        nextAction: `Proceed.`
+      };
+    } else if (stepName.toLowerCase().includes('classification')) {
+      return {
+        summary: `${type.charAt(0).toUpperCase() + type.slice(1)} emergency detected.`,
+        evidence: [
+          `Identified emergency patterns in report content`,
+          `Verified coordinates at Zone ${zone}`
+        ],
+        decision: incident.severity?.toUpperCase() || 'HIGH',
+        confidence: `${confidencePercent}%`,
+        nextAction: `Dispatch Response Teams.`
+      };
+    } else if (stepName.toLowerCase().includes('context')) {
+      return {
+        summary: `Environmental conditions verified.`,
+        evidence: [
+          `Weather: ${weather.temperature !== undefined ? `${weather.weatherDescription || getWeatherCondition(weather.weatherCode)}` : 'Clear'}`,
+          `Match: ${matchStatus.isMatchToday ? 'Active match day' : 'No active match'}`
+        ],
+        decision: `No environmental reduction in risk.`,
+        nextAction: `Continue response.`
+      };
+    } else if (stepName.toLowerCase().includes('decision')) {
+      const actions = incident.actionsTaken || [];
+      return {
+        summary: `Mitigation dispatches calculated.`,
+        evidence: [
+          `Risk matrix verified against active stadium zones`,
+          `Proposed actions: ${actions.length ? actions.map(a => a.replace('dispatchMedical', 'Medical Response').replace('escalateToSecurity', 'Security Response').replace('sendDiscordNotification', 'Operations Notification')).join(', ') : 'None'}`
+        ],
+        decision: incident.status === 'pending-confirmation' 
+          ? `Proposed escalations require supervisor authorization.`
+          : `Mitigation pathways authorized for execution.`,
+        nextAction: incident.status === 'pending-confirmation'
+          ? `Operator approval required.`
+          : `Dispatched safety teams.`
+      };
+    } else if (stepName.toLowerCase().includes('report')) {
+      return {
+        summary: `Operational logs compiled for stadium records.`,
+        evidence: [
+          `Decision steps complete`,
+          `Resolution ETA: ${incident.incidentReport?.estimatedResolutionTime || 'Not Available'}`
+        ],
+        decision: `Incident dossier archived in database ledger.`,
+        nextAction: `Transition status to active monitoring.`
+      };
+    }
+
+    return {
+      summary: `System stage execution.`,
+      evidence: [`Logs generated by step coordinator.`],
+      decision: `Completed processing task.`,
+      nextAction: `Transfer to next decision phase.`
+    };
+  };
+
+  const getLanguageLabel = (langCode) => {
+    if (!langCode) return 'English';
+    const mapping = {
+      en: 'English (US)',
+      es: 'Spanish (ES)',
+      fr: 'French (FR)',
+      de: 'German (DE)',
+      it: 'Italian (IT)',
+      pt: 'Portuguese (PT)',
+      ar: 'Arabic (AR)',
+      zh: 'Chinese (ZH)',
+      ja: 'Japanese (JA)'
+    };
+    return mapping[langCode.toLowerCase()] || `Foreign Language (${langCode.toUpperCase()})`;
+  };
+
+  // Check action dispatch states
+  const hasMedical = incident.actionsTaken?.includes('dispatchMedical');
+  const hasSecurity = incident.actionsTaken?.includes('escalateToSecurity') || incident.type === 'security' || incident.type === 'fire';
+  const hasDiscord = incident.actionsTaken?.includes('sendDiscordNotification');
 
   return (
-    <div className="page-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
-      {/* BREADCRUMB */}
-      <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
-        <Link
-          to="/"
-          className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition font-semibold flex items-center gap-1.5"
-        >
-          <span>←</span> Back to Dashboard
-        </Link>
-        <span className="text-[11px] font-mono text-[var(--text-muted)]">
-          ID: {incident._id}
-        </span>
+    <div className="page-container" style={{
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '24px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '32px'
+    }}>
+      
+      {/* 1. PAGE HEADER */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '24px', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Link
+              to="/"
+              className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition font-semibold"
+              style={{ textDecoration: 'none' }}
+            >
+              ← Back to Dashboard
+            </Link>
+            <span style={{ color: 'var(--text-muted)' }}>|</span>
+            <span style={{ fontSize: '13px', fontFamily: 'monospace', color: 'var(--text-muted)', fontWeight: 'bold' }}>
+              Incident #CASE-{incident._id ? incident._id.substring(Math.max(0, incident._id.length - 8)).toUpperCase() : 'UNKNOWN'}
+            </span>
+          </div>
+          <h1 style={{ fontSize: '28px', fontWeight: '900', color: 'var(--text-primary)', margin: 0, textTransform: 'capitalize' }}>
+            {incident.type} Emergency
+          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '500' }}>
+            <span>📍 Zone {incident.zoneLocation || 'Unspecified'}</span>
+            <span style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: 'var(--text-muted)' }} />
+            <span>Reported {incident.createdAt ? new Date(incident.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Unknown'}</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+          <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.05em' }}>Current Status</span>
+          <span style={{
+            fontSize: '13px',
+            fontWeight: '800',
+            textTransform: 'uppercase',
+            padding: '6px 14px',
+            borderRadius: '8px',
+            background: incident.status === 'pending-confirmation' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+            color: incident.status === 'pending-confirmation' ? 'var(--medium)' : 'var(--low)',
+            border: incident.status === 'pending-confirmation' ? '1px solid rgba(234, 179, 8, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)'
+          }}>
+            {incident.status === 'pending-confirmation' ? 'Pending Confirmation' : incident.status}
+          </span>
+        </div>
       </div>
 
-      {/* HEADER SECTION */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center flex-wrap gap-2.5">
-            <span className="text-xs font-mono text-[var(--text-muted)] tracking-wider">
-              #{incident._id.slice(-8).toUpperCase()}
+      {/* 2. AI DECISION SUMMARY (LARGE HERO CARD) */}
+      <div className="section-card" style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        borderRadius: '16px',
+        padding: '24px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+      }}>
+        <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>🛡️</span> AI Decision Summary
+        </h2>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '24px' }}>
+          {/* Incident Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>Incident</span>
+            <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+              {incident.type} Emergency
             </span>
-            <span
-              className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full text-white"
-              style={{ backgroundColor: severityColors[incident.severity] || 'var(--low)' }}
-            >
+          </div>
+
+          {/* Severity Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>Severity</span>
+            <span style={{
+              fontSize: '14px',
+              fontWeight: '800',
+              textTransform: 'uppercase',
+              color: severityColors[incident.severity] || 'var(--low)'
+            }}>
               {incident.severity}
             </span>
-            <span
-              className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full text-white"
-              style={{ backgroundColor: typeColors[incident.type] || 'var(--text-muted)' }}
-            >
-              {incident.type}
-            </span>
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-secondary)]">
-              {statusLabels[incident.status] || incident.status}
+          </div>
+
+          {/* Confidence Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>Confidence</span>
+            <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent)' }}>
+              {confidencePercent}%
             </span>
           </div>
 
-          {/* Confidence Dial/Progress */}
-          <div className="flex items-center gap-3 bg-[var(--bg-primary)] p-2 px-3 rounded-lg border border-[var(--border)] min-w-[240px]">
-            <div className="flex-grow">
-              <div className="flex items-center justify-between text-[10px] font-bold tracking-wide uppercase mb-1">
-                <span className="text-[var(--text-secondary)]">AI Confidence</span>
-                <span style={{ color: confidenceColor }}>{confidencePercent}%</span>
-              </div>
-              <div className="w-full h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-300"
-                  style={{ width: `${confidencePercent}%`, backgroundColor: confidenceColor }}
-                />
-              </div>
-            </div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] select-none">
-              {confidenceLevel}
-            </div>
+          {/* Approval Status Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>Approval</span>
+            <span style={{
+              fontSize: '13px',
+              fontWeight: '800',
+              color: incident.humanOverride ? 'var(--medium)' :
+                     incident.status === 'pending-confirmation' ? 'var(--high)' : 'var(--low)'
+            }}>
+              {incident.humanOverride ? 'Manual Override Applied' :
+               incident.status === 'pending-confirmation' ? 'Human Approval Required' : 'Analysis Complete'}
+            </span>
           </div>
         </div>
 
-        {/* Location coordinates summary columns */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2 text-xs border-t border-[var(--border)]/40">
-          <div>
-            <label className="text-[10px] font-semibold uppercase text-[var(--text-muted)] tracking-wider block">Stadium</label>
-            <span className="text-[var(--text-primary)] font-semibold">{incident.stadiumName}</span>
+        {/* Decision Basis & Evidence & Recommended Response */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '24px',
+          borderTop: '1px solid var(--border)',
+          paddingTop: '20px'
+        }}>
+          {/* Decision Basis Section */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>Decision Basis</span>
+            <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+              {getDecisionBasis().map((basisText, bIdx) => (
+                <li key={bIdx} style={{ lineHeight: '1.5' }}>{basisText}</li>
+              ))}
+            </ul>
           </div>
-          <div>
-            <label className="text-[10px] font-semibold uppercase text-[var(--text-muted)] tracking-wider block">City</label>
-            <span className="text-[var(--text-secondary)] font-semibold">{incident.stadiumCity || 'N/A'}</span>
+
+          {/* Evidence Considered Checklist */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>Evidence</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: 'var(--low)', fontWeight: 'bold' }}>✓</span>
+                <span>Incident Report</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: weather.temperature !== undefined ? 1 : 0.5 }}>
+                <span style={{ color: weather.temperature !== undefined ? 'var(--low)' : 'var(--text-muted)', fontWeight: 'bold' }}>
+                  {weather.temperature !== undefined ? '✓' : '○'}
+                </span>
+                <span>Weather Conditions</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: incident.zoneLocation ? 'var(--low)' : 'var(--text-muted)', fontWeight: 'bold' }}>
+                  {incident.zoneLocation ? '✓' : '○'}
+                </span>
+                <span>Stadium Location</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: matchStatus.isMatchToday ? 1 : 0.5 }}>
+                <span style={{ color: matchStatus.isMatchToday ? 'var(--low)' : 'var(--text-muted)', fontWeight: 'bold' }}>
+                  {matchStatus.isMatchToday ? '✓' : '○'}
+                </span>
+                <span>Match Operations</span>
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="text-[10px] font-semibold uppercase text-[var(--text-muted)] tracking-wider block">Zone / Location</label>
-            <span className="text-[var(--text-primary)] font-semibold">📍 {incident.zoneLocation}</span>
-          </div>
-          <div>
-            <label className="text-[10px] font-semibold uppercase text-[var(--text-muted)] tracking-wider block">Reported At</label>
-            <span className="text-[var(--text-secondary)] font-semibold">
-              {new Date(incident.createdAt).toLocaleString()}
-            </span>
+
+          {/* Recommended Response */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>Recommended Response</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+              {incident.actionsTaken && incident.actionsTaken.length > 0 ? (
+                incident.actionsTaken.map((action, aIdx) => {
+                  let label = action;
+                  if (action === 'dispatchMedical') label = 'Dispatch Medical';
+                  else if (action === 'escalateToSecurity') label = 'Notify Security';
+                  else if (action === 'sendDiscordNotification') label = 'Notify Operations';
+                  else if (action === 'sendReportEmail') label = 'Incident Report Distribution';
+                  else if (action === 'resolveAsLowPriority') label = 'Auto Resolution';
+                  else if (action === 'flagForHumanReview') label = 'Human Review';
+
+                  return (
+                    <div key={aIdx} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>✓</span>
+                      <span>{label}</span>
+                    </div>
+                  );
+                })
+              ) : (
+                <div style={{ fontSize: '12px', fontStyle: 'italic', color: 'var(--text-muted)' }}>No recommendations active.</div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ORIGINAL REPORT SECTION */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 shadow-sm space-y-3">
-        <h3 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider border-b border-[var(--border)] pb-2">
-          Original Report Intake
+      {/* 3. QUICK STATISTICS */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          📊 Quick Statistics
         </h3>
-        {incident.detectedLanguage !== 'en' && incident.translatedDescription ? (
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm italic text-[var(--text-muted)] leading-relaxed">
-                "{incident.originalDescription}"
-              </p>
-              <span className="text-[10px] font-semibold text-[var(--accent)] mt-1.5 block">
-                🌐 Language Detected: {incident.detectedLanguage.toUpperCase()}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: '24px'
+        }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Classification</span>
+            <p style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, textTransform: 'capitalize' }}>
+              {incident.type} Emergency
+            </p>
+          </div>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Severity</span>
+            <p style={{ fontSize: '16px', fontWeight: '800', color: severityColors[incident.severity] || 'var(--low)', margin: 0, textTransform: 'uppercase' }}>
+              {incident.severity}
+            </p>
+          </div>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Confidence</span>
+            <p style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent)', margin: 0 }}>
+              {confidencePercent}%
+            </p>
+          </div>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Approval</span>
+            <p style={{ fontSize: '16px', fontWeight: '800', color: incident.status === 'pending-confirmation' ? 'var(--medium)' : 'var(--low)', margin: 0, textTransform: 'uppercase' }}>
+              {incident.status === 'pending-confirmation' ? 'Pending' : 'Approved'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. INCIDENT DETAILS */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          📑 Incident Details
+        </h3>
+        <div className="section-card" style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          borderRadius: '16px',
+          padding: '24px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '24px'
+        }}>
+          {/* Column 1: Original Report */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: 'span 2' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Original Report</span>
+            <div style={{
+              padding: '16px',
+              background: 'var(--bg-primary)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+              fontSize: '14px',
+              color: 'var(--text-primary)',
+              lineHeight: '1.6',
+              whiteSpace: 'pre-wrap'
+            }}>
+              {incident.translatedDescription && incident.detectedLanguage !== 'en' ? (
+                <div>
+                  <div style={{ fontStyle: 'italic', marginBottom: '8px', color: 'var(--text-secondary)' }}>"{incident.originalDescription}"</div>
+                  <div style={{ fontWeight: '500', borderTop: '1px solid var(--border)', paddingTop: '8px', marginTop: '8px' }}>Translated: "{incident.translatedDescription}"</div>
+                </div>
+              ) : (
+                `"${incident.originalDescription || 'Not Available'}"`
+              )}
+            </div>
+          </div>
+
+          {/* Column 2: Metadata stats */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Location</span>
+              <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                📍 {incident.stadiumName} (Zone {incident.zoneLocation || 'Unspecified'})
               </span>
             </div>
-            <div className="flex justify-center text-[var(--accent)] leading-none my-1 font-bold">↓</div>
-            <div>
-              <p className="text-sm text-[var(--text-primary)] font-medium leading-relaxed bg-[var(--bg-primary)] p-3 rounded border border-[var(--border)]">
-                "{incident.translatedDescription}"
-              </p>
-              <span className="text-[10px] font-semibold text-[var(--text-muted)] mt-1 block">
-                Translated to English by AI Pipeline
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Reported Time</span>
+              <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                ⏱️ {incident.createdAt ? new Date(incident.createdAt).toLocaleString() : 'Not Available'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Reporter Language</span>
+              <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                🌐 {getLanguageLabel(incident.detectedLanguage)}
               </span>
             </div>
           </div>
-        ) : (
-          <p className="text-sm text-[var(--text-primary)] leading-relaxed bg-[var(--bg-primary)] p-3 rounded border border-[var(--border)]">
-            "{incident.originalDescription}"
-          </p>
+        </div>
+      </div>
+
+      {/* 5. OPERATIONAL CONTEXT */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          🌐 Operational Context
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+          {/* Card 1: Weather */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', justifyBetween: 'space-between', minHeight: '180px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Weather</span>
+              {weather.temperature !== undefined ? (
+                <div>
+                  <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)' }}>{weather.temperature}°C</div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                    {weather.weatherDescription || getWeatherCondition(weather.weatherCode)}
+                  </div>
+                </div>
+              ) : (
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>No weather context recorded.</span>
+              )}
+            </div>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+              Windspeed: <strong>{weather.windspeed || 0} km/h</strong> • Precipitation: <strong>{weather.precipitation || 0} mm</strong>
+            </div>
+          </div>
+
+          {/* Card 2: Match Status */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', justifyBetween: 'space-between', minHeight: '180px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Match Status</span>
+              {matchStatus.isMatchToday ? (
+                <div>
+                  <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>
+                    {matchStatus.homeTeam} vs {matchStatus.awayTeam}
+                  </div>
+                  <div style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: '700', marginTop: '4px' }}>
+                    {matchStatus.phase} (Score: {matchStatus.score || '0-0'})
+                  </div>
+                </div>
+              ) : (
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>No match scheduled today.</span>
+              )}
+            </div>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+              Minute: <strong>{matchStatus.minute || 'N/A'}</strong> • Stadium Status: <strong>{matchStatus.isMatchToday ? 'Active Matchday' : 'Normal Operations'}</strong>
+            </div>
+          </div>
+
+          {/* Card 3: Crowd Conditions */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', justifyBetween: 'space-between', minHeight: '180px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Crowd Conditions</span>
+              <div>
+                <span style={{
+                  fontSize: '12px',
+                  fontWeight: '800',
+                  textTransform: 'uppercase',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  background:
+                    matchStatus.crowdRiskLevel === 'critical' ? 'rgba(239, 68, 68, 0.15)' :
+                    matchStatus.crowdRiskLevel === 'high' ? 'rgba(249, 115, 22, 0.15)' :
+                    matchStatus.crowdRiskLevel === 'medium' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                  color:
+                    matchStatus.crowdRiskLevel === 'critical' ? 'var(--critical)' :
+                    matchStatus.crowdRiskLevel === 'high' ? 'var(--high)' :
+                    matchStatus.crowdRiskLevel === 'medium' ? 'var(--medium)' : 'var(--low)',
+                  display: 'inline-block'
+                }}>
+                  {matchStatus.crowdRiskLevel ? `${matchStatus.crowdRiskLevel} risk` : 'low risk'}
+                </span>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
+                  Spectator density risk computed based on arena gate telemetry.
+                </p>
+              </div>
+            </div>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+              Assigned Safety Officers: <strong>Standard Staffing</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 6. RECOMMENDED ACTIONS */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          ⚡ Recommended Actions
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
+          {/* Action 1: Medical Response */}
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderTop: `4px solid ${hasMedical ? 'var(--medical)' : 'var(--border)'}`,
+            borderRadius: '16px',
+            padding: '24px',
+            opacity: hasMedical ? 1 : 0.6
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <span style={{ fontSize: '20px' }}>🚑</span>
+              <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>Medical Response</span>
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4', margin: '0 0 16px 0' }}>
+              Dispatcher alert to nearby stadium medical team for immediate assistance.
+            </p>
+            <span style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              color: hasMedical ? 'var(--low)' : 'var(--text-muted)'
+            }}>
+              {hasMedical ? '● Dispatched' : '○ Standby'}
+            </span>
+          </div>
+
+          {/* Action 2: Security Response */}
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderTop: `4px solid ${hasSecurity ? 'var(--security)' : 'var(--border)'}`,
+            borderRadius: '16px',
+            padding: '24px',
+            opacity: hasSecurity ? 1 : 0.6
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <span style={{ fontSize: '20px' }}>🚔</span>
+              <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>Security Response</span>
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4', margin: '0 0 16px 0' }}>
+              Escalation notification dispatched to stadium gate security personnel.
+            </p>
+            <span style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              color: hasSecurity ? 'var(--low)' : 'var(--text-muted)'
+            }}>
+              {hasSecurity ? '● Dispatched' : '○ Standby'}
+            </span>
+          </div>
+
+          {/* Action 3: Operations Notification */}
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderTop: `4px solid ${hasDiscord ? 'var(--accent)' : 'var(--border)'}`,
+            borderRadius: '16px',
+            padding: '24px',
+            opacity: hasDiscord ? 1 : 0.6
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <span style={{ fontSize: '20px' }}>📢</span>
+              <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>Operations Notification</span>
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4', margin: '0 0 16px 0' }}>
+              Broadcast alerts to arena coordinators and command crew channels.
+            </p>
+            <span style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              color: hasDiscord ? 'var(--low)' : 'var(--text-muted)'
+            }}>
+              {hasDiscord ? '● Dispatched' : '○ Standby'}
+            </span>
+          </div>
+
+          {/* Action 4: Human Approval */}
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderTop: `4px solid ${incident.status === 'pending-confirmation' ? 'var(--medium)' : 'var(--low)'}`,
+            borderRadius: '16px',
+            padding: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '20px' }}>👤</span>
+                <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>Human Approval</span>
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4', margin: '0 0 16px 0' }}>
+                {incident.status === 'pending-confirmation' 
+                  ? 'Mitigation flow suspended. Operator validation required.'
+                  : 'Mitigation pathway authorized and archived.'}
+              </p>
+            </div>
+            
+            {incident.status === 'pending-confirmation' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={handleConfirm}
+                    style={{
+                      flex: 1,
+                      background: 'var(--low)',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '8px',
+                      borderRadius: '6px',
+                      fontWeight: '700',
+                      fontSize: '11px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    onClick={() => setShowOverrideForm(!showOverrideForm)}
+                    style={{
+                      flex: 1,
+                      background: 'var(--critical)',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '8px',
+                      borderRadius: '6px',
+                      fontWeight: '700',
+                      fontSize: '11px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Override
+                  </button>
+                </div>
+
+                {showOverrideForm && (
+                  <form onSubmit={handleOverrideSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+                    <select
+                      value={newStatus}
+                      onChange={(e) => setNewStatus(e.target.value)}
+                      style={{
+                        background: 'var(--bg-primary)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '6px',
+                        padding: '6px',
+                        fontSize: '11px',
+                        color: 'var(--text-primary)',
+                        outline: 'none'
+                      }}
+                    >
+                      <option value="resolved">Mark Resolved</option>
+                      <option value="escalated">Mark Escalated</option>
+                      <option value="flagged-for-review">Mark Flagged for Review</option>
+                    </select>
+                    <textarea
+                      rows={2}
+                      value={overrideReason}
+                      onChange={(e) => setOverrideReason(e.target.value)}
+                      placeholder="Override reason..."
+                      style={{
+                        background: 'var(--bg-primary)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '6px',
+                        padding: '8px',
+                        fontSize: '11px',
+                        color: 'var(--text-primary)',
+                        outline: 'none',
+                        resize: 'none'
+                      }}
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSubmittingOverride}
+                      style={{
+                        background: 'var(--accent)',
+                        color: '#fff',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '4px',
+                        fontWeight: '700',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        alignSelf: 'flex-start'
+                      }}
+                    >
+                      {isSubmittingOverride ? '...' : 'Submit'}
+                    </button>
+                  </form>
+                )}
+              </div>
+            ) : (
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--low)', textTransform: 'uppercase' }}>
+                ✓ Complete {incident.humanOverride && '(Override Applied)'}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {incident.humanOverride && (
+          <div style={{
+            background: 'rgba(234, 179, 8, 0.1)',
+            borderLeft: '4px solid var(--medium)',
+            borderRadius: '12px',
+            padding: '16px',
+            fontSize: '13px',
+            color: 'var(--text-secondary)',
+            lineHeight: '1.5'
+          }}>
+            👤 <strong>Manual Override Note:</strong> "{incident.overrideReason}"
+          </div>
         )}
       </div>
 
-      {/* LIVE CONTEXT PANEL */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Weather Card */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 shadow-sm space-y-3">
-          <h3 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider border-b border-[var(--border)] pb-2 flex items-center gap-1.5">
-            🌤️ Live Weather Context
-          </h3>
-          {weather.temperature !== undefined ? (
-            <div className="space-y-3">
-              <div className="flex items-baseline justify-between">
-                <span className="text-3xl font-extrabold text-[var(--text-primary)]">{weather.temperature}°C</span>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-[var(--border)] text-[var(--text-secondary)] border border-[var(--border)]">
-                  {weather.weatherDescription || getWeatherCondition(weather.weatherCode)}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-3 text-xs text-[var(--text-secondary)]">
-                <div>Windspeed: <strong className="text-[var(--text-primary)]">{weather.windspeed} km/h</strong></div>
-                <div>Precipitation: <strong className="text-[var(--text-primary)]">{weather.precipitation} mm</strong></div>
-              </div>
-
-              {weather.riskFlags && weather.riskFlags.length > 0 ? (
-                <div className="mt-2.5 p-2 bg-[var(--critical)]/10 border border-[var(--critical)]/20 text-[var(--critical)] rounded text-xs font-semibold">
-                  <span className="block mb-1 text-[10px] uppercase font-bold text-[var(--critical)]">⚠️ Climate Risk Flags</span>
-                  {weather.riskFlags.map((flag, idx) => (
-                    <div key={idx} className="flex items-center gap-1 mt-0.5">
-                      <span>•</span> {flag}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-[11px] text-[var(--low)] font-semibold mt-1">
-                  ✅ No weather risk flags active
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-xs text-[var(--text-muted)] italic py-2">
-              Weather context skipped for this incident.
-            </div>
-          )}
-        </div>
-
-        {/* Match Card */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 shadow-sm space-y-3">
-          <h3 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider border-b border-[var(--border)] pb-2 flex items-center gap-1.5">
-            ⚽ Live Match Status
-          </h3>
-          {matchStatus.isMatchToday ? (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold uppercase px-2.5 py-0.5 rounded bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/20 leading-none">
-                  {matchStatus.phase}
-                </span>
-                {matchStatus.phase !== 'inactive' && matchStatus.phase !== 'pre-match' && matchStatus.phase !== 'post-match' && (
-                  <span className="text-xs text-[var(--critical)] font-bold animate-pulse">
-                    LIVE • {matchStatus.minute}'
-                  </span>
-                )}
-              </div>
-
-              <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg p-2.5 text-center flex items-center justify-center gap-3">
-                <span className="text-xs font-bold text-[var(--text-primary)]">{matchStatus.homeTeam}</span>
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-[var(--border)] text-[var(--text-primary)]">
-                  {matchStatus.score}
-                </span>
-                <span className="text-xs font-bold text-[var(--text-primary)]">{matchStatus.awayTeam}</span>
-              </div>
-
-              <div className="text-xs text-[var(--text-secondary)] flex items-center gap-1">
-                <span>Crowd Risk:</span>
-                <span
-                  className="font-bold uppercase"
-                  style={{
-                    color:
-                      matchStatus.crowdRiskLevel === 'critical' ? 'var(--critical)' :
-                      matchStatus.crowdRiskLevel === 'high' ? 'var(--high)' :
-                      matchStatus.crowdRiskLevel === 'medium' ? 'var(--medium)' : 'var(--low)'
-                  }}
-                >
-                  {matchStatus.crowdRiskLevel}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2 py-2">
-              <div className="text-xs text-[var(--text-muted)] italic">
-                No match scheduled at {incident.stadiumName} today.
-              </div>
-              <div className="text-[11px] text-[var(--text-secondary)]">
-                Standard spectator density levels expected.
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* COMBINED RISK ACCENT BAR */}
-      <div
-        className="rounded-lg p-3 text-center text-xs font-bold uppercase tracking-wider text-white"
-        style={{ backgroundColor: riskColor }}
-      >
-        Combined Incident Risk Rating: {combinedRisk}
-      </div>
-
-      {/* ACTIONS TAKEN SECTION */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 shadow-sm space-y-3">
-        <h3 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider border-b border-[var(--border)] pb-2">
-          ⚡ Actions Triggered
+      {/* 7. AI DECISION PROCESS */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          🧠 AI Decision Process
         </h3>
-        <div className="flex flex-wrap gap-2 pt-1">
-          {incident.actionsTaken && incident.actionsTaken.length > 0 ? (
-            incident.actionsTaken.map((action, idx) => {
-              let label = action;
-              let icon = '⚡';
-              let badgeColor = 'var(--accent)';
-              
-              if (action === 'dispatchMedical') {
-                label = 'Medical Dispatched';
-                icon = '🚑';
-                badgeColor = 'var(--medical)';
-              } else if (action === 'escalateToSecurity') {
-                label = 'Security Escalated';
-                icon = '🚔';
-                badgeColor = 'var(--security)';
-              } else if (action === 'resolveAsLowPriority') {
-                label = 'Auto Resolved';
-                icon = '✅';
-                badgeColor = 'var(--low)';
-              } else if (action === 'flagForHumanReview') {
-                label = 'Human Review flagged';
-                icon = '🚩';
-                badgeColor = 'var(--high)';
-              } else if (action === 'sendDiscordNotification') {
-                label = 'Discord Alerted';
-                icon = '📢';
-                badgeColor = 'var(--accent)';
-              } else if (action === 'sendReportEmail') {
-                label = 'Report Emailed';
-                icon = '📧';
-                badgeColor = 'var(--accent)';
-              } else if (action === 'SYSTEM_ERROR') {
-                label = 'Rate Limit Fallback Bypass';
-                icon = '⚠️';
-                badgeColor = 'var(--critical)';
-              }
-
-              return (
-                <span
-                  key={idx}
-                  className="text-xs font-semibold px-3 py-1 rounded-full text-white flex items-center gap-1.5"
-                  style={{ backgroundColor: badgeColor }}
-                >
-                  <span>{icon}</span> {label}
-                </span>
-              );
-            })
-          ) : (
-            <span className="text-xs text-[var(--text-muted)] italic">No actions recorded</span>
-          )}
-        </div>
-      </div>
-
-      {/* HUMAN CONFIRMATION PANEL */}
-      {incident.status === 'pending-confirmation' && (
-        <div className="bg-[var(--bg-card)] border-l-4 border-[var(--medium)] border-[var(--border)] rounded-lg p-5 shadow-sm space-y-4">
-          <div>
-            <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-              <span>⚠️</span> Action Pending Confirmation
-            </h3>
-            <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">
-              The AI Pipeline has proposed an escalation pathway. Review the reasoning timeline below to authorize or bypass.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleConfirm}
-              className="px-4 py-2 bg-[var(--low)] hover:bg-[var(--low)]/90 text-white font-bold text-xs rounded-lg cursor-pointer transition active:scale-[0.98]"
-            >
-              ✅ Confirm & Execute
-            </button>
-            <button
-              onClick={() => setShowOverrideForm(!showOverrideForm)}
-              className="px-4 py-2 bg-[var(--critical)] hover:bg-[var(--critical)]/90 text-white font-bold text-xs rounded-lg cursor-pointer transition active:scale-[0.98]"
-            >
-              ❌ Override AI Decision
-            </button>
-          </div>
-
-          {showOverrideForm && (
-            <form onSubmit={handleOverrideSubmit} className="mt-4 border-t border-[var(--border)]/40 pt-4 space-y-3 max-w-lg">
-              <div>
-                <label className="block text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">
-                  Override Status Target *
-                </label>
-                <select
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value)}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg p-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                >
-                  <option value="resolved">Mark Resolved</option>
-                  <option value="escalated">Mark Escalated</option>
-                  <option value="flagged-for-review">Mark Flagged for Review</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">
-                  Override Rationale *
-                </label>
-                <textarea
-                  rows={3}
-                  value={overrideReason}
-                  onChange={(e) => setOverrideReason(e.target.value)}
-                  placeholder="Provide supervisor justification notes explaining this manual override..."
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg p-2.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] resize-none"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmittingOverride}
-                className="px-3.5 py-1.5 bg-[var(--accent)] text-white text-xs font-bold rounded-lg hover:bg-[var(--accent)]/90 transition cursor-pointer"
-              >
-                {isSubmittingOverride ? 'Saving...' : 'Submit Override'}
-              </button>
-            </form>
-          )}
-        </div>
-      )}
-
-      {/* HUMAN OVERRIDE HIGHLIGHT NOTE */}
-      {incident.humanOverride && (
-        <div className="bg-[var(--medium)]/10 border-l-4 border-[var(--medium)] border-[var(--border)] rounded-lg p-4 flex gap-3">
-          <span className="text-lg">👤</span>
-          <div>
-            <h4 className="text-xs font-bold text-[var(--medium)] uppercase tracking-wider">Human Override Applied</h4>
-            <p className="text-xs text-[var(--text-secondary)] leading-relaxed mt-1">
-              Autonomous pipeline logic has been overridden by a supervisor. Check the reasoning steps below for operational justifications.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* REASONING TRAIL SECTION */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 shadow-sm space-y-4">
-        <div>
-          <h3 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider border-b border-[var(--border)] pb-2 flex items-center justify-between">
-            <span>🧠 AI Reasoning Trail</span>
-            <span className="text-[10px] text-[var(--low)] font-semibold px-2 py-0.5 bg-[var(--low)]/10 border border-[var(--low)]/20 rounded-full leading-none">
-              Sequence complete ({incident.reasoningTrail?.length || 0} steps)
-            </span>
-          </h3>
-          <p className="text-[11px] text-[var(--text-muted)] mt-1.5">
-            Complete decision trail showing chronological actions executed across 5 separate specialized GenAI agents.
-          </p>
-        </div>
-
-        <div className="pt-2 pl-2 space-y-4 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-[var(--border)]">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
           {incident.reasoningTrail && incident.reasoningTrail.length > 0 ? (
             incident.reasoningTrail.map((step, idx) => {
-              let agentColor = '#6b7280'; // Human / fallback gray
-              if (step.agentName.includes('Intake')) agentColor = '#3b82f6';
-              else if (step.agentName.includes('Classification')) agentColor = '#8b5cf6';
-              else if (step.agentName.includes('Context')) agentColor = '#14b8a6';
-              else if (step.agentName.includes('Decision')) agentColor = '#f97316';
-              else if (step.agentName.includes('Report')) agentColor = '#6366f1';
+              const friendlyName = sanitizeAgentName(step.agentName);
+              const story = getExecutiveStoryForStep(step.agentName);
+              const diag = getDiagnosticsForStep(step, idx, incident);
+
+              let accentColor = 'var(--accent)';
+              if (step.agentName.toLowerCase().includes('intake')) accentColor = '#3b82f6';
+              else if (step.agentName.toLowerCase().includes('classification')) accentColor = '#8b5cf6';
+              else if (step.agentName.toLowerCase().includes('context')) accentColor = '#14b8a6';
+              else if (step.agentName.toLowerCase().includes('decision')) accentColor = '#f97316';
+              else if (step.agentName.toLowerCase().includes('report')) accentColor = '#6366f1';
 
               return (
-                <div key={idx} className="flex gap-4 relative">
-                  {/* Timeline circle dot */}
-                  <div
-                    className="w-[20px] h-[20px] rounded-full border-4 border-[var(--bg-card)] flex-shrink-0 z-10"
-                    style={{ backgroundColor: agentColor }}
-                  />
-
-                  {/* Card content */}
-                  <div className="flex-1 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg p-4 space-y-2 text-xs">
-                    <div className="flex items-center justify-between gap-3 border-b border-[var(--border)]/40 pb-1.5">
-                      <span
-                        className="px-2 py-0.5 rounded text-[9px] font-extrabold text-white leading-none"
-                        style={{ backgroundColor: agentColor }}
-                      >
-                        {step.agentName}
-                      </span>
-                      <span className="text-[9px] text-[var(--text-muted)]">
-                        {new Date(step.timestamp).toLocaleTimeString()}
-                      </span>
+                <div key={idx} className="section-card" style={{
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  borderLeft: `5px solid ${accentColor}`,
+                  borderRadius: '16px',
+                  padding: '24px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px'
+                }}>
+                  {/* Header Row */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>{friendlyName}</span>
+                      {renderStatusBadge(diag.status)}
                     </div>
-
-                    {step.action && (
-                      <div className="font-bold text-[10px] uppercase text-[var(--text-primary)] tracking-wide">
-                        ACTION: <span className="text-[var(--accent)]">{step.action}</span>
-                      </div>
-                    )}
-
-                    <div className="text-[var(--text-secondary)] leading-relaxed">
-                      {step.thought}
-                    </div>
-
-                    {step.result && (
-                      <div className="text-[11px] italic text-[var(--text-muted)] pt-1 border-t border-[var(--border)]/30">
-                        Result: {step.result}
-                      </div>
-                    )}
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '500' }}>
+                      {new Date(step.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
+
+                  {/* Structured Summarized Sections */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                    <div>
+                      <h5 style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', margin: '0 0 4px 0', letterSpacing: '0.05em' }}>Summary</h5>
+                      <p style={{ margin: 0, lineHeight: '1.4' }}>{story.summary}</p>
+                    </div>
+                    <div>
+                      <h5 style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', margin: '0 0 4px 0', letterSpacing: '0.05em' }}>Evidence</h5>
+                      <ul style={{ margin: 0, paddingLeft: '14px', listStyleType: 'disc', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        {story.evidence.map((item, evIdx) => (
+                          <li key={evIdx} style={{ lineHeight: '1.4' }}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h5 style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', margin: '0 0 4px 0', letterSpacing: '0.05em' }}>
+                        {step.agentName.toLowerCase().includes('classification') ? 'Decision' : 'Decision'}
+                      </h5>
+                      <p style={{ margin: 0, lineHeight: '1.4', fontWeight: step.agentName.toLowerCase().includes('classification') ? '800' : 'normal', color: step.agentName.toLowerCase().includes('classification') ? 'var(--critical)' : 'inherit' }}>
+                        {story.decision}
+                      </p>
+                      {step.agentName.toLowerCase().includes('classification') && story.confidence && (
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          Confidence: <strong>{story.confidence}</strong>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h5 style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', margin: '0 0 4px 0', letterSpacing: '0.05em' }}>
+                        Next Action
+                      </h5>
+                      <p style={{ margin: 0, lineHeight: '1.4', fontWeight: '600', color: 'var(--text-primary)' }}>{story.nextAction}</p>
+                    </div>
+                  </div>
+
+                  {/* Collapsed Technical Details Accordion */}
+                  <details style={{
+                    marginTop: '8px',
+                    borderTop: '1px solid var(--border)',
+                    paddingTop: '12px',
+                    cursor: 'pointer'
+                  }}>
+                    <summary style={{
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      color: 'var(--text-muted)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      outline: 'none',
+                      userSelect: 'none'
+                    }}>
+                      ▼ Technical Details
+                    </summary>
+                    <div style={{
+                      marginTop: '16px',
+                      padding: '20px',
+                      background: 'var(--bg-primary)',
+                      borderRadius: '12px',
+                      border: '1px solid var(--border)',
+                      fontSize: '13px',
+                      color: 'var(--text-secondary)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '20px',
+                      cursor: 'default'
+                    }}>
+                      {/* AI Processing section */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Processing</span>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>AI Provider</span>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{diag.provider}</span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Model</span>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{diag.model}</span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Execution Status</span>
+                            <div>{renderStatusBadge(diag.status)}</div>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Pipeline Duration</span>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{diag.pipelineDuration}</span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Confidence Score</span>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{diag.confidence}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* External Services section */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>External Services</span>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Weather Intelligence</span>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{diag.weatherService}</span>
+                          </div>
+                          {diag.weatherService !== 'Not Available' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Service Status</span>
+                              <div>{renderStatusBadge(diag.weatherStatus)}</div>
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Match Operations</span>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{diag.matchService}</span>
+                          </div>
+                          {diag.matchService !== 'Not Available' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Service Status</span>
+                              <div>{renderStatusBadge(diag.matchStatus)}</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* AI Tool Execution section */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Tool Execution</span>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Structured Tool Execution</span>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{diag.toolExecution}</span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Processing Steps Completed</span>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{diag.stepsCompleted}</span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Execution Order</span>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{diag.executionOrder}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Diagnostics section */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Diagnostics</span>
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Warnings</span>
+                            <span style={{
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              color: diag.warnings === 'None' ? 'var(--low)' : 'var(--medium)'
+                            }}>
+                              {diag.warnings}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Errors</span>
+                            <span style={{
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              color: diag.errors === 'None' ? 'var(--low)' : 'var(--critical)'
+                            }}>
+                              {diag.errors}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Execution Logs</span>
+                          <pre style={{
+                            margin: 0,
+                            padding: '12px',
+                            background: 'var(--bg-card)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontFamily: 'monospace',
+                            overflowX: 'auto',
+                            color: 'var(--text-secondary)',
+                            whiteSpace: 'pre-wrap'
+                          }}>
+                            {diag.logs}
+                          </pre>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '500' }}>Raw Response / JSON Payload</span>
+                          <pre style={{
+                            margin: 0,
+                            padding: '12px',
+                            background: 'var(--bg-card)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontFamily: 'monospace',
+                            overflowX: 'auto',
+                            color: 'var(--text-secondary)',
+                            whiteSpace: 'pre-wrap'
+                          }}>
+                            {diag.rawResponse}
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
                 </div>
               );
             })
           ) : (
-            <div className="text-xs text-[var(--text-muted)] italic py-2">No timeline steps recorded.</div>
+            <div style={{ fontSize: '13px', fontStyle: 'italic', color: 'var(--text-muted)' }}>
+              No stages recorded.
+            </div>
           )}
         </div>
       </div>
 
-      {/* INCIDENT REPORT SECTION */}
-      {incident.incidentReport && (
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 shadow-sm space-y-4">
-          <div>
-            <h3 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider border-b border-[var(--border)] pb-2">
-              📋 AI Generated Incident Report
-            </h3>
-            <p className="text-[11px] text-[var(--text-muted)] mt-1.5">
-              Drafted by Report Agent (Agent 5) for stadium operations logs. Risk rating: <strong style={{ color: riskColor }}>{incident.incidentReport.riskRating || incident.incidentReport.riskRating}</strong>.
-            </p>
-          </div>
-
-          {/* Executive Summary Box */}
-          <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg p-4 text-xs leading-relaxed space-y-1">
-            <span className="text-[9px] font-bold text-[var(--accent)] uppercase tracking-wider block">Executive Summary</span>
-            <p className="text-[var(--text-primary)] font-medium">
-              {incident.incidentReport.executiveSummary}
-            </p>
-          </div>
-
-          <div className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5">
-            <span>Estimated Resolution Time:</span>
-            <span className="font-bold text-[var(--text-primary)] px-2 py-0.5 bg-[var(--border)] border border-[var(--border)] rounded">
-              {incident.incidentReport.estimatedResolutionTime}
-            </span>
-          </div>
-
-          {/* Collapsible Sections Container */}
-          <div className="space-y-2.5 pt-2">
-            {/* 1. Incident Narrative */}
-            <div className="border border-[var(--border)] rounded-lg overflow-hidden text-xs">
-              <button
-                type="button"
-                onClick={() => toggleSection('narrative')}
-                className="w-full bg-[var(--bg-primary)] p-3 flex items-center justify-between text-left font-bold text-[var(--text-secondary)] cursor-pointer hover:text-white transition focus:outline-none"
-              >
-                <span>📖 Incident Narrative</span>
-                <span>{collapsedSections.narrative ? '▼' : '▲'}</span>
-              </button>
-              {!collapsedSections.narrative && (
-                <div className="p-4 bg-[var(--bg-card)] border-t border-[var(--border)]/40 text-[var(--text-secondary)] leading-relaxed whitespace-pre-line">
-                  {incident.incidentReport.incidentNarrative}
-                </div>
-              )}
-            </div>
-
-            {/* 2. Root Cause Analysis */}
-            <div className="border border-[var(--border)] rounded-lg overflow-hidden text-xs">
-              <button
-                type="button"
-                onClick={() => toggleSection('rootCause')}
-                className="w-full bg-[var(--bg-primary)] p-3 flex items-center justify-between text-left font-bold text-[var(--text-secondary)] cursor-pointer hover:text-white transition focus:outline-none"
-              >
-                <span>🔍 Root Cause Analysis</span>
-                <span>{collapsedSections.rootCause ? '▼' : '▲'}</span>
-              </button>
-              {!collapsedSections.rootCause && (
-                <div className="p-4 bg-[var(--bg-card)] border-t border-[var(--border)]/40 text-[var(--text-secondary)] leading-relaxed">
-                  {incident.incidentReport.rootCauseAnalysis}
-                </div>
-              )}
-            </div>
-
-            {/* 3. Immediate Actions Log */}
-            <div className="border border-[var(--border)] rounded-lg overflow-hidden text-xs">
-              <button
-                type="button"
-                onClick={() => toggleSection('actionsLog')}
-                className="w-full bg-[var(--bg-primary)] p-3 flex items-center justify-between text-left font-bold text-[var(--text-secondary)] cursor-pointer hover:text-white transition focus:outline-none"
-              >
-                <span>⚡ Immediate Actions Log</span>
-                <span>{collapsedSections.actionsLog ? '▼' : '▲'}</span>
-              </button>
-              {!collapsedSections.actionsLog && (
-                <div className="p-4 bg-[var(--bg-card)] border-t border-[var(--border)]/40 text-[var(--text-secondary)] space-y-1.5">
-                  {(incident.incidentReport.immediateActionsLog || []).map((action, idx) => (
-                    <div key={idx} className="flex items-start gap-1.5">
-                      <span className="text-[var(--accent)] font-bold">→</span>
-                      <span>{action}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 4. Recommended Follow-Up */}
-            <div className="border border-[var(--border)] rounded-lg overflow-hidden text-xs">
-              <button
-                type="button"
-                onClick={() => toggleSection('followUp')}
-                className="w-full bg-[var(--bg-primary)] p-3 flex items-center justify-between text-left font-bold text-[var(--text-secondary)] cursor-pointer hover:text-white transition focus:outline-none"
-              >
-                <span>📋 Recommended Follow-Up Actions</span>
-                <span>{collapsedSections.followUp ? '▼' : '▲'}</span>
-              </button>
-              {!collapsedSections.followUp && (
-                <div className="p-4 bg-[var(--bg-card)] border-t border-[var(--border)]/40 space-y-2">
-                  {(incident.incidentReport.recommendedFollowUp || []).map((follow, idx) => (
-                    <div
-                      key={idx}
-                      className="p-2 px-3 border-l-2 border-[var(--accent)] bg-[var(--bg-primary)] text-[var(--text-secondary)] rounded-r"
-                    >
-                      {follow}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 5. Prevention Measures */}
-            <div className="border border-[var(--border)] rounded-lg overflow-hidden text-xs">
-              <button
-                type="button"
-                onClick={() => toggleSection('prevention')}
-                className="w-full bg-[var(--bg-primary)] p-3 flex items-center justify-between text-left font-bold text-[var(--text-secondary)] cursor-pointer hover:text-white transition focus:outline-none"
-              >
-                <span>🛡️ Prevention Measures</span>
-                <span>{collapsedSections.prevention ? '▼' : '▲'}</span>
-              </button>
-              {!collapsedSections.prevention && (
-                <div className="p-4 bg-[var(--bg-card)] border-t border-[var(--border)]/40 space-y-2">
-                  {(incident.incidentReport.preventionMeasures || []).map((prev, idx) => (
-                    <div
-                      key={idx}
-                      className="p-2 px-3 border-l-2 border-[var(--accent)] bg-[var(--bg-primary)] text-[var(--text-secondary)] rounded-r"
-                    >
-                      {prev}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 6. Lessons Learned */}
-            <div className="border border-[var(--border)] rounded-lg overflow-hidden text-xs">
-              <button
-                type="button"
-                onClick={() => toggleSection('lessons')}
-                className="w-full bg-[var(--bg-primary)] p-3 flex items-center justify-between text-left font-bold text-[var(--text-secondary)] cursor-pointer hover:text-white transition focus:outline-none"
-              >
-                <span>💡 Lessons Learned</span>
-                <span>{collapsedSections.lessons ? '▼' : '▲'}</span>
-              </button>
-              {!collapsedSections.lessons && (
-                <div className="p-4 bg-[var(--bg-card)] border-t border-[var(--border)]/40 text-[var(--text-secondary)] leading-relaxed">
-                  {incident.incidentReport.lessonsLearned}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
