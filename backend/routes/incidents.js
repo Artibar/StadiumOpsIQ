@@ -4,8 +4,24 @@ import rateLimit from 'express-rate-limit';
 import Incident from '../models/Incident.js';
 import { runPipeline } from '../pipeline/agentPipeline.js';
 
+import fetch from 'node-fetch';
+
 const router = express.Router();
 const statsRouter = express.Router();
+
+router.get('/stadiums', async (req, res) => {
+  try {
+    const response = await fetch(
+      'https://worldcup26.ir/get/stadiums')
+    const data = await response.json()
+    res.json(data)
+  } catch (error) {
+    console.error('[STADIUMS] Failed:', error)
+    res.status(500).json({ 
+      error: 'Failed to fetch stadiums' 
+    })
+  }
+})
 
 const incidentLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { incidentsRouter, statsRouter } from './routes/incidents.js';
 import errorHandler from './middleware/errorHandler.js';
+import fetch from 'node-fetch';
 
 dotenv.config();
 
@@ -26,6 +27,19 @@ app.options('*', cors());
 app.use(express.json());
 
 app.use('/api/incidents', incidentsRouter);
+app.get('/api/stadiums', async (req, res) => {
+  try {
+    const response = await fetch('https://worldcup26.ir/get/stadiums')
+    const data = await response.json()
+    res.json(data)
+  } catch (error) {
+    console.error('[STADIUMS] proxy failed:', error.message)
+    res.status(500).json({ 
+      error: 'Failed to fetch stadiums',
+      message: error.message
+    })
+  }
+})
 app.use('/api/stats', statsRouter);
 
 app.get('/api/health', (req, res) => {

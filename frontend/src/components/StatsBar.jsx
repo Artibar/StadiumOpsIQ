@@ -1,82 +1,108 @@
-import React from 'react';
+import React from 'react'
 
 export default function StatsBar({ stats }) {
-  // Skeleton Loading Placeholders
   if (!stats) {
     return (
-      <div className="flex flex-col md:flex-row gap-4 w-full select-none">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div
-            key={i}
-            className="flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-[16px_20px] shadow-sm shimmer"
-            style={{ minHeight: '94px' }}
-          >
-            <div className="h-4 bg-[var(--border)] rounded w-2/3 mb-3 animate-pulse" />
-            <div className="h-8 bg-[var(--border)] rounded w-1/3 animate-pulse" />
-          </div>
+      <div className="stats-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(6, 1fr)',
+        gap: '12px',
+        padding: '16px 0',
+      }}>
+        {[...Array(6)].map((_, i) => (
+          <div key={i} style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '16px',
+            height: '80px'
+          }} />
         ))}
       </div>
-    );
+    )
   }
-
-  const {
-    totalIncidents = 0,
-    bySeverity = { low: 0, medium: 0, high: 0, critical: 0 },
-    byStatus = { open: 0, 'pending-confirmation': 0, escalated: 0, resolved: 0, 'flagged-for-review': 0 },
-    avgConfidence = 0
-  } = stats;
 
   const cards = [
     {
-      label: "Total Incidents",
-      value: totalIncidents,
-      color: "var(--accent)"
+      label: 'Total Incidents',
+      value: stats.totalIncidents || 0,
+      color: 'var(--accent)',
+      icon: '📊'
     },
     {
-      label: "Critical 🔴",
-      value: bySeverity.critical || 0,
-      color: "var(--critical)"
+      label: 'Critical',
+      value: stats.bySeverity?.critical || 0,
+      color: 'var(--critical)',
+      icon: '🔴'
     },
     {
-      label: "High 🟠",
-      value: bySeverity.high || 0,
-      color: "var(--high)"
+      label: 'High',
+      value: stats.bySeverity?.high || 0,
+      color: 'var(--high)',
+      icon: '🟠'
     },
     {
-      label: "Pending ⏳",
-      value: byStatus['pending-confirmation'] || 0,
-      color: "var(--medium)"
+      label: 'Pending',
+      value: stats.byStatus?.['pending-confirmation'] || 0,
+      color: 'var(--medium)',
+      icon: '⏳'
     },
     {
-      label: "Resolved ✅",
-      value: byStatus.resolved || 0,
-      color: "var(--low)"
+      label: 'Resolved',
+      value: stats.byStatus?.resolved || 0,
+      color: 'var(--low)',
+      icon: '✅'
     },
     {
-      label: "Avg Confidence 🎯",
-      value: `${(avgConfidence * 100).toFixed(0)}%`,
-      color: "var(--accent)"
+      label: 'Avg Confidence',
+      value: Math.round(
+        (stats.avgConfidence || 0) * 100
+      ) + '%',
+      color: 'var(--accent)',
+      icon: '🎯'
     }
-  ];
+  ]
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 w-full select-none">
-      {cards.map((card, idx) => (
-        <div
-          key={idx}
-          className="flex-grow flex-shrink-0 md:flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-[16px_20px] flex flex-col justify-between shadow-sm transition hover:border-[var(--text-muted)]"
-        >
-          <div className="text-[12px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider leading-none">
-            {card.label}
-          </div>
-          <div
-            className="text-[28px] font-bold tracking-tight mt-2.5 leading-none"
-            style={{ color: card.color }}
-          >
+    <div className="stats-grid" style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(6, 1fr)',
+      gap: '12px',
+      padding: '16px 0',
+    }}>
+      {cards.map((card, index) => (
+        <div key={index} style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '16px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <div style={{
+            fontSize: '28px',
+            fontWeight: '700',
+            color: card.color,
+            lineHeight: '1'
+          }}>
             {card.value}
+          </div>
+          <div style={{
+            fontSize: '11px',
+            color: 'var(--text-muted)',
+            fontWeight: '500',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em'
+          }}>
+            <span>{card.icon}</span>
+            <span>{card.label}</span>
           </div>
         </div>
       ))}
     </div>
-  );
+  )
 }

@@ -138,7 +138,7 @@ export default function AuditLog() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 space-y-6 select-none">
+    <div className="page-container" style={{ padding: '24px 0' }}>
       {/* HEADER */}
       <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
         <div>

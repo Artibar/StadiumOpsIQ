@@ -94,3 +94,39 @@ body {
   animation: shimmer 2s infinite;
   content: '';
 }
+
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+  }
+  .dashboard-grid {
+    grid-template-columns: 40% 60% !important;
+  }
+}

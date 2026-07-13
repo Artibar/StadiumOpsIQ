@@ -30,7 +30,7 @@ function Navbar() {
         <span className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
           <span>🏟️</span> StadiumOps IQ
         </span>
-        <span className="text-[12px] text-[var(--text-muted)] font-medium leading-none mt-0.5">
+        <span className="text-[12px] text-[var(--text-muted)] font-medium leading-none mt-0.5 hide-mobile">
           FIFA World Cup 2026 Operations
         </span>
       </Link>

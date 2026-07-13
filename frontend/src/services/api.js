@@ -12,12 +12,13 @@ const api = axios.create({
 
 export const getStadiums = async () => {
   try {
-    const response = await fetch(
-      'https://worldcup26.ir/get/stadiums')
-    const data = await response.json()
-    return data
+    const response = await api.get(
+      '/api/stadiums')
+    // Extract stadiums array since the API response is wrapped in { stadiums: [...] }
+    return response.data.stadiums || response.data || []
   } catch (error) {
-    console.error('getStadiums failed:', error)
+    console.error('getStadiums failed:', 
+      error)
     return []
   }
 }

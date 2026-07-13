@@ -44,9 +44,9 @@ export default function Dashboard() {
   };
 
   return (
-    <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+    <div className="page-container" style={{ padding: '24px 0' }}>
       {/* Header section with live stats status */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border)] pb-4 mb-6">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
             <span aria-hidden="true">🏟️</span> StadiumOps IQ <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] font-semibold border border-[var(--accent)]/20">LIVE OPS CONTROL</span>
@@ -69,7 +69,7 @@ export default function Dashboard() {
       </div>
 
       {error && (
-        <div className="p-3.5 bg-[var(--critical)]/10 border border-[var(--critical)]/25 text-[var(--critical)] rounded-lg text-xs font-medium flex items-center gap-1.5" aria-live="assertive">
+        <div className="p-3.5 mb-6 bg-[var(--critical)]/10 border border-[var(--critical)]/25 text-[var(--critical)] rounded-lg text-xs font-medium flex items-center gap-1.5" aria-live="assertive">
           <span aria-hidden="true">⚠️</span> {error}
         </div>
       )}
@@ -77,25 +77,39 @@ export default function Dashboard() {
       {/* Stats Bar */}
       <StatsBar stats={stats} />
 
-      {/* Two Column Grid (40/60 split) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left column (40% width): Report Form */}
-        <div className="lg:col-span-5">
+      {/* Two Column Grid */}
+      <div className="dashboard-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: '40% 60%',
+        gap: '24px',
+        padding: '24px 0',
+        alignItems: 'start'
+      }}>
+        {/* Left — Incident Form */}
+        <div style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          borderRadius: '12px',
+          padding: '24px'
+        }}>
           <IncidentForm 
-            stadiums={stadiums} 
-            onIncidentCreated={handleIncidentCreated} 
-          />
+            stadiums={stadiums}
+            onIncidentCreated={handleIncidentCreated} />
         </div>
 
-        {/* Right column (60% width): Live Feed */}
-        <div className="lg:col-span-7">
+        {/* Right — Incident Feed */}
+        <div style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          borderRadius: '12px',
+          padding: '24px'
+        }}>
           <IncidentFeed 
-            incidents={incidents} 
-            onRefresh={fetchData} 
-            lastUpdated={lastUpdated} 
-          />
+            incidents={incidents}
+            onRefresh={fetchData}
+            lastUpdated={lastUpdated} />
         </div>
       </div>
-    </main>
+    </div>
   );
 }
