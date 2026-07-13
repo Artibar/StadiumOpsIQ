@@ -55,7 +55,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
   };
 
   return (
-    <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 shadow-sm space-y-4 select-none" aria-labelledby="feed-title">
+    <section className="space-y-4 select-none" aria-labelledby="feed-title">
       {/* Header Row */}
       <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
         <div className="flex flex-col">

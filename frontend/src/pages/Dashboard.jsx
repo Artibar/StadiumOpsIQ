@@ -80,9 +80,8 @@ export default function Dashboard() {
       {/* Two Column Grid */}
       <div className="dashboard-grid" style={{
         display: 'grid',
-        gridTemplateColumns: '40% 60%',
         gap: '24px',
-        padding: '24px 0',
+        marginTop: '24px',
         alignItems: 'start'
       }}>
         {/* Left — Incident Form */}

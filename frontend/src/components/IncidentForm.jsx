@@ -187,7 +187,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
   };
 
   return (
-    <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 shadow-sm relative overflow-hidden select-none" aria-labelledby="form-title">
+    <section className="relative overflow-hidden select-none" aria-labelledby="form-title">
       <h2 id="form-title" className="text-lg font-bold text-[var(--text-primary)] mb-1 flex items-center gap-2">
         <span aria-hidden="true">🚨</span> Report New Incident
       </h2>

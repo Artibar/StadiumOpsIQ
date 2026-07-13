@@ -168,7 +168,7 @@ export default function IncidentDetail() {
   const riskColor = severityColors[combinedRisk.toLowerCase()] || 'var(--low)';
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 space-y-6 select-none">
+    <div className="page-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
       {/* BREADCRUMB */}
       <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
         <Link
