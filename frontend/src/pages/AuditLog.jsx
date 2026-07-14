@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { Download, Search, RefreshCw, ChevronLeft, ChevronRight, Eye, FilterX, AlertCircle } from 'lucide-react';
+import { Download, Search, RefreshCw, ChevronLeft, ChevronRight, Eye, FilterX, AlertCircle, Loader2 } from 'lucide-react';
 import { getIncidents } from '../services/api.js';
 
 const LANGUAGE_FLAGS = {
@@ -199,11 +199,11 @@ export default function AuditLog() {
               className="w-full bg-[var(--bg-primary)] border border-[var(--border)] text-xs text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
               style={{ height: '36px' }}
             >
-              <option value="all">All Severities</option>
-              <option value="critical">Critical</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
+              <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Severities</option>
+              <option value="critical" style={{ background: '#151B2E', color: '#fff' }}>Critical</option>
+              <option value="high" style={{ background: '#151B2E', color: '#fff' }}>High</option>
+              <option value="medium" style={{ background: '#151B2E', color: '#fff' }}>Medium</option>
+              <option value="low" style={{ background: '#151B2E', color: '#fff' }}>Low</option>
             </select>
           </div>
 
@@ -219,12 +219,12 @@ export default function AuditLog() {
               className="w-full bg-[var(--bg-primary)] border border-[var(--border)] text-xs text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
               style={{ height: '36px' }}
             >
-              <option value="all">All Statuses</option>
-              <option value="open">Open</option>
-              <option value="pending-confirmation">Pending</option>
-              <option value="escalated">Escalated</option>
-              <option value="resolved">Resolved</option>
-              <option value="flagged-for-review">Flagged</option>
+              <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Statuses</option>
+              <option value="open" style={{ background: '#151B2E', color: '#fff' }}>Open</option>
+              <option value="pending-confirmation" style={{ background: '#151B2E', color: '#fff' }}>Pending</option>
+              <option value="escalated" style={{ background: '#151B2E', color: '#fff' }}>Escalated</option>
+              <option value="resolved" style={{ background: '#151B2E', color: '#fff' }}>Resolved</option>
+              <option value="flagged-for-review" style={{ background: '#151B2E', color: '#fff' }}>Flagged</option>
             </select>
           </div>
 
@@ -240,14 +240,14 @@ export default function AuditLog() {
               className="w-full bg-[var(--bg-primary)] border border-[var(--border)] text-xs text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
               style={{ height: '36px' }}
             >
-              <option value="all">All Types</option>
-              <option value="medical">Medical</option>
-              <option value="security">Security</option>
-              <option value="crowd">Crowd</option>
-              <option value="fire">Fire</option>
-              <option value="weather">Weather</option>
-              <option value="lost-item">Lost Item</option>
-              <option value="other">Other</option>
+              <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Types</option>
+              <option value="medical" style={{ background: '#151B2E', color: '#fff' }}>Medical</option>
+              <option value="security" style={{ background: '#151B2E', color: '#fff' }}>Security</option>
+              <option value="crowd" style={{ background: '#151B2E', color: '#fff' }}>Crowd</option>
+              <option value="fire" style={{ background: '#151B2E', color: '#fff' }}>Fire</option>
+              <option value="weather" style={{ background: '#151B2E', color: '#fff' }}>Weather</option>
+              <option value="lost-item" style={{ background: '#151B2E', color: '#fff' }}>Lost Item</option>
+              <option value="other" style={{ background: '#151B2E', color: '#fff' }}>Other</option>
             </select>
           </div>
 
@@ -263,9 +263,9 @@ export default function AuditLog() {
               className="w-full bg-[var(--bg-primary)] border border-[var(--border)] text-xs text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
               style={{ height: '36px' }}
             >
-              <option value="all">All Stadiums</option>
+              <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Stadiums</option>
               {uniqueStadiums.map((name, idx) => (
-                <option key={idx} value={name}>{name}</option>
+                <option key={idx} value={name} style={{ background: '#151B2E', color: '#fff' }}>{name}</option>
               ))}
             </select>
           </div>

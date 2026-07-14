@@ -269,9 +269,9 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                   disabled={isSubmitting}
                   required
                 >
-                  <option value="">Select FIFA 2026 Stadium...</option>
+                  <option value="" style={{ background: '#151B2E', color: '#fff' }}>Select FIFA 2026 Stadium...</option>
                   {stadiums.map((stadium, i) => (
-                    <option key={i} value={stadium.name}>
+                    <option key={i} value={stadium.name} style={{ background: '#151B2E', color: '#fff' }}>
                       {stadium.name} — {stadium.city}
                     </option>
                   ))}

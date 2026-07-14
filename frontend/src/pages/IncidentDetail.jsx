@@ -467,9 +467,9 @@ export default function IncidentDetail() {
                           outline: 'none'
                         }}
                       >
-                        <option value="resolved">Resolved / Closed</option>
-                        <option value="escalated">Escalated</option>
-                        <option value="flagged-for-review">Flagged for External Review</option>
+                        <option value="resolved" style={{ background: '#151B2E', color: '#fff' }}>Resolved / Closed</option>
+                        <option value="escalated" style={{ background: '#151B2E', color: '#fff' }}>Escalated</option>
+                        <option value="flagged-for-review" style={{ background: '#151B2E', color: '#fff' }}>Flagged for External Review</option>
                       </select>
                     </div>
 

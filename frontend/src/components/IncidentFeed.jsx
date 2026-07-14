@@ -86,14 +86,14 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             aria-label="Filter by Incident Type"
             className="bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] rounded-lg p-2 text-xs focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
           >
-            <option value="all">All Types</option>
-            <option value="medical">Medical</option>
-            <option value="security">Security</option>
-            <option value="crowd">Crowd</option>
-            <option value="fire">Fire</option>
-            <option value="weather">Weather</option>
-            <option value="lost-item">Lost Item</option>
-            <option value="other">Other</option>
+            <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Types</option>
+            <option value="medical" style={{ background: '#151B2E', color: '#fff' }}>Medical</option>
+            <option value="security" style={{ background: '#151B2E', color: '#fff' }}>Security</option>
+            <option value="crowd" style={{ background: '#151B2E', color: '#fff' }}>Crowd</option>
+            <option value="fire" style={{ background: '#151B2E', color: '#fff' }}>Fire</option>
+            <option value="weather" style={{ background: '#151B2E', color: '#fff' }}>Weather</option>
+            <option value="lost-item" style={{ background: '#151B2E', color: '#fff' }}>Lost Item</option>
+            <option value="other" style={{ background: '#151B2E', color: '#fff' }}>Other</option>
           </select>
 
           {/* Severity Filter */}
@@ -103,11 +103,11 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             aria-label="Filter by Incident Severity"
             className="bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] rounded-lg p-2 text-xs focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
           >
-            <option value="all">All Severities</option>
-            <option value="critical">Critical</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
+            <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Severities</option>
+            <option value="critical" style={{ background: '#151B2E', color: '#fff' }}>Critical</option>
+            <option value="high" style={{ background: '#151B2E', color: '#fff' }}>High</option>
+            <option value="medium" style={{ background: '#151B2E', color: '#fff' }}>Medium</option>
+            <option value="low" style={{ background: '#151B2E', color: '#fff' }}>Low</option>
           </select>
 
           {/* Status Filter */}
@@ -117,12 +117,12 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             aria-label="Filter by Incident Status"
             className="bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] rounded-lg p-2 text-xs focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
           >
-            <option value="all">All Statuses</option>
-            <option value="open">Open</option>
-            <option value="pending-confirmation">Pending</option>
-            <option value="escalated">Escalated</option>
-            <option value="resolved">Resolved</option>
-            <option value="flagged-for-review">Flagged</option>
+            <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Statuses</option>
+            <option value="open" style={{ background: '#151B2E', color: '#fff' }}>Open</option>
+            <option value="pending-confirmation" style={{ background: '#151B2E', color: '#fff' }}>Pending</option>
+            <option value="escalated" style={{ background: '#151B2E', color: '#fff' }}>Escalated</option>
+            <option value="resolved" style={{ background: '#151B2E', color: '#fff' }}>Resolved</option>
+            <option value="flagged-for-review" style={{ background: '#151B2E', color: '#fff' }}>Flagged</option>
           </select>
         </div>
 
