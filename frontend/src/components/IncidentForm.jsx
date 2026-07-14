@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { AlertCircle, Globe, Landmark, MapPin, Send, CheckCircle2, Loader2 } from 'lucide-react';
 import { createIncident } from '../services/api.js';
 
 const PLACEHOLDERS = [
@@ -23,11 +24,11 @@ const PLACEHOLDERS = [
 ];
 
 const AGENT_STEPS = [
-  "🔵 Agent 1: Detecting language & matching stadium...",
-  "🔵 Agent 2: Classifying incident with AI...",
-  "🔵 Agent 3: Fetching live weather & match status...",
-  "🔵 Agent 4: AI reasoning & deciding action...",
-  "🔵 Agent 5: Generating incident report & sending email..."
+  "Analyzing report intake and matching stadium...",
+  "Classifying incident severity...",
+  "Retrieving local operational context...",
+  "Generating action recommendations...",
+  "Compiling operations team notification..."
 ];
 
 function detectScriptLanguage(text) {
@@ -44,53 +45,53 @@ function detectScriptLanguage(text) {
 
   if (devanagari.test(text)) {
     if (text.includes("आहे") || text.includes("करणे") || text.includes("झाली") || text.includes("जवळ")) {
-      return { lang: 'Marathi', flag: '🇮🇳', confidence: 'high' };
+      return { lang: 'Marathi', label: 'MR', confidence: 'high' };
     }
-    return { lang: 'Hindi', flag: '🇮🇳', confidence: 'high' };
+    return { lang: 'Hindi', label: 'HI', confidence: 'high' };
   }
   if (arabicUrdu.test(text)) {
     if (text.includes("ہے") || text.includes("تھا") || text.includes("کیا")) {
-      return { lang: 'Urdu', flag: '🇵🇰', confidence: 'high' };
+      return { lang: 'Urdu', label: 'UR', confidence: 'high' };
     }
-    return { lang: 'Arabic', flag: '🇸🇦', confidence: 'high' };
+    return { lang: 'Arabic', label: 'AR', confidence: 'high' };
   }
   if (tamil.test(text)) {
-    return { lang: 'Tamil', flag: '🇮🇳', confidence: 'high' };
+    return { lang: 'Tamil', label: 'TA', confidence: 'high' };
   }
   if (kannada.test(text)) {
-    return { lang: 'Kannada', flag: '🇮🇳', confidence: 'high' };
+    return { lang: 'Kannada', label: 'KN', confidence: 'high' };
   }
   if (malayalam.test(text)) {
-    return { lang: 'Malayalam', flag: '🇮🇳', confidence: 'high' };
+    return { lang: 'Malayalam', label: 'ML', confidence: 'high' };
   }
   if (japanese.test(text)) {
-    return { lang: 'Japanese', flag: '🇯🇵', confidence: 'high' };
+    return { lang: 'Japanese', label: 'JA', confidence: 'high' };
   }
   if (korean.test(text)) {
-    return { lang: 'Korean', flag: '🇰🇷', confidence: 'high' };
+    return { lang: 'Korean', label: 'KO', confidence: 'high' };
   }
   if (chinese.test(text)) {
-    return { lang: 'Chinese (Mandarin)', flag: '🇨🇳', confidence: 'high' };
+    return { lang: 'Chinese (Mandarin)', label: 'ZH', confidence: 'high' };
   }
 
   const textLower = text.toLowerCase();
   if (/\b(el|la|los|que|y|en|un|una|del|es)\b/.test(textLower)) {
-    return { lang: 'Spanish', flag: '🇪🇸', confidence: 'high' };
+    return { lang: 'Spanish', label: 'ES', confidence: 'high' };
   }
   if (/\b(le|la|les|que|et|dans|un|une|est)\b/.test(textLower)) {
-    return { lang: 'French', flag: '🇫🇷', confidence: 'high' };
+    return { lang: 'French', label: 'FR', confidence: 'high' };
   }
   if (/\b(o|a|os|as|que|e|em|um|uma|do|da|é)\b/.test(textLower)) {
-    return { lang: 'Portuguese', flag: '🇵🇹', confidence: 'high' };
+    return { lang: 'Portuguese', label: 'PT', confidence: 'high' };
   }
   if (/\b(der|die|das|und|ist|in|ein|eine|von|mit)\b/.test(textLower)) {
-    return { lang: 'German', flag: '🇩🇪', confidence: 'high' };
+    return { lang: 'German', label: 'DE', confidence: 'high' };
   }
   if (/\b(de|het|een|en|is|in|van|op|met)\b/.test(textLower)) {
-    return { lang: 'Dutch', flag: '🇳🇱', confidence: 'high' };
+    return { lang: 'Dutch', label: 'NL', confidence: 'high' };
   }
   if (/\b(kuna|ni|na|katika|ya|wa|kwa|ni)\b/.test(textLower)) {
-    return { lang: 'Swahili', flag: '🇰🇪', confidence: 'high' };
+    return { lang: 'Swahili', label: 'SW', confidence: 'high' };
   }
 
   return null;
@@ -187,137 +188,145 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
   };
 
   return (
-    <section className="relative overflow-hidden select-none" aria-labelledby="form-title">
-      <h2 id="form-title" className="text-lg font-bold text-[var(--text-primary)] mb-1 flex items-center gap-2">
-        <span aria-hidden="true">🚨</span> Report New Incident
-      </h2>
-      <p className="text-xs text-[var(--text-muted)] mb-5">
-        Submit in any language — AI handles translation, risk scoring, and dispatch.
-      </p>
+    <section className="relative overflow-hidden select-none flex flex-col justify-between h-full" style={{ minHeight: '420px' }} aria-labelledby="form-title">
+      <div>
+        <h2 id="form-title" className="text-white mb-1.5 flex items-center gap-2.5 font-bold" style={{ fontSize: '20px' }}>
+          <AlertCircle size={20} className="text-[var(--critical)]" /> 
+          <span>Report Intake Dispatch</span>
+        </h2>
+        <p className="text-xs text-[var(--text-muted)] mb-6 font-medium">
+          Submit reports in any localized language. Automated context translation and priority routing will execute immediately.
+        </p>
 
-      {submitError && (
-        <div className="mb-4 p-3 bg-[var(--critical)]/10 border border-[var(--critical)]/25 text-[var(--critical)] rounded-lg text-xs font-semibold" aria-live="assertive">
-          <span aria-hidden="true">⚠️</span> {submitError}
-        </div>
-      )}
-
-      {submitSuccess && (
-        <div className="mb-4 p-3.5 bg-[var(--low)]/10 border border-[var(--low)]/20 text-[var(--low)] rounded-lg text-xs font-semibold flex flex-col gap-2" aria-live="polite">
-          <div>
-            <span aria-hidden="true">✅</span> Incident processed! Type: <span className="underline">{submitSuccess.type}</span> | Severity: <span className="underline">{submitSuccess.severity}</span> | Status: <span className="underline">{submitSuccess.status}</span>
+        {submitError && (
+          <div className="mb-5 p-3.5 bg-[var(--critical)]/10 border border-[var(--critical)]/20 text-[var(--critical)] rounded-lg text-xs font-semibold flex items-center gap-2" aria-live="assertive">
+            <AlertCircle size={14} />
+            <span>{submitError}</span>
           </div>
-          <Link
-            to={`/incidents/${submitSuccess._id}`}
-            className="text-[var(--accent)] hover:underline inline-flex items-center gap-1 font-bold"
-          >
-            View Details →
-          </Link>
-        </div>
-      )}
+        )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Textarea description */}
-        <div>
-          <label htmlFor="incident-desc" className="block text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
-            Incident Description *
-          </label>
-          <div className="relative">
-            <textarea
-              id="incident-desc"
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={PLACEHOLDERS[placeholderIndex]}
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg p-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition resize-none leading-relaxed"
-              disabled={isSubmitting}
-              required
-            />
-          </div>
-          <div className="mt-1.5 min-h-[18px]">
-            {detectedLang ? (
-              <span className="text-[11px] text-[var(--low)] font-semibold flex items-center gap-1">
-                <span aria-hidden="true">{detectedLang.flag}</span> {detectedLang.lang} detected — will auto-translate to English
-              </span>
-            ) : (
-              <span className="text-[11px] text-[var(--text-muted)] font-medium">
-                <span aria-hidden="true">🌐</span> Type in any of 17 supported languages
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Stadium select & zone inputs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="stadium-select" className="block text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
-              Stadium *
-            </label>
-            <select
-              id="stadium-select"
-              value={stadiumName}
-              onChange={(e) => setStadiumName(e.target.value)}
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg p-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition"
-              disabled={isSubmitting}
-              required
-            >
-              <option value="">Select FIFA 2026 Stadium...</option>
-              {stadiums.map((stadium, i) => (
-                <option key={i} value={stadium.name}>
-                  {stadium.name} — {stadium.city}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="zone-input" className="block text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
-              Zone / Location *
-            </label>
-            <input
-              id="zone-input"
-              type="text"
-              value={zoneLocation}
-              onChange={(e) => setZoneLocation(e.target.value)}
-              placeholder="e.g. Gate 4, Section 12"
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg p-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition"
-              disabled={isSubmitting}
-              required
-            />
-          </div>
-        </div>
-
-        {/* Submit Progress State / Button */}
-        {isSubmitting ? (
-          <div className="space-y-2 pt-2" aria-live="polite" aria-atomic="true">
-            <div className="text-[12px] font-medium text-[var(--text-primary)] flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] animate-pulse" />
-              <span>{AGENT_STEPS[agentStep]}</span>
+        {submitSuccess && (
+          <div className="mb-5 p-4 bg-[var(--low)]/10 border border-[var(--low)]/20 text-[var(--low)] rounded-xl text-xs font-semibold flex flex-col gap-2.5" aria-live="polite">
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 size={14} />
+              <span>Report processed successfully: <strong className="capitalize">{submitSuccess.type}</strong> severity level: <strong className="uppercase">{submitSuccess.severity}</strong></span>
             </div>
-            {/* Animated progress bar */}
-            <div className="w-full h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-[var(--accent)] rounded-full transition-all duration-300"
-                style={{ width: `${(agentStep + 1) * 20}%` }}
+            <Link
+              to={`/incidents/${submitSuccess._id}`}
+              className="text-[var(--accent)] hover:underline inline-flex items-center gap-1 font-bold"
+            >
+              View Dispatch Details →
+            </Link>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Textarea description */}
+          <div>
+            <label htmlFor="incident-desc" className="block text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+              Incident Description
+            </label>
+            <div className="relative">
+              <textarea
+                id="incident-desc"
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={PLACEHOLDERS[placeholderIndex]}
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition resize-none leading-relaxed"
+                disabled={isSubmitting}
+                required
               />
             </div>
-            <button
-              type="button"
-              className="w-full h-[44px] bg-[var(--border)] text-[var(--text-muted)] font-bold text-sm rounded-lg cursor-not-allowed flex items-center justify-center gap-1.5"
-              disabled
-              aria-disabled="true"
-            >
-              <span aria-hidden="true">⏳</span> Processing...
-            </button>
+            <div className="mt-2 min-h-[18px]">
+              {detectedLang ? (
+                <span className="text-[11px] text-[var(--low)] font-semibold flex items-center gap-1.5">
+                  <Globe size={12} />
+                  <span>[{detectedLang.label}] {detectedLang.lang} detected — auto-translating narrative</span>
+                </span>
+              ) : (
+                <span className="text-[11px] text-[var(--text-muted)] font-medium flex items-center gap-1.5">
+                  <Globe size={12} />
+                  <span>Multi-lingual intake processing active (17 languages)</span>
+                </span>
+              )}
+            </div>
           </div>
-        ) : (
-          <button
-            type="submit"
-            className="w-full h-[44px] bg-[var(--accent)] hover:bg-[var(--accent)]/90 text-white font-bold text-sm rounded-lg cursor-pointer transition select-none flex items-center justify-center gap-1.5 active:scale-[0.99] shadow-sm"
-          >
-            <span aria-hidden="true">🚨</span> Report Incident
-          </button>
-        )}
-      </form>
+
+          {/* Stadium select & zone inputs */}
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="stadium-select" className="block text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                Stadium Venue
+              </label>
+              <div className="relative">
+                <Landmark size={14} className="absolute left-3 top-3 text-[var(--text-muted)]" />
+                <select
+                  id="stadium-select"
+                  value={stadiumName}
+                  onChange={(e) => setStadiumName(e.target.value)}
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-2.5 pl-9 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition appearance-none cursor-pointer"
+                  disabled={isSubmitting}
+                  required
+                >
+                  <option value="">Select FIFA 2026 Stadium...</option>
+                  {stadiums.map((stadium, i) => (
+                    <option key={i} value={stadium.name}>
+                      {stadium.name} — {stadium.city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="zone-input" className="block text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                Zone / Location Inside Venue
+              </label>
+              <div className="relative">
+                <MapPin size={14} className="absolute left-3 top-3.5 text-[var(--text-muted)]" />
+                <input
+                  id="zone-input"
+                  type="text"
+                  value={zoneLocation}
+                  onChange={(e) => setZoneLocation(e.target.value)}
+                  placeholder="e.g. Gate 4, Concourse Section 12"
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-2.5 pl-9 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition"
+                  disabled={isSubmitting}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Progress State / Button */}
+          <div className="pt-2">
+            {isSubmitting ? (
+              <div className="space-y-3" aria-live="polite" aria-atomic="true">
+                <div className="text-[12px] font-bold text-[var(--text-primary)] flex items-center gap-2">
+                  <Loader2 size={14} className="animate-spin text-[var(--accent)]" />
+                  <span>{AGENT_STEPS[agentStep]}</span>
+                </div>
+                {/* Progress bar */}
+                <div className="w-full h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-[var(--accent)] rounded-full transition-all duration-300"
+                    style={{ width: `${(agentStep + 1) * 20}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <button
+                type="submit"
+                className="w-full h-[46px] bg-[var(--accent)] hover:bg-[var(--accent)]/95 text-white font-bold text-sm rounded-xl cursor-pointer transition select-none flex items-center justify-center gap-2 active:scale-[0.99] shadow-md"
+              >
+                <Send size={14} />
+                <span>Submit Intake Dispatch</span>
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
     </section>
   );
 }
