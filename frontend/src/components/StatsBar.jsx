@@ -63,16 +63,18 @@ export default function StatsBar({ stats }) {
       {cards.map((card, index) => {
         const IconComponent = card.icon;
         return (
-          <div key={index} style={{
+          <div key={index} className="hover-lift" style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
+            borderTop: `4px solid ${card.color}`,
             borderRadius: 'var(--card-radius)',
             padding: 'var(--card-padding)',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
             height: '96px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+            cursor: 'default'
           }}>
             <div style={{
               display: 'flex',
@@ -82,7 +84,7 @@ export default function StatsBar({ stats }) {
             }}>
               <span style={{
                 fontSize: 'var(--caption-size)',
-                color: 'var(--text-muted)',
+                color: 'var(--text-secondary)',
                 fontWeight: '700',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em'

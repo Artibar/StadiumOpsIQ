@@ -155,7 +155,7 @@ export default function IncidentDetail() {
     } else if (desc.includes('fight') || desc.includes('weapon') || desc.includes('crowd')) {
       text += `This classification was determined due to high spectator congestion or active physical security threats needing crowd control dispatches.`;
     } else {
-      text += `This determination was reached through standard NLP screening of the dispatcher's submitted logs.`;
+      text += `This determination was reached through NLP screening of the dispatcher's submitted logs.`;
     }
     return text;
   };
@@ -179,6 +179,8 @@ export default function IncidentDetail() {
   const tReviewed = (incident.humanOverride || incident.status !== 'pending-confirmation') && tReported ? new Date(tReported.getTime() + 25000) : null;
   const tDispatched = activeActions.length > 0 && tReported ? new Date(tReported.getTime() + 3200) : null;
   const tResolved = incident.status === 'resolved' && tReported ? new Date(tReported.getTime() + 45000) : null;
+
+  const currentSeverityColor = severityColors[incident.severity] || 'var(--low)';
 
   return (
     <div className="page-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: 'var(--section-spacing) 0', display: 'flex', flexDirection: 'column', gap: 'var(--section-spacing)' }}>
@@ -239,9 +241,10 @@ export default function IncidentDetail() {
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
+            borderTop: `4px solid ${currentSeverityColor}`,
             borderRadius: 'var(--card-radius)',
             padding: 'var(--card-padding)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -250,13 +253,14 @@ export default function IncidentDetail() {
               </h2>
               <span style={{
                 fontSize: 'var(--caption-size)',
-                fontWeight: '950',
+                fontWeight: '700',
                 textTransform: 'uppercase',
                 padding: '4px 12px',
                 borderRadius: '6px',
-                background: severityColors[incident.severity] + '15',
-                color: severityColors[incident.severity] || 'var(--low)',
-                border: `1px solid ${severityColors[incident.severity]}33`
+                color: currentSeverityColor,
+                backgroundColor: currentSeverityColor + '15',
+                borderColor: currentSeverityColor + '33',
+                border: '1px solid'
               }}>
                 {incident.severity}
               </span>
@@ -264,19 +268,19 @@ export default function IncidentDetail() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--grid-gap)', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Incident ID</span>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Incident ID</span>
                 <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0, fontFamily: 'monospace' }}>
                   {incident._id}
                 </p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Status</span>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Status</span>
                 <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                   {statusLabels[incident.status] || incident.status}
                 </p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Location / Venue</span>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Location / Venue</span>
                 <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                   {incident.stadiumName}
                 </p>
@@ -285,19 +289,19 @@ export default function IncidentDetail() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--grid-gap)', paddingTop: '20px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Zone Location</span>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Zone Location</span>
                 <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                   Zone {incident.zoneLocation || 'Unspecified'}
                 </p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Reported Time</span>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Reported Time</span>
                 <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                   {incident.createdAt ? new Date(incident.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Unknown'}
                 </p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Reporter Language</span>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Reporter Language</span>
                 <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                   {getLanguageLabel(incident.detectedLanguage)}
                 </p>
@@ -309,8 +313,10 @@ export default function IncidentDetail() {
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
+            borderTop: '4px solid var(--accent)',
             borderRadius: 'var(--card-radius)',
-            padding: 'var(--card-padding)'
+            padding: 'var(--card-padding)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
           }}>
             <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <ShieldAlert size={20} className="text-[var(--accent)]" />
@@ -334,8 +340,10 @@ export default function IncidentDetail() {
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
+            borderTop: '4px solid var(--accent)',
             borderRadius: 'var(--card-radius)',
-            padding: 'var(--card-padding)'
+            padding: 'var(--card-padding)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
           }}>
             <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Activity size={20} className="text-[var(--accent)]" />
@@ -344,25 +352,25 @@ export default function IncidentDetail() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--grid-gap)', marginBottom: '24px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Priority Rating</span>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Priority Rating</span>
                 <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: severityColors[incident.severity] || 'var(--low)', textTransform: 'uppercase' }}>
                   {incident.severity} priority
                 </span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Response Division</span>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Response Division</span>
                 <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
                   {incident.type === 'medical' ? 'Medical Dispatch' : incident.type === 'security' ? 'Stadium Security' : incident.type === 'fire' ? 'Safety & Rescue' : 'Venue Staff'}
                 </span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Est. Resolution Time</span>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Est. Resolution Time</span>
                 <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
                   {incident.incidentReport?.estimatedResolutionTime || 'Immediate (< 5 mins)'}
                 </span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Crowd Risk Exposure</span>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Crowd Risk Exposure</span>
                 <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
                   {incident.liveContext?.matchStatus?.crowdRiskLevel || 'low'}
                 </span>
@@ -370,7 +378,7 @@ export default function IncidentDetail() {
             </div>
 
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-              <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '12px' }}>Recommended Dispatch Steps</span>
+              <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '12px' }}>Recommended Dispatch Steps</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {activeActions.length > 0 ? activeActions.map((actionText, idx) => (
                   <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--body-size)', color: 'var(--text-primary)' }}>
@@ -416,8 +424,10 @@ export default function IncidentDetail() {
                       borderRadius: '8px',
                       fontWeight: '700',
                       fontSize: 'var(--caption-size)',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      transition: 'opacity 0.15s ease'
                     }}
+                    className="hover:opacity-90 active:scale-95"
                   >
                     Authorize Dispatch
                   </button>
@@ -431,8 +441,10 @@ export default function IncidentDetail() {
                       borderRadius: '8px',
                       fontWeight: '700',
                       fontSize: 'var(--caption-size)',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      transition: 'opacity 0.15s ease'
                     }}
+                    className="hover:opacity-90 active:scale-95"
                   >
                     Override recommendation
                   </button>
@@ -441,13 +453,13 @@ export default function IncidentDetail() {
                 {showOverrideForm && (
                   <form onSubmit={handleOverrideSubmit} style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                      <label style={{ fontSize: 'var(--caption-size)', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Target Dispatch Status</label>
+                      <label style={{ fontSize: 'var(--caption-size)', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Target Dispatch Status</label>
                       <select
                         value={newStatus}
                         onChange={(e) => setNewStatus(e.target.value)}
                         style={{
-                          background: 'var(--bg-card)',
-                          border: '1px solid var(--border)',
+                          background: 'var(--bg-primary)',
+                          border: '1px solid rgba(255,255,255,0.15)',
                           borderRadius: '8px',
                           padding: '8px',
                           fontSize: 'var(--caption-size)',
@@ -462,15 +474,15 @@ export default function IncidentDetail() {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                      <label style={{ fontSize: 'var(--caption-size)', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Supervisor Justification</label>
+                      <label style={{ fontSize: 'var(--caption-size)', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Supervisor Justification</label>
                       <textarea
                         rows={2}
                         value={overrideReason}
                         onChange={(e) => setOverrideReason(e.target.value)}
                         placeholder="Log justification statement..."
                         style={{
-                          background: 'var(--bg-card)',
-                          border: '1px solid var(--border)',
+                          background: 'var(--bg-primary)',
+                          border: '1px solid rgba(255,255,255,0.15)',
                           borderRadius: '8px',
                           padding: '8px',
                           fontSize: 'var(--caption-size)',
@@ -489,13 +501,15 @@ export default function IncidentDetail() {
                         background: 'var(--accent)',
                         color: '#fff',
                         border: 'none',
-                        padding: '6px 12px',
-                        borderRadius: '6px',
+                        padding: '8px 16px',
+                        borderRadius: '8px',
                         fontWeight: '700',
-                        fontSize: '11px',
+                        fontSize: 'var(--caption-size)',
                         cursor: 'pointer',
-                        alignSelf: 'flex-start'
+                        alignSelf: 'flex-start',
+                        transition: 'opacity 0.15s ease'
                       }}
+                      className="hover:opacity-90 active:scale-95"
                     >
                       {isSubmittingOverride ? 'Saving...' : 'Apply Status Override'}
                     </button>
@@ -525,8 +539,10 @@ export default function IncidentDetail() {
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
+            borderTop: '4px solid var(--accent)',
             borderRadius: 'var(--card-radius)',
-            padding: 'var(--card-padding)'
+            padding: 'var(--card-padding)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
           }}>
             <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Paperclip size={20} className="text-[var(--accent)]" />
@@ -539,7 +555,7 @@ export default function IncidentDetail() {
               gap: 'var(--grid-gap)'
             }}>
               {/* Doc attachment */}
-              <div style={{
+              <div className="hover-lift" style={{
                 background: 'var(--bg-primary)',
                 border: '1px solid var(--border)',
                 borderRadius: 'var(--card-radius)',
@@ -556,7 +572,7 @@ export default function IncidentDetail() {
               </div>
 
               {/* Video attachment */}
-              <div style={{
+              <div className="hover-lift" style={{
                 background: 'var(--bg-primary)',
                 border: '1px solid var(--border)',
                 borderRadius: 'var(--card-radius)',
@@ -573,7 +589,7 @@ export default function IncidentDetail() {
               </div>
 
               {/* Telemetry attachment */}
-              <div style={{
+              <div className="hover-lift" style={{
                 background: 'var(--bg-primary)',
                 border: '1px solid var(--border)',
                 borderRadius: 'var(--card-radius)',
@@ -600,8 +616,10 @@ export default function IncidentDetail() {
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
+            borderTop: '4px solid var(--accent)',
             borderRadius: 'var(--card-radius)',
-            padding: 'var(--card-padding)'
+            padding: 'var(--card-padding)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
           }}>
             <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 24px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Clock size={18} className="text-[var(--accent)]" />

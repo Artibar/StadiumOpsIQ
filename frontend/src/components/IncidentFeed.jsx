@@ -85,7 +85,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
             aria-label="Filter by Incident Type"
-            className="bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
+            className="bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
             style={{ fontSize: 'var(--caption-size)' }}
           >
             <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Types</option>
@@ -103,7 +103,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             value={filterSeverity}
             onChange={(e) => setFilterSeverity(e.target.value)}
             aria-label="Filter by Incident Severity"
-            className="bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
+            className="bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
             style={{ fontSize: 'var(--caption-size)' }}
           >
             <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Severities</option>
@@ -118,7 +118,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             aria-label="Filter by Incident Status"
-            className="bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
+            className="bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
             style={{ fontSize: 'var(--caption-size)' }}
           >
             <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Statuses</option>
@@ -155,6 +155,15 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
               const temp = inc.liveContext?.weather?.temperature;
               const phase = inc.liveContext?.matchStatus?.phase;
 
+              const statusColors = {
+                open: 'var(--accent)',
+                'pending-confirmation': 'var(--medium)',
+                escalated: 'var(--critical)',
+                resolved: 'var(--low)',
+                'flagged-for-review': 'var(--high)'
+              };
+              const statusColor = statusColors[inc.status] || 'var(--accent)';
+
               return (
                 <div
                   key={inc._id}
@@ -170,19 +179,34 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span
-                        className="text-[9px] font-black uppercase px-2 py-0.5 rounded text-white leading-none tracking-wider"
-                        style={{ backgroundColor: sideColor }}
+                        className="text-[10px] font-bold uppercase px-2.5 py-1 rounded border leading-none tracking-wider"
+                        style={{ 
+                          color: sideColor,
+                          backgroundColor: sideColor + '15',
+                          borderColor: sideColor + '33'
+                        }}
                       >
                         {inc.severity}
                       </span>
                       <span
-                        className="text-[9px] font-black uppercase px-2 py-0.5 rounded text-white leading-none tracking-wider"
-                        style={{ backgroundColor: `var(--${inc.type})` }}
+                        className="text-[10px] font-bold uppercase px-2.5 py-1 rounded border leading-none tracking-wider"
+                        style={{ 
+                          color: `var(--${inc.type})`,
+                          backgroundColor: `var(--${inc.type})15`,
+                          borderColor: `var(--${inc.type})33`
+                        }}
                       >
                         {inc.type}
                       </span>
                     </div>
-                    <span className="font-bold text-[var(--text-secondary)]" style={{ fontSize: 'var(--caption-size)' }}>
+                    <span 
+                      className="text-[10px] font-bold uppercase px-2.5 py-1 rounded border leading-none tracking-wider"
+                      style={{ 
+                        color: statusColor,
+                        backgroundColor: statusColor + '15',
+                        borderColor: statusColor + '33'
+                      }}
+                    >
                       {statusLabels[inc.status] || inc.status}
                     </span>
                   </div>

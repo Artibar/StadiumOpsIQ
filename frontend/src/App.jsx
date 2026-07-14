@@ -84,11 +84,6 @@ function Navbar() {
             className={`w-2 h-2 rounded-full pulsing-dot ${
               isOnline ? 'bg-[var(--low)]' : 'bg-[var(--critical)]'
             }`}
-            style={{
-              boxShadow: isOnline 
-                ? '0 0 6px var(--low)' 
-                : '0 0 6px var(--critical)'
-            }}
           />
           <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] hide-mobile">
             {isOnline ? 'System Online' : 'System Offline'}

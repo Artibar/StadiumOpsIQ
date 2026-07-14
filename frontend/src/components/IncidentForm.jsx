@@ -233,7 +233,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={PLACEHOLDERS[placeholderIndex]}
-                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-3 text-[var(--body-size)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition resize-none leading-relaxed"
+                className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] rounded-xl p-3 text-[var(--body-size)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition resize-none leading-relaxed"
                 disabled={isSubmitting}
                 required
               />
@@ -265,7 +265,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                   id="stadium-select"
                   value={stadiumName}
                   onChange={(e) => setStadiumName(e.target.value)}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-2.5 pl-9 text-[var(--body-size)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition appearance-none cursor-pointer"
+                  className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] rounded-xl p-2.5 pl-9 text-[var(--body-size)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition appearance-none cursor-pointer"
                   disabled={isSubmitting}
                   required
                 >
@@ -291,7 +291,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                   value={zoneLocation}
                   onChange={(e) => setZoneLocation(e.target.value)}
                   placeholder="e.g. Gate 4, Concourse Section 12"
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-2.5 pl-9 text-[var(--body-size)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition"
+                  className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] rounded-xl p-2.5 pl-9 text-[var(--body-size)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition"
                   disabled={isSubmitting}
                   required
                 />

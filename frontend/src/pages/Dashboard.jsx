@@ -89,12 +89,13 @@ export default function Dashboard() {
         <div style={{
           background: 'var(--bg-card)',
           border: '1px solid var(--border)',
+          borderTop: '4px solid var(--accent)',
           borderRadius: 'var(--card-radius)',
           padding: 'var(--card-padding)',
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)'
         }}>
           <IncidentForm 
             stadiums={stadiums}
@@ -105,12 +106,13 @@ export default function Dashboard() {
         <div style={{
           background: 'var(--bg-card)',
           border: '1px solid var(--border)',
+          borderTop: '4px solid var(--accent)',
           borderRadius: 'var(--card-radius)',
           padding: 'var(--card-padding)',
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)'
         }}>
           <IncidentFeed 
             incidents={incidents}

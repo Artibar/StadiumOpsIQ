@@ -162,7 +162,7 @@ export default function AuditLog() {
       </div>
 
       {/* FILTER ROW (All controls same height) */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border)] shadow-sm space-y-4" style={{ padding: 'var(--card-padding)', borderRadius: 'var(--card-radius)', marginBottom: 'var(--section-spacing)' }}>
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] shadow-sm space-y-4" style={{ padding: 'var(--card-padding)', borderRadius: 'var(--card-radius)', borderTop: '4px solid var(--accent)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)', marginBottom: 'var(--section-spacing)' }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -197,7 +197,7 @@ export default function AuditLog() {
                 setFilterSeverity(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
+              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
               style={{ height: '36px' }}
             >
               <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Severities</option>
@@ -217,7 +217,7 @@ export default function AuditLog() {
                 setFilterStatus(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
+              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
               style={{ height: '36px' }}
             >
               <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Statuses</option>
@@ -238,7 +238,7 @@ export default function AuditLog() {
                 setFilterType(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
+              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
               style={{ height: '36px' }}
             >
               <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Types</option>
@@ -261,7 +261,7 @@ export default function AuditLog() {
                 setFilterStadium(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
+              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
               style={{ height: '36px' }}
             >
               <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Stadiums</option>
@@ -309,7 +309,7 @@ export default function AuditLog() {
           </button>
         </div>
       ) : (
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden shadow-sm" style={{ display: 'flex', flexDirection: 'column', borderRadius: 'var(--card-radius)' }}>
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden shadow-sm" style={{ display: 'flex', flexDirection: 'column', borderRadius: 'var(--card-radius)', borderTop: '4px solid var(--accent)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -342,6 +342,10 @@ export default function AuditLog() {
                     ? 'bg-[rgba(234,179,8,0.06)] border-l-2 border-l-[var(--medium)]' 
                     : 'hover:bg-[var(--bg-card-hover)]/30';
 
+                  const typeColor = typeColors[inc.type] || 'var(--text-muted)';
+                  const severityColor = severityColors[inc.severity] || 'var(--low)';
+                  const statusColor = statusColors[inc.status] || 'var(--accent)';
+
                   return (
                     <tr key={inc._id} className={`${rowClass} transition duration-150`} style={{ height: '52px' }}>
                       {/* 1. Time */}
@@ -362,8 +366,12 @@ export default function AuditLog() {
                       {/* 4. Type */}
                       <td className="px-6 py-2">
                         <span
-                          className="px-2 py-0.5 rounded text-[9px] font-black uppercase text-white tracking-wider"
-                          style={{ backgroundColor: typeColors[inc.type] || 'var(--text-muted)' }}
+                          className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border"
+                          style={{ 
+                            color: typeColor,
+                            backgroundColor: typeColor + '15',
+                            borderColor: typeColor + '33'
+                          }}
                         >
                           {inc.type}
                         </span>
@@ -372,8 +380,12 @@ export default function AuditLog() {
                       {/* 5. Severity */}
                       <td className="px-6 py-2">
                         <span
-                          className="px-2 py-0.5 rounded text-[9px] font-black uppercase text-white tracking-wider"
-                          style={{ backgroundColor: severityColors[inc.severity] || 'var(--low)' }}
+                          className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border"
+                          style={{ 
+                            color: severityColor,
+                            backgroundColor: severityColor + '15',
+                            borderColor: severityColor + '33'
+                          }}
                         >
                           {inc.severity}
                         </span>
@@ -382,8 +394,12 @@ export default function AuditLog() {
                       {/* 6. Status */}
                       <td className="px-6 py-2">
                         <span
-                          className="px-2 py-0.5 rounded text-[9px] font-black uppercase text-white tracking-wider"
-                          style={{ backgroundColor: statusColors[inc.status] || 'var(--accent)' }}
+                          className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border"
+                          style={{ 
+                            color: statusColor,
+                            backgroundColor: statusColor + '15',
+                            borderColor: statusColor + '33'
+                          }}
                         >
                           {statusLabels[inc.status] || inc.status}
                         </span>
@@ -448,7 +464,7 @@ export default function AuditLog() {
                       <td className="px-6 py-2">
                         <RouterLink
                           to={`/incidents/${inc._id}`}
-                          className="px-2 py-1 bg-[var(--border)] text-[var(--text-secondary)] hover:text-white rounded transition hover:bg-[var(--bg-card-hover)] font-bold inline-flex items-center"
+                          className="px-2.5 py-1 bg-[var(--border)] text-[var(--text-secondary)] hover:text-white rounded transition hover:bg-[var(--bg-card-hover)] font-bold inline-flex items-center"
                           style={{ fontSize: 'var(--caption-size)' }}
                         >
                           <Eye size={12} />
