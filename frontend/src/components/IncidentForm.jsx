@@ -190,23 +190,23 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
   return (
     <section className="relative overflow-hidden select-none flex flex-col justify-between h-full" style={{ minHeight: '420px' }} aria-labelledby="form-title">
       <div>
-        <h2 id="form-title" className="text-white mb-1.5 flex items-center gap-2.5 font-bold" style={{ fontSize: '20px' }}>
-          <AlertCircle size={20} className="text-[var(--critical)]" /> 
+        <h2 id="form-title" className="text-white mb-1.5 flex items-center gap-2.5 font-semibold" style={{ fontSize: 'var(--section-title-size)' }}>
+          <AlertCircle size={18} className="text-[var(--critical)]" /> 
           <span>Report Intake Dispatch</span>
         </h2>
-        <p className="text-xs text-[var(--text-muted)] mb-6 font-medium">
+        <p className="text-[var(--text-muted)] mb-6 font-medium" style={{ fontSize: 'var(--caption-size)', lineHeight: '1.5' }}>
           Submit reports in any localized language. Automated context translation and priority routing will execute immediately.
         </p>
 
         {submitError && (
-          <div className="mb-5 p-3.5 bg-[var(--critical)]/10 border border-[var(--critical)]/20 text-[var(--critical)] rounded-lg text-xs font-semibold flex items-center gap-2" aria-live="assertive">
+          <div className="mb-5 p-3.5 bg-[var(--critical)]/10 border border-[var(--critical)]/20 text-[var(--critical)] rounded-lg font-semibold flex items-center gap-2" style={{ fontSize: 'var(--caption-size)' }} aria-live="assertive">
             <AlertCircle size={14} />
             <span>{submitError}</span>
           </div>
         )}
 
         {submitSuccess && (
-          <div className="mb-5 p-4 bg-[var(--low)]/10 border border-[var(--low)]/20 text-[var(--low)] rounded-xl text-xs font-semibold flex flex-col gap-2.5" aria-live="polite">
+          <div className="mb-5 p-4 bg-[var(--low)]/10 border border-[var(--low)]/20 text-[var(--low)] rounded-xl font-semibold flex flex-col gap-2.5" style={{ fontSize: 'var(--caption-size)' }} aria-live="polite">
             <div className="flex items-center gap-1.5">
               <CheckCircle2 size={14} />
               <span>Report processed successfully: <strong className="capitalize">{submitSuccess.type}</strong> severity level: <strong className="uppercase">{submitSuccess.severity}</strong></span>
@@ -220,10 +220,10 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Textarea description */}
           <div>
-            <label htmlFor="incident-desc" className="block text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+            <label htmlFor="incident-desc" className="block font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2" style={{ fontSize: 'var(--caption-size)' }}>
               Incident Description
             </label>
             <div className="relative">
@@ -233,19 +233,19 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={PLACEHOLDERS[placeholderIndex]}
-                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition resize-none leading-relaxed"
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-3 text-[var(--body-size)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition resize-none leading-relaxed"
                 disabled={isSubmitting}
                 required
               />
             </div>
             <div className="mt-2 min-h-[18px]">
               {detectedLang ? (
-                <span className="text-[11px] text-[var(--low)] font-semibold flex items-center gap-1.5">
+                <span className="font-semibold flex items-center gap-1.5 text-[var(--low)]" style={{ fontSize: 'var(--caption-size)' }}>
                   <Globe size={12} />
                   <span>[{detectedLang.label}] {detectedLang.lang} detected — auto-translating narrative</span>
                 </span>
               ) : (
-                <span className="text-[11px] text-[var(--text-muted)] font-medium flex items-center gap-1.5">
+                <span className="font-medium flex items-center gap-1.5 text-[var(--text-muted)]" style={{ fontSize: 'var(--caption-size)' }}>
                   <Globe size={12} />
                   <span>Multi-lingual intake processing active (17 languages)</span>
                 </span>
@@ -256,7 +256,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
           {/* Stadium select & zone inputs */}
           <div className="space-y-4">
             <div>
-              <label htmlFor="stadium-select" className="block text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+              <label htmlFor="stadium-select" className="block font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2" style={{ fontSize: 'var(--caption-size)' }}>
                 Stadium Venue
               </label>
               <div className="relative">
@@ -265,7 +265,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                   id="stadium-select"
                   value={stadiumName}
                   onChange={(e) => setStadiumName(e.target.value)}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-2.5 pl-9 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition appearance-none cursor-pointer"
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-2.5 pl-9 text-[var(--body-size)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition appearance-none cursor-pointer"
                   disabled={isSubmitting}
                   required
                 >
@@ -280,7 +280,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
             </div>
 
             <div>
-              <label htmlFor="zone-input" className="block text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+              <label htmlFor="zone-input" className="block font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2" style={{ fontSize: 'var(--caption-size)' }}>
                 Zone / Location Inside Venue
               </label>
               <div className="relative">
@@ -291,7 +291,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                   value={zoneLocation}
                   onChange={(e) => setZoneLocation(e.target.value)}
                   placeholder="e.g. Gate 4, Concourse Section 12"
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-2.5 pl-9 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition"
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-2.5 pl-9 text-[var(--body-size)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition"
                   disabled={isSubmitting}
                   required
                 />
@@ -303,7 +303,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
           <div className="pt-2">
             {isSubmitting ? (
               <div className="space-y-3" aria-live="polite" aria-atomic="true">
-                <div className="text-[12px] font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <div className="font-semibold text-[var(--text-primary)] flex items-center gap-2" style={{ fontSize: 'var(--caption-size)' }}>
                   <Loader2 size={14} className="animate-spin text-[var(--accent)]" />
                   <span>{AGENT_STEPS[agentStep]}</span>
                 </div>
@@ -318,7 +318,8 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
             ) : (
               <button
                 type="submit"
-                className="w-full h-[46px] bg-[var(--accent)] hover:bg-[var(--accent)]/95 text-white font-bold text-sm rounded-xl cursor-pointer transition select-none flex items-center justify-center gap-2 active:scale-[0.99] shadow-md"
+                className="w-full h-[46px] bg-[var(--accent)] hover:bg-[var(--accent)]/95 text-white font-bold rounded-xl cursor-pointer transition select-none flex items-center justify-center gap-2 active:scale-[0.99] shadow-md"
+                style={{ fontSize: 'var(--body-size)' }}
               >
                 <Send size={14} />
                 <span>Submit Intake Dispatch</span>

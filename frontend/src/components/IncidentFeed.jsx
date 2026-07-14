@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RefreshCw, MapPin, Clock, Thermometer, ShieldAlert, ArrowRight, Inbox, Eye } from 'lucide-react';
+import { RefreshCw, MapPin, Clock, Thermometer, ShieldAlert, ArrowRight, Inbox } from 'lucide-react';
 
 function formatTimeAgo(dateInput) {
   const date = new Date(dateInput);
@@ -56,21 +56,22 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
   };
 
   return (
-    <section className="space-y-4 select-none flex flex-col justify-between h-full" style={{ minHeight: '420px' }} aria-labelledby="feed-title">
+    <section className="select-none flex flex-col justify-between h-full" style={{ minHeight: '420px' }} aria-labelledby="feed-title">
       <div>
         {/* Header Row */}
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-3.5 mb-4">
+        <div className="flex items-center justify-between border-b border-[var(--border)] pb-3.5" style={{ marginBottom: '16px' }}>
           <div className="flex flex-col">
-            <span id="feed-title" className="font-bold text-white text-[15px]">
+            <span id="feed-title" className="font-semibold text-white" style={{ fontSize: 'var(--section-title-size)' }}>
               Live Incident Feed
             </span>
-            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider mt-0.5" aria-live="polite">
+            <span className="text-[var(--text-muted)] font-bold uppercase tracking-wider mt-0.5" style={{ fontSize: 'var(--caption-size)' }} aria-live="polite">
               Updated {secondsSinceUpdate}s ago
             </span>
           </div>
           <button
             onClick={onRefresh}
-            className="px-3 py-1.5 text-xs rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)] hover:text-white transition cursor-pointer flex items-center gap-1.5 font-bold"
+            className="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)] hover:text-white transition cursor-pointer flex items-center gap-1.5 font-bold"
+            style={{ fontSize: 'var(--caption-size)' }}
           >
             <RefreshCw size={12} />
             <span>Refresh</span>
@@ -78,13 +79,14 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
         </div>
 
         {/* Filter Row */}
-        <div className="grid grid-cols-3 gap-3.5 mb-4">
+        <div className="grid grid-cols-3" style={{ gap: 'var(--field-gap)', marginBottom: '16px' }}>
           {/* Type Filter */}
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
             aria-label="Filter by Incident Type"
-            className="bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] rounded-lg p-2 text-xs focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
+            className="bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
+            style={{ fontSize: 'var(--caption-size)' }}
           >
             <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Types</option>
             <option value="medical" style={{ background: '#151B2E', color: '#fff' }}>Medical</option>
@@ -101,7 +103,8 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             value={filterSeverity}
             onChange={(e) => setFilterSeverity(e.target.value)}
             aria-label="Filter by Incident Severity"
-            className="bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] rounded-lg p-2 text-xs focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
+            className="bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
+            style={{ fontSize: 'var(--caption-size)' }}
           >
             <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Severities</option>
             <option value="critical" style={{ background: '#151B2E', color: '#fff' }}>Critical</option>
@@ -115,7 +118,8 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             aria-label="Filter by Incident Status"
-            className="bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] rounded-lg p-2 text-xs focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
+            className="bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
+            style={{ fontSize: 'var(--caption-size)' }}
           >
             <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Statuses</option>
             <option value="open" style={{ background: '#151B2E', color: '#fff' }}>Open</option>
@@ -132,10 +136,10 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             /* Empty State */
             <div className="flex flex-col items-center justify-center py-20 text-center text-[var(--text-muted)]">
               <Inbox size={32} className="mb-2.5 text-[var(--text-muted)]" />
-              <h3 className="text-sm font-bold text-[var(--text-secondary)]">
+              <h3 className="font-bold text-[var(--text-secondary)]" style={{ fontSize: 'var(--body-size)' }}>
                 No active incidents matched
               </h3>
-              <p className="text-xs max-w-xs mx-auto mt-1.5 leading-relaxed font-medium">
+              <p className="max-w-xs mx-auto mt-1.5 leading-relaxed font-medium text-[var(--text-muted)]" style={{ fontSize: 'var(--caption-size)' }}>
                 Incidents matching selected criteria will display here. Multi-lingual support active.
               </p>
             </div>
@@ -155,8 +159,12 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
                 <div
                   key={inc._id}
                   onClick={() => navigate(`/incidents/${inc._id}`)}
-                  className="hover-lift bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-4 cursor-pointer flex flex-col gap-3 shadow-sm transition duration-150"
-                  style={{ borderLeft: `4px solid ${sideColor}` }}
+                  className="hover-lift bg-[var(--bg-primary)] border border-[var(--border)] cursor-pointer flex flex-col gap-3 shadow-sm transition duration-150"
+                  style={{ 
+                    borderLeft: `4px solid ${sideColor}`,
+                    borderRadius: 'var(--card-radius)',
+                    padding: 'var(--card-padding)'
+                  }}
                 >
                   {/* ROW 1: Badges */}
                   <div className="flex items-center justify-between">
@@ -174,13 +182,13 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
                         {inc.type}
                       </span>
                     </div>
-                    <span className="text-[11px] font-bold text-[var(--text-secondary)]">
+                    <span className="font-bold text-[var(--text-secondary)]" style={{ fontSize: 'var(--caption-size)' }}>
                       {statusLabels[inc.status] || inc.status}
                     </span>
                   </div>
 
                   {/* ROW 2: Location */}
-                  <div className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                  <div className="font-bold text-[var(--text-primary)] flex items-center gap-1.5" style={{ fontSize: 'var(--body-size)' }}>
                     <MapPin size={12} className="text-[var(--text-muted)]" />
                     <span>{inc.stadiumName}</span>
                     <span className="text-[var(--text-muted)] font-normal">|</span>
@@ -188,12 +196,12 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
                   </div>
 
                   {/* ROW 3: Description */}
-                  <div className="text-xs text-[var(--text-secondary)] leading-relaxed font-medium italic">
+                  <div className="text-[var(--text-secondary)] leading-relaxed font-medium italic" style={{ fontSize: 'var(--body-size)' }}>
                     "{descDisplay}"
                   </div>
 
                   {/* ROW 4: Footer indicators */}
-                  <div className="flex items-center justify-between border-t border-[var(--border)]/40 pt-3 mt-1 text-[11px] text-[var(--text-muted)] font-semibold">
+                  <div className="flex items-center justify-between border-t border-[var(--border)]/40 pt-3 mt-1 font-semibold text-[var(--text-muted)]" style={{ fontSize: 'var(--caption-size)' }}>
                     <div className="flex items-center gap-3">
                       <span className="flex items-center gap-1">
                         <Clock size={11} />
@@ -218,6 +226,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
                         navigate(`/incidents/${inc._id}`);
                       }}
                       className="text-[var(--accent)] hover:underline border-none bg-transparent cursor-pointer font-bold leading-none p-0 flex items-center gap-1"
+                      style={{ fontSize: 'var(--caption-size)' }}
                     >
                       <span>View Details</span>
                       <ArrowRight size={12} />

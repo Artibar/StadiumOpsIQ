@@ -6,8 +6,8 @@ export default function StatsBar({ stats }) {
     <div key={i} className="animate-pulse" style={{
       background: 'var(--bg-card)',
       border: '1px solid var(--border)',
-      borderRadius: '16px',
-      height: '92px'
+      borderRadius: 'var(--card-radius)',
+      height: '96px'
     }} />
   ));
 
@@ -66,12 +66,12 @@ export default function StatsBar({ stats }) {
           <div key={index} style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
-            borderRadius: '16px',
-            padding: '20px',
+            borderRadius: 'var(--card-radius)',
+            padding: 'var(--card-padding)',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            height: '92px',
+            height: '96px',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
           }}>
             <div style={{
@@ -81,7 +81,7 @@ export default function StatsBar({ stats }) {
               width: '100%'
             }}>
               <span style={{
-                fontSize: '11px',
+                fontSize: 'var(--caption-size)',
                 color: 'var(--text-muted)',
                 fontWeight: '700',
                 textTransform: 'uppercase',
@@ -89,11 +89,11 @@ export default function StatsBar({ stats }) {
               }}>
                 {card.label}
               </span>
-              <IconComponent size={15} style={{ color: card.color }} />
+              <IconComponent size={14} style={{ color: card.color }} />
             </div>
             <div style={{
-              fontSize: '24px',
-              fontWeight: '900',
+              fontSize: 'var(--kpi-size)',
+              fontWeight: '600',
               color: '#fff',
               lineHeight: '1',
               marginTop: '8px'

@@ -19,6 +19,21 @@
   --fire: #ef4444;
   --weather: #06b6d4;
   --lost-item: #ec4899;
+
+  /* Typography Design Tokens */
+  --title-size: 32px;
+  --section-title-size: 20px;
+  --body-size: 14px;
+  --caption-size: 12px;
+  --kpi-size: 24px;
+
+  /* Spacing Design Tokens */
+  --card-padding: 24px;
+  --card-radius: 16px;
+  --grid-gap: 24px;
+  --section-spacing: 32px;
+  --field-gap: 16px;
+  --label-value-gap: 8px;
 }
 
 * {
@@ -31,6 +46,7 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
+  font-size: var(--body-size);
   min-height: 100vh;
 }
 
@@ -98,7 +114,7 @@ body {
 .page-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 32px;
+  padding: 0 var(--card-padding);
   animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -110,7 +126,7 @@ body {
 
 @media (min-width: 769px) and (max-width: 1024px) {
   .page-container {
-    padding: 0 24px;
+    padding: 0 var(--card-padding);
   }
 }
 

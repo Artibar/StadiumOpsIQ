@@ -12,31 +12,12 @@ import {
   FileText, 
   Landmark, 
   MapPin, 
-  Eye, 
-  File, 
   Play, 
-  Image, 
+  File, 
   Paperclip, 
-  Check, 
-  X, 
-  Hourglass,
-  Calendar,
   AlertCircle
 } from 'lucide-react';
 import { getIncidentById, confirmIncident, overrideIncident } from '../services/api.js';
-
-function getWeatherCondition(code) {
-  if (code === undefined || code === null) return 'Unknown';
-  if (code === 0) return 'Clear Sky';
-  if (code >= 1 && code <= 3) return 'Partly Cloudy';
-  if (code === 45 || code === 48) return 'Foggy';
-  if (code >= 51 && code <= 55) return 'Light Drizzle';
-  if (code >= 61 && code <= 65) return 'Rain';
-  if (code >= 71 && code <= 75) return 'Snow';
-  if (code >= 80 && code <= 82) return 'Rain showers';
-  if (code >= 95 && code <= 99) return 'Thunderstorm';
-  return `Weather Code ${code}`;
-}
 
 export default function IncidentDetail() {
   const { id } = useParams();
@@ -200,9 +181,9 @@ export default function IncidentDetail() {
   const tResolved = incident.status === 'resolved' && tReported ? new Date(tReported.getTime() + 45000) : null;
 
   return (
-    <div className="page-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 0', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div className="page-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: 'var(--section-spacing) 0', display: 'flex', flexDirection: 'column', gap: 'var(--section-spacing)' }}>
       
-      {/* HEADER */}
+      {/* BREADCRUMB HEADER */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link
@@ -212,7 +193,7 @@ export default function IncidentDetail() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              fontSize: '13px',
+              fontSize: 'var(--caption-size)',
               fontWeight: '700',
               color: 'var(--text-secondary)',
               transition: 'color 0.2s ease'
@@ -223,12 +204,12 @@ export default function IncidentDetail() {
             <span>Dashboard</span>
           </Link>
           <span style={{ color: 'var(--text-muted)' }}>/</span>
-          <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontFamily: 'monospace', fontWeight: 'bold' }}>
+          <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', fontFamily: 'monospace', fontWeight: 'bold' }}>
             CASE-{incident._id ? incident._id.substring(Math.max(0, incident._id.length - 8)).toUpperCase() : 'UNKNOWN'}
           </span>
         </div>
         <span style={{
-          fontSize: '11px',
+          fontSize: 'var(--caption-size)',
           fontWeight: '700',
           textTransform: 'uppercase',
           padding: '4px 10px',
@@ -241,28 +222,35 @@ export default function IncidentDetail() {
         </span>
       </div>
 
+      {/* PAGE TITLE */}
+      <div>
+        <h1 style={{ fontSize: 'var(--title-size)', fontWeight: '600', color: '#fff', margin: 0 }}>
+          Incident Command Dossier
+        </h1>
+      </div>
+
       {/* Grid Layout - 12 Columns */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '32px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--grid-gap)', alignItems: 'start' }}>
         
         {/* Left Column (8 cols): Summary, Assessment, Actions, Evidence */}
-        <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+        <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 'var(--section-spacing)' }}>
           
           {/* SECTION 1: Incident Summary (Large Hero Card) */}
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
-            borderRadius: '16px',
-            padding: '24px',
+            borderRadius: 'var(--card-radius)',
+            padding: 'var(--card-padding)',
             boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Shield size={20} className="text-[var(--accent)]" />
                 <span>Incident Summary</span>
               </h2>
               <span style={{
-                fontSize: '11px',
-                fontWeight: '900',
+                fontSize: 'var(--caption-size)',
+                fontWeight: '950',
                 textTransform: 'uppercase',
                 padding: '4px 12px',
                 borderRadius: '6px',
@@ -274,43 +262,43 @@ export default function IncidentDetail() {
               </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
-              <div>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Incident ID</span>
-                <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '4px 0 0 0', fontFamily: 'monospace' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--grid-gap)', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Incident ID</span>
+                <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0, fontFamily: 'monospace' }}>
                   {incident._id}
                 </p>
               </div>
-              <div>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Status</span>
-                <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '4px 0 0 0' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Status</span>
+                <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                   {statusLabels[incident.status] || incident.status}
                 </p>
               </div>
-              <div>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Location / Venue</span>
-                <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '4px 0 0 0' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Location / Venue</span>
+                <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                   {incident.stadiumName}
                 </p>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', paddingTop: '20px' }}>
-              <div>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Zone Location</span>
-                <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '4px 0 0 0' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--grid-gap)', paddingTop: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Zone Location</span>
+                <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                   Zone {incident.zoneLocation || 'Unspecified'}
                 </p>
               </div>
-              <div>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Reported Time</span>
-                <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '4px 0 0 0' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Reported Time</span>
+                <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                   {incident.createdAt ? new Date(incident.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Unknown'}
                 </p>
               </div>
-              <div>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Reporter Language</span>
-                <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '4px 0 0 0' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Reporter Language</span>
+                <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                   {getLanguageLabel(incident.detectedLanguage)}
                 </p>
               </div>
@@ -321,15 +309,15 @@ export default function IncidentDetail() {
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
-            borderRadius: '16px',
-            padding: '24px'
+            borderRadius: 'var(--card-radius)',
+            padding: 'var(--card-padding)'
           }}>
-            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <ShieldAlert size={20} className="text-[var(--accent)]" />
               <span>AI Incident Assessment</span>
             </h2>
             <p style={{
-              fontSize: '14px',
+              fontSize: 'var(--body-size)',
               color: 'var(--text-primary)',
               lineHeight: '1.6',
               background: 'var(--bg-primary)',
@@ -346,51 +334,51 @@ export default function IncidentDetail() {
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
-            borderRadius: '16px',
-            padding: '24px'
+            borderRadius: 'var(--card-radius)',
+            padding: 'var(--card-padding)'
           }}>
-            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Activity size={20} className="text-[var(--accent)]" />
               <span>Operational Recommendation</span>
             </h2>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Priority Rating</span>
-                <span style={{ fontSize: '14px', fontWeight: '800', color: severityColors[incident.severity] || 'var(--low)', textTransform: 'uppercase' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--grid-gap)', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Priority Rating</span>
+                <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: severityColors[incident.severity] || 'var(--low)', textTransform: 'uppercase' }}>
                   {incident.severity} priority
                 </span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Response Division</span>
-                <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Response Division</span>
+                <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
                   {incident.type === 'medical' ? 'Medical Dispatch' : incident.type === 'security' ? 'Stadium Security' : incident.type === 'fire' ? 'Safety & Rescue' : 'Venue Staff'}
                 </span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Est. Resolution Time</span>
-                <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Est. Resolution Time</span>
+                <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
                   {incident.incidentReport?.estimatedResolutionTime || 'Immediate (< 5 mins)'}
                 </span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Crowd Risk Exposure</span>
-                <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Crowd Risk Exposure</span>
+                <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
                   {incident.liveContext?.matchStatus?.crowdRiskLevel || 'low'}
                 </span>
               </div>
             </div>
 
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '12px' }}>Recommended Dispatch Steps</span>
+              <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '12px' }}>Recommended Dispatch Steps</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {activeActions.length > 0 ? activeActions.map((actionText, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-primary)' }}>
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--body-size)', color: 'var(--text-primary)' }}>
                     <CheckCircle2 size={14} className="text-[var(--low)]" />
                     <span>{actionText}</span>
                   </div>
                 )) : (
-                  <div style={{ fontSize: '13px', fontStyle: 'italic', color: 'var(--text-muted)' }}>No dispatches scheduled.</div>
+                  <div style={{ fontSize: 'var(--body-size)', fontStyle: 'italic', color: 'var(--text-muted)' }}>No dispatches scheduled.</div>
                 )}
               </div>
             </div>
@@ -399,7 +387,7 @@ export default function IncidentDetail() {
             {incident.status === 'pending-confirmation' && (
               <div style={{
                 marginTop: '24px',
-                padding: '20px',
+                padding: 'var(--card-padding)',
                 background: 'var(--bg-primary)',
                 borderRadius: '12px',
                 border: '1px solid var(--border)',
@@ -408,11 +396,11 @@ export default function IncidentDetail() {
                 gap: '16px'
               }}>
                 <div>
-                  <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <h4 style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <AlertCircle size={14} className="text-[var(--medium)]" />
                     <span>Action Required: Supervisor Authorization</span>
                   </h4>
-                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '4px 0 0 0', lineHeight: '1.5' }}>
+                  <p style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', margin: '4px 0 0 0', lineHeight: '1.5' }}>
                     Automated dispatches are staged. Authorize dispatches or execute manual override parameters below.
                   </p>
                 </div>
@@ -427,7 +415,7 @@ export default function IncidentDetail() {
                       padding: '8px 16px',
                       borderRadius: '8px',
                       fontWeight: '700',
-                      fontSize: '12px',
+                      fontSize: 'var(--caption-size)',
                       cursor: 'pointer'
                     }}
                   >
@@ -442,7 +430,7 @@ export default function IncidentDetail() {
                       padding: '8px 16px',
                       borderRadius: '8px',
                       fontWeight: '700',
-                      fontSize: '12px',
+                      fontSize: 'var(--caption-size)',
                       cursor: 'pointer'
                     }}
                   >
@@ -452,8 +440,8 @@ export default function IncidentDetail() {
 
                 {showOverrideForm && (
                   <form onSubmit={handleOverrideSubmit} style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Target Dispatch Status</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                      <label style={{ fontSize: 'var(--caption-size)', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Target Dispatch Status</label>
                       <select
                         value={newStatus}
                         onChange={(e) => setNewStatus(e.target.value)}
@@ -462,7 +450,7 @@ export default function IncidentDetail() {
                           border: '1px solid var(--border)',
                           borderRadius: '8px',
                           padding: '8px',
-                          fontSize: '12px',
+                          fontSize: 'var(--caption-size)',
                           color: 'var(--text-primary)',
                           outline: 'none'
                         }}
@@ -473,8 +461,8 @@ export default function IncidentDetail() {
                       </select>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Supervisor Justification</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                      <label style={{ fontSize: 'var(--caption-size)', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Supervisor Justification</label>
                       <textarea
                         rows={2}
                         value={overrideReason}
@@ -485,7 +473,7 @@ export default function IncidentDetail() {
                           border: '1px solid var(--border)',
                           borderRadius: '8px',
                           padding: '8px',
-                          fontSize: '12px',
+                          fontSize: 'var(--caption-size)',
                           color: 'var(--text-primary)',
                           outline: 'none',
                           resize: 'none'
@@ -523,7 +511,7 @@ export default function IncidentDetail() {
                 background: 'rgba(234, 179, 8, 0.08)',
                 borderLeft: '4px solid var(--medium)',
                 borderRadius: '8px',
-                fontSize: '13px',
+                fontSize: 'var(--body-size)',
                 color: 'var(--text-secondary)',
                 lineHeight: '1.5'
               }}>
@@ -537,10 +525,10 @@ export default function IncidentDetail() {
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
-            borderRadius: '16px',
-            padding: '24px'
+            borderRadius: 'var(--card-radius)',
+            padding: 'var(--card-padding)'
           }}>
-            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Paperclip size={20} className="text-[var(--accent)]" />
               <span>Evidence Ledger</span>
             </h2>
@@ -548,22 +536,22 @@ export default function IncidentDetail() {
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '16px'
+              gap: 'var(--grid-gap)'
             }}>
               {/* Doc attachment */}
               <div style={{
                 background: 'var(--bg-primary)',
                 border: '1px solid var(--border)',
-                borderRadius: '12px',
-                padding: '16px',
+                borderRadius: 'var(--card-radius)',
+                padding: 'var(--card-padding)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px'
               }}>
                 <FileText size={24} className="text-[var(--accent)]" />
                 <div>
-                  <span style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#fff' }}>incident_dossier.pdf</span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>PDF Report • 142 KB</span>
+                  <span style={{ display: 'block', fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff' }}>incident_dossier.pdf</span>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)' }}>PDF Report • 142 KB</span>
                 </div>
               </div>
 
@@ -571,16 +559,16 @@ export default function IncidentDetail() {
               <div style={{
                 background: 'var(--bg-primary)',
                 border: '1px solid var(--border)',
-                borderRadius: '12px',
-                padding: '16px',
+                borderRadius: 'var(--card-radius)',
+                padding: 'var(--card-padding)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px'
               }}>
                 <Play size={24} className="text-[var(--accent)]" />
                 <div>
-                  <span style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#fff' }}>security_feed_gate4.mp4</span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>CCTV Capture • 1.2 MB</span>
+                  <span style={{ display: 'block', fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff' }}>security_feed_gate4.mp4</span>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)' }}>CCTV Capture • 1.2 MB</span>
                 </div>
               </div>
 
@@ -588,16 +576,16 @@ export default function IncidentDetail() {
               <div style={{
                 background: 'var(--bg-primary)',
                 border: '1px solid var(--border)',
-                borderRadius: '12px',
-                padding: '16px',
+                borderRadius: 'var(--card-radius)',
+                padding: 'var(--card-padding)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px'
               }}>
                 <File size={24} className="text-[var(--accent)]" />
                 <div>
-                  <span style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#fff' }}>telemetry_log.json</span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>JSON Dataset • 48 KB</span>
+                  <span style={{ display: 'block', fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff' }}>telemetry_log.json</span>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)' }}>JSON Dataset • 48 KB</span>
                 </div>
               </div>
             </div>
@@ -612,10 +600,10 @@ export default function IncidentDetail() {
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
-            borderRadius: '16px',
-            padding: '24px'
+            borderRadius: 'var(--card-radius)',
+            padding: 'var(--card-padding)'
           }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#fff', margin: '0 0 24px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 24px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Clock size={18} className="text-[var(--accent)]" />
               <span>Incident Timeline</span>
             </h2>
@@ -645,8 +633,8 @@ export default function IncidentDetail() {
                   marginTop: '2px'
                 }} />
                 <div>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#fff', display: 'block' }}>Reported</span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                  <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>Reported</span>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
                     {tReported ? tReported.toLocaleString() : 'Pending'}
                   </span>
                 </div>
@@ -663,8 +651,8 @@ export default function IncidentDetail() {
                   marginTop: '2px'
                 }} />
                 <div>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#fff', display: 'block' }}>AI Classified</span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                  <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>AI Classified</span>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
                     {tClassified ? tClassified.toLocaleString() : 'Pending'}
                   </span>
                 </div>
@@ -681,8 +669,8 @@ export default function IncidentDetail() {
                   marginTop: '2px'
                 }} />
                 <div>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#fff', display: 'block' }}>Supervisor Reviewed</span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                  <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>Supervisor Reviewed</span>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
                     {tReviewed ? tReviewed.toLocaleString() : 'Pending verification'}
                   </span>
                 </div>
@@ -699,8 +687,8 @@ export default function IncidentDetail() {
                   marginTop: '2px'
                 }} />
                 <div>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#fff', display: 'block' }}>Team Dispatched</span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                  <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>Team Dispatched</span>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
                     {tDispatched ? tDispatched.toLocaleString() : 'Awaiting dispatch confirmation'}
                   </span>
                 </div>
@@ -717,8 +705,8 @@ export default function IncidentDetail() {
                   marginTop: '2px'
                 }} />
                 <div>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#fff', display: 'block' }}>Resolved</span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                  <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>Resolved</span>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
                     {tResolved ? tResolved.toLocaleString() : 'Active event'}
                   </span>
                 </div>
