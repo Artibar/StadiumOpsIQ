@@ -33,8 +33,9 @@ function StatCard({ card, index }) {
       className="hover-lift"
       style={{
         position: 'relative',
-        background: 'linear-gradient(180deg, var(--bg-card) 0%, rgba(255,255,255,0.02) 100%)',
-        border: isCritical ? `1px solid ${card.color}` : '1px solid var(--border)',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        borderTop: `4px solid ${card.color}`,
         borderRadius: 'var(--card-radius)',
         padding: 'var(--card-padding)',
         display: 'flex',
@@ -43,37 +44,14 @@ function StatCard({ card, index }) {
         height: '108px',
         overflow: 'hidden',
         cursor: 'default',
-        backdropFilter: 'blur(6px)',
         boxShadow: isCritical
-          ? `0 0 0 1px ${card.color}33, 0 0 24px ${card.color}40, 0 4px 14px rgba(0,0,0,0.35)`
+          ? `0 0 0 1px ${card.color}33, 0 2px 10px rgba(0,0,0,0.3)`
           : '0 2px 10px rgba(0,0,0,0.3)',
         transition: 'transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease',
         animation: `statCardIn 0.45s ease both`,
         animationDelay: `${index * 60}ms`
       }}
     >
-      {/* ambient glow */}
-      <div style={{
-        position: 'absolute',
-        top: '-50%',
-        right: '-30%',
-        width: '160px',
-        height: '160px',
-        borderRadius: '50%',
-        background: card.color,
-        opacity: isCritical ? 0.18 : 0.09,
-        filter: 'blur(24px)',
-        pointerEvents: 'none'
-      }} />
-
-      {/* diagonal scan sheen */}
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: `linear-gradient(115deg, transparent 40%, ${card.color}14 50%, transparent 60%)`,
-        pointerEvents: 'none'
-      }} />
-
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -98,16 +76,14 @@ function StatCard({ card, index }) {
               height: '6px',
               borderRadius: '50%',
               background: card.color,
-              animation: 'pulseDot 1.4s ease-in-out infinite',
-              boxShadow: `0 0 6px ${card.color}`
+              animation: 'pulseDot 1.4s ease-in-out infinite'
             }} />
           )}
         </span>
         <card.icon
           size={15}
           style={{
-            color: card.color,
-            filter: isCritical ? `drop-shadow(0 0 4px ${card.color})` : 'none'
+            color: card.color
           }}
         />
       </div>
@@ -120,8 +96,7 @@ function StatCard({ card, index }) {
         letterSpacing: '-0.02em',
         fontVariantNumeric: 'tabular-nums',
         fontFamily: "'JetBrains Mono', 'SF Mono', ui-monospace, monospace",
-        position: 'relative',
-        textShadow: isCritical ? `0 0 18px ${card.color}80` : 'none'
+        position: 'relative'
       }}>
         {typeof card.value === 'number' ? displayValue : card.value}
       </div>

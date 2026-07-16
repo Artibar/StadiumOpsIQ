@@ -80,7 +80,6 @@ export default function Dashboard() {
                 height: '6px',
                 borderRadius: '50%',
                 background: 'var(--accent)',
-                boxShadow: '0 0 6px var(--accent)',
                 animation: 'livePulseDot 1.8s ease-in-out infinite'
               }} />
               LIVE

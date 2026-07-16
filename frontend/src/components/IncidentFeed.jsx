@@ -63,12 +63,8 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
           to { opacity: 1; transform: translateX(0); }
         }
         @keyframes livePulse {
-          0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5); }
-          50% { opacity: 0.6; transform: scale(1.3); box-shadow: 0 0 0 4px rgba(52, 211, 153, 0); }
-        }
-        @keyframes urgentSheen {
-          0% { background-position: -150% 0; }
-          100% { background-position: 250% 0; }
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(1.2); }
         }
       `}</style>
       <div>
@@ -202,23 +198,12 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
                     borderRadius: 'var(--card-radius)',
                     padding: 'var(--card-padding)',
                     boxShadow: isUrgent
-                      ? `0 0 0 1px ${sideColor}30, 0 0 20px ${sideColor}25, 0 2px 8px rgba(0,0,0,0.3)`
-                      : '0 1px 4px rgba(0,0,0,0.2)',
+                      ? `0 0 0 1px ${sideColor}30, 0 2px 8px rgba(0,0,0,0.35)`
+                      : '0 2px 6px rgba(0,0,0,0.2)',
                     animation: `feedCardIn 0.35s ease both`,
                     animationDelay: `${Math.min(idx, 8) * 45}ms`
                   }}
                 >
-                  {isUrgent && (
-                    <div style={{
-                      position: 'absolute',
-                      inset: 0,
-                      background: `linear-gradient(100deg, transparent 30%, ${sideColor}12 45%, transparent 60%)`,
-                      backgroundSize: '200% 100%',
-                      animation: 'urgentSheen 3.5s linear infinite',
-                      pointerEvents: 'none'
-                    }} />
-                  )}
-
                   {/* ROW 1: Badges */}
                   <div className="flex items-center justify-between relative">
                     <div className="flex items-center gap-2">

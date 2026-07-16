@@ -241,7 +241,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
             style={{
               fontSize: 'var(--caption-size)',
               borderColor: 'var(--low)',
-              boxShadow: '0 0 24px rgba(52, 211, 153, 0.18)',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.25)',
               animation: 'bannerPop 0.35s ease'
             }}
             aria-live="polite"
@@ -289,7 +289,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                   borderColor: detectedLang ? 'var(--low)' : 'rgba(255,255,255,0.15)',
                   boxShadow: detectedLang ? '0 0 0 1px rgba(52, 211, 153, 0.25)' : 'none'
                 }}
-                onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; e.target.style.boxShadow = '0 0 0 3px rgba(124, 92, 255, 0.15)'; }}
+                onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; e.target.style.boxShadow = '0 0 0 2px rgba(99, 102, 241, 0.2)'; }}
                 onBlur={(e) => { e.target.style.borderColor = detectedLang ? 'var(--low)' : 'rgba(255,255,255,0.15)'; e.target.style.boxShadow = detectedLang ? '0 0 0 1px rgba(52, 211, 153, 0.25)' : 'none'; }}
                 disabled={isSubmitting}
                 required
@@ -413,15 +413,13 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
             ) : (
               <button
                 type="submit"
-                className="w-full h-[46px] text-white font-bold rounded-xl cursor-pointer transition-all select-none flex items-center justify-center gap-2 active:scale-[0.98] shadow-md relative overflow-hidden group"
+                className="w-full h-[46px] text-white font-bold rounded-xl cursor-pointer transition-all select-none flex items-center justify-center gap-2 active:scale-[0.98] shadow-md bg-[var(--accent)] hover:bg-indigo-600 transition-colors duration-150"
                 style={{
                   fontSize: 'var(--body-size)',
-                  background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent) 45%, #9b87ff 50%, var(--accent) 55%, var(--accent) 100%)',
-                  backgroundSize: '250% 100%',
-                  animation: 'shimmer 4s linear infinite'
+                  border: '1px solid rgba(255, 255, 255, 0.05)'
                 }}
               >
-                <Send size={14} className="transition-transform group-hover:translate-x-0.5" />
+                <Send size={14} />
                 <span>Submit Intake Dispatch</span>
               </button>
             )}

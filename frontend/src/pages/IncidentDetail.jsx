@@ -210,8 +210,8 @@ export default function IncidentDetail() {
           51%, 100% { opacity: 0; }
         }
         @keyframes authGlow {
-          0%, 100% { box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.2), 0 0 20px rgba(234, 179, 8, 0.08); }
-          50% { box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.35), 0 0 28px rgba(234, 179, 8, 0.15); }
+          0%, 100% { border-color: rgba(234, 179, 8, 0.3); background: rgba(234, 179, 8, 0.04); }
+          50% { border-color: rgba(234, 179, 8, 0.65); background: rgba(234, 179, 8, 0.09); }
         }
       `}</style>
 
@@ -263,7 +263,6 @@ export default function IncidentDetail() {
             height: '8px',
             borderRadius: '50%',
             background: currentSeverityColor,
-            boxShadow: `0 0 8px ${currentSeverityColor}`,
             display: 'inline-block'
           }} />
         </h1>
@@ -282,7 +281,7 @@ export default function IncidentDetail() {
             borderTop: `4px solid ${currentSeverityColor}`,
             borderRadius: 'var(--card-radius)',
             padding: 'var(--card-padding)',
-            boxShadow: `0 0 32px ${currentSeverityColor}12, 0 2px 8px rgba(0,0,0,0.25)`,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
             animation: 'cardFadeIn 0.35s ease both'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -329,7 +328,7 @@ export default function IncidentDetail() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--grid-gap)', paddingTop: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--grid-gap)', paddingTop: '20px', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
                 <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <MapPin size={11} />
@@ -352,6 +351,29 @@ export default function IncidentDetail() {
                 </p>
               </div>
             </div>
+
+            {/* Narrative comparison bug fix: display the dispatcher reported narrative */}
+            <div style={{ paddingTop: '20px' }}>
+              <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '8px' }}>
+                Reported Narrative
+              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '750', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Original Dispatch Log</span>
+                  <p style={{ fontSize: 'var(--body-size)', color: 'var(--text-primary)', margin: 0, lineHeight: '1.5' }}>
+                    {incident.originalDescription}
+                  </p>
+                </div>
+                {incident.translatedDescription && incident.translatedDescription !== incident.originalDescription && (
+                  <div style={{ background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)', borderLeft: '3px solid var(--accent)' }}>
+                    <span style={{ fontSize: '10px', color: 'var(--accent)', fontWeight: '750', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Translated Narrative (English)</span>
+                    <p style={{ fontSize: 'var(--body-size)', color: 'var(--text-primary)', margin: 0, lineHeight: '1.5' }}>
+                      {incident.translatedDescription}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* SECTION 2: AI Incident Assessment — styled like a live model readout */}
@@ -371,7 +393,6 @@ export default function IncidentDetail() {
               <Sparkles size={13} className="text-[var(--accent)]" style={{ opacity: 0.7 }} />
             </h2>
             <p style={{
-              fontSize: 'var(--body-size)',
               color: 'var(--text-primary)',
               lineHeight: '1.7',
               background: 'var(--bg-primary)',
@@ -381,7 +402,7 @@ export default function IncidentDetail() {
               borderLeft: '2px solid var(--accent)',
               margin: 0,
               fontFamily: "'JetBrains Mono', 'SF Mono', ui-monospace, monospace",
-              fontSize: '0.85em'
+              fontSize: '0.85rem'
             }}>
               {generateAIAssessment()}
               <span
@@ -662,7 +683,7 @@ export default function IncidentDetail() {
               }}>
                 <div style={{
                   width: '40px', height: '40px', borderRadius: '10px',
-                  background: 'var(--accent)18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                  background: 'rgba(79, 70, 229, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                 }}>
                   <FileText size={20} className="text-[var(--accent)]" />
                 </div>
@@ -685,7 +706,7 @@ export default function IncidentDetail() {
               }}>
                 <div style={{
                   width: '40px', height: '40px', borderRadius: '10px',
-                  background: 'var(--accent)18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                  background: 'rgba(79, 70, 229, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                 }}>
                   <Play size={20} className="text-[var(--accent)]" />
                 </div>
@@ -708,7 +729,7 @@ export default function IncidentDetail() {
               }}>
                 <div style={{
                   width: '40px', height: '40px', borderRadius: '10px',
-                  background: 'var(--accent)18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                  background: 'rgba(79, 70, 229, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                 }}>
                   <File size={20} className="text-[var(--accent)]" />
                 </div>
