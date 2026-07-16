@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RefreshCw, MapPin, Clock, Thermometer, ShieldAlert, ArrowRight, Inbox } from 'lucide-react';
+import { RefreshCw, MapPin, Clock, Thermometer, ShieldAlert, ArrowRight, Inbox, Radio } from 'lucide-react';
 
 function formatTimeAgo(dateInput) {
   const date = new Date(dateInput);
@@ -57,20 +57,43 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
 
   return (
     <section className="select-none flex flex-col justify-between h-full" style={{ minHeight: '420px' }} aria-labelledby="feed-title">
+      <style>{`
+        @keyframes feedCardIn {
+          from { opacity: 0; transform: translateX(-6px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes livePulse {
+          0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5); }
+          50% { opacity: 0.6; transform: scale(1.3); box-shadow: 0 0 0 4px rgba(52, 211, 153, 0); }
+        }
+        @keyframes urgentSheen {
+          0% { background-position: -150% 0; }
+          100% { background-position: 250% 0; }
+        }
+      `}</style>
       <div>
         {/* Header Row */}
         <div className="flex items-center justify-between border-b border-[var(--border)] pb-3.5" style={{ marginBottom: '16px' }}>
           <div className="flex flex-col">
-            <span id="feed-title" className="font-semibold text-white" style={{ fontSize: 'var(--section-title-size)' }}>
+            <span id="feed-title" className="font-semibold text-white flex items-center gap-2" style={{ fontSize: 'var(--section-title-size)' }}>
+              <Radio size={15} style={{ color: 'var(--low)' }} />
               Live Incident Feed
             </span>
-            <span className="text-[var(--text-muted)] font-bold uppercase tracking-wider mt-0.5" style={{ fontSize: 'var(--caption-size)' }} aria-live="polite">
+            <span className="text-[var(--text-muted)] font-bold uppercase tracking-wider mt-0.5 flex items-center gap-1.5" style={{ fontSize: 'var(--caption-size)' }} aria-live="polite">
+              <span style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: 'var(--low)',
+                animation: 'livePulse 1.8s ease-in-out infinite',
+                flexShrink: 0
+              }} />
               Updated {secondsSinceUpdate}s ago
             </span>
           </div>
           <button
             onClick={onRefresh}
-            className="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)] hover:text-white transition cursor-pointer flex items-center gap-1.5 font-bold"
+            className="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)] hover:text-white transition-all duration-200 cursor-pointer flex items-center gap-1.5 font-bold hover:border-[var(--accent)] active:scale-95"
             style={{ fontSize: 'var(--caption-size)' }}
           >
             <RefreshCw size={12} />
@@ -85,7 +108,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
             aria-label="Filter by Incident Type"
-            className="bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
+            className="bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] font-semibold cursor-pointer transition-colors"
             style={{ fontSize: 'var(--caption-size)' }}
           >
             <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Types</option>
@@ -103,7 +126,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             value={filterSeverity}
             onChange={(e) => setFilterSeverity(e.target.value)}
             aria-label="Filter by Incident Severity"
-            className="bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
+            className="bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] font-semibold cursor-pointer transition-colors"
             style={{ fontSize: 'var(--caption-size)' }}
           >
             <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Severities</option>
@@ -118,7 +141,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             aria-label="Filter by Incident Status"
-            className="bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] font-semibold cursor-pointer"
+            className="bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] font-semibold cursor-pointer transition-colors"
             style={{ fontSize: 'var(--caption-size)' }}
           >
             <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Statuses</option>
@@ -131,7 +154,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
         </div>
 
         {/* Incidents feed container */}
-        <div className="space-y-4 pr-1 overflow-y-auto" style={{ maxHeight: '380px' }} aria-live="polite">
+        <div className="space-y-3 pr-1 overflow-y-auto" style={{ maxHeight: '380px' }} aria-live="polite">
           {filteredIncidents.length === 0 ? (
             /* Empty State */
             <div className="flex flex-col items-center justify-center py-20 text-center text-[var(--text-muted)]">
@@ -144,7 +167,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
               </p>
             </div>
           ) : (
-            filteredIncidents.map((inc) => {
+            filteredIncidents.map((inc, idx) => {
               const sideColor = severityColors[inc.severity] || 'var(--low)';
               const descPreview = inc.translatedDescription || inc.originalDescription || '';
               const descDisplay =
@@ -164,28 +187,58 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
               };
               const statusColor = statusColors[inc.status] || 'var(--accent)';
 
+              const isUrgent = inc.severity === 'critical' || inc.status === 'escalated';
+
               return (
                 <div
                   key={inc._id}
                   onClick={() => navigate(`/incidents/${inc._id}`)}
-                  className="hover-lift bg-[var(--bg-primary)] border border-[var(--border)] cursor-pointer flex flex-col gap-3 shadow-sm transition duration-150"
-                  style={{ 
+                  className="hover-lift bg-[var(--bg-primary)] border cursor-pointer flex flex-col gap-3 transition-all duration-200 relative overflow-hidden"
+                  style={{
                     borderLeft: `4px solid ${sideColor}`,
+                    borderTop: '1px solid var(--border)',
+                    borderRight: '1px solid var(--border)',
+                    borderBottom: '1px solid var(--border)',
                     borderRadius: 'var(--card-radius)',
-                    padding: 'var(--card-padding)'
+                    padding: 'var(--card-padding)',
+                    boxShadow: isUrgent
+                      ? `0 0 0 1px ${sideColor}30, 0 0 20px ${sideColor}25, 0 2px 8px rgba(0,0,0,0.3)`
+                      : '0 1px 4px rgba(0,0,0,0.2)',
+                    animation: `feedCardIn 0.35s ease both`,
+                    animationDelay: `${Math.min(idx, 8) * 45}ms`
                   }}
                 >
+                  {isUrgent && (
+                    <div style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: `linear-gradient(100deg, transparent 30%, ${sideColor}12 45%, transparent 60%)`,
+                      backgroundSize: '200% 100%',
+                      animation: 'urgentSheen 3.5s linear infinite',
+                      pointerEvents: 'none'
+                    }} />
+                  )}
+
                   {/* ROW 1: Badges */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between relative">
                     <div className="flex items-center gap-2">
                       <span
-                        className="text-[10px] font-bold uppercase px-2.5 py-1 rounded border leading-none tracking-wider"
+                        className="text-[10px] font-bold uppercase px-2.5 py-1 rounded border leading-none tracking-wider flex items-center gap-1"
                         style={{ 
                           color: sideColor,
                           backgroundColor: sideColor + '15',
                           borderColor: sideColor + '33'
                         }}
                       >
+                        {inc.severity === 'critical' && (
+                          <span style={{
+                            width: '5px',
+                            height: '5px',
+                            borderRadius: '50%',
+                            background: sideColor,
+                            animation: 'livePulse 1.4s ease-in-out infinite'
+                          }} />
+                        )}
                         {inc.severity}
                       </span>
                       <span
@@ -212,7 +265,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
                   </div>
 
                   {/* ROW 2: Location */}
-                  <div className="font-bold text-[var(--text-primary)] flex items-center gap-1.5" style={{ fontSize: 'var(--body-size)' }}>
+                  <div className="font-bold text-[var(--text-primary)] flex items-center gap-1.5 relative" style={{ fontSize: 'var(--body-size)' }}>
                     <MapPin size={12} className="text-[var(--text-muted)]" />
                     <span>{inc.stadiumName}</span>
                     <span className="text-[var(--text-muted)] font-normal">|</span>
@@ -220,12 +273,12 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
                   </div>
 
                   {/* ROW 3: Description */}
-                  <div className="text-[var(--text-secondary)] leading-relaxed font-medium italic" style={{ fontSize: 'var(--body-size)' }}>
+                  <div className="text-[var(--text-secondary)] leading-relaxed font-medium italic relative" style={{ fontSize: 'var(--body-size)' }}>
                     "{descDisplay}"
                   </div>
 
                   {/* ROW 4: Footer indicators */}
-                  <div className="flex items-center justify-between border-t border-[var(--border)]/40 pt-3 mt-1 font-semibold text-[var(--text-muted)]" style={{ fontSize: 'var(--caption-size)' }}>
+                  <div className="flex items-center justify-between border-t border-[var(--border)]/40 pt-3 mt-1 font-semibold text-[var(--text-muted)] relative" style={{ fontSize: 'var(--caption-size)' }}>
                     <div className="flex items-center gap-3">
                       <span className="flex items-center gap-1">
                         <Clock size={11} />
@@ -249,7 +302,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
                         e.stopPropagation();
                         navigate(`/incidents/${inc._id}`);
                       }}
-                      className="text-[var(--accent)] hover:underline border-none bg-transparent cursor-pointer font-bold leading-none p-0 flex items-center gap-1"
+                      className="text-[var(--accent)] hover:underline border-none bg-transparent cursor-pointer font-bold leading-none p-0 flex items-center gap-1 hover:gap-1.5 transition-all"
                       style={{ fontSize: 'var(--caption-size)' }}
                     >
                       <span>View Details</span>

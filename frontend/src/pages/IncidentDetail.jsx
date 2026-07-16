@@ -15,7 +15,9 @@ import {
   Play, 
   File, 
   Paperclip, 
-  AlertCircle
+  AlertCircle,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import { getIncidentById, confirmIncident, overrideIncident } from '../services/api.js';
 
@@ -182,9 +184,37 @@ export default function IncidentDetail() {
 
   const currentSeverityColor = severityColors[incident.severity] || 'var(--low)';
 
+  // Presentational only — how far along the timeline visually fills, based on the same completed-step booleans below
+  const timelineSteps = [true, true, !!tReviewed, !!tDispatched, !!tResolved];
+  const completedCount = timelineSteps.filter(Boolean).length;
+  const timelineFillPct = ((completedCount - 1) / (timelineSteps.length - 1)) * 100;
+
   return (
     <div className="page-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: 'var(--section-spacing) 0', display: 'flex', flexDirection: 'column', gap: 'var(--section-spacing)' }}>
-      
+      <style>{`
+        @keyframes cardFadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes dotPop {
+          0% { transform: scale(0.3); opacity: 0; }
+          60% { transform: scale(1.25); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes activePulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(124, 92, 255, 0.5); }
+          50% { box-shadow: 0 0 0 6px rgba(124, 92, 255, 0); }
+        }
+        @keyframes cursorBlink {
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0; }
+        }
+        @keyframes authGlow {
+          0%, 100% { box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.2), 0 0 20px rgba(234, 179, 8, 0.08); }
+          50% { box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.35), 0 0 28px rgba(234, 179, 8, 0.15); }
+        }
+      `}</style>
+
       {/* BREADCRUMB HEADER */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -226,8 +256,16 @@ export default function IncidentDetail() {
 
       {/* PAGE TITLE */}
       <div>
-        <h1 style={{ fontSize: 'var(--title-size)', fontWeight: '600', color: '#fff', margin: 0 }}>
+        <h1 style={{ fontSize: 'var(--title-size)', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
           Incident Command Dossier
+          <span style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            background: currentSeverityColor,
+            boxShadow: `0 0 8px ${currentSeverityColor}`,
+            display: 'inline-block'
+          }} />
         </h1>
       </div>
 
@@ -244,7 +282,8 @@ export default function IncidentDetail() {
             borderTop: `4px solid ${currentSeverityColor}`,
             borderRadius: 'var(--card-radius)',
             padding: 'var(--card-padding)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
+            boxShadow: `0 0 32px ${currentSeverityColor}12, 0 2px 8px rgba(0,0,0,0.25)`,
+            animation: 'cardFadeIn 0.35s ease both'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -280,7 +319,10 @@ export default function IncidentDetail() {
                 </p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Location / Venue</span>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Landmark size={11} />
+                  Location / Venue
+                </span>
                 <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                   {incident.stadiumName}
                 </p>
@@ -289,7 +331,10 @@ export default function IncidentDetail() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--grid-gap)', paddingTop: '20px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Zone Location</span>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <MapPin size={11} />
+                  Zone Location
+                </span>
                 <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                   Zone {incident.zoneLocation || 'Unspecified'}
                 </p>
@@ -309,30 +354,47 @@ export default function IncidentDetail() {
             </div>
           </div>
 
-          {/* SECTION 2: AI Incident Assessment */}
+          {/* SECTION 2: AI Incident Assessment — styled like a live model readout */}
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
             borderTop: '4px solid var(--accent)',
             borderRadius: 'var(--card-radius)',
             padding: 'var(--card-padding)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            animation: 'cardFadeIn 0.35s ease both',
+            animationDelay: '60ms'
           }}>
             <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <ShieldAlert size={20} className="text-[var(--accent)]" />
               <span>AI Incident Assessment</span>
+              <Sparkles size={13} className="text-[var(--accent)]" style={{ opacity: 0.7 }} />
             </h2>
             <p style={{
               fontSize: 'var(--body-size)',
               color: 'var(--text-primary)',
-              lineHeight: '1.6',
+              lineHeight: '1.7',
               background: 'var(--bg-primary)',
               padding: '20px',
               borderRadius: '12px',
               border: '1px solid var(--border)',
-              margin: 0
+              borderLeft: '2px solid var(--accent)',
+              margin: 0,
+              fontFamily: "'JetBrains Mono', 'SF Mono', ui-monospace, monospace",
+              fontSize: '0.85em'
             }}>
               {generateAIAssessment()}
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: '6px',
+                  height: '12px',
+                  marginLeft: '4px',
+                  verticalAlign: 'middle',
+                  background: 'var(--accent)',
+                  animation: 'cursorBlink 1s step-end infinite'
+                }}
+              />
             </p>
           </div>
 
@@ -343,7 +405,9 @@ export default function IncidentDetail() {
             borderTop: '4px solid var(--accent)',
             borderRadius: 'var(--card-radius)',
             padding: 'var(--card-padding)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            animation: 'cardFadeIn 0.35s ease both',
+            animationDelay: '120ms'
           }}>
             <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Activity size={20} className="text-[var(--accent)]" />
@@ -381,8 +445,19 @@ export default function IncidentDetail() {
               <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '12px' }}>Recommended Dispatch Steps</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {activeActions.length > 0 ? activeActions.map((actionText, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--body-size)', color: 'var(--text-primary)' }}>
-                    <CheckCircle2 size={14} className="text-[var(--low)]" />
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: 'var(--body-size)',
+                      color: 'var(--text-primary)',
+                      animation: 'cardFadeIn 0.3s ease both',
+                      animationDelay: `${180 + idx * 50}ms`
+                    }}
+                  >
+                    <CheckCircle2 size={14} className="text-[var(--low)]" style={{ flexShrink: 0 }} />
                     <span>{actionText}</span>
                   </div>
                 )) : (
@@ -398,13 +473,22 @@ export default function IncidentDetail() {
                 padding: 'var(--card-padding)',
                 background: 'var(--bg-primary)',
                 borderRadius: '12px',
-                border: '1px solid var(--border)',
+                border: '1px solid rgba(234, 179, 8, 0.25)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '16px'
+                gap: '16px',
+                animation: 'authGlow 2.6s ease-in-out infinite'
               }}>
                 <div>
                   <h4 style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      background: 'var(--medium)',
+                      animation: 'activePulse 1.6s ease-in-out infinite',
+                      flexShrink: 0
+                    }} />
                     <AlertCircle size={14} className="text-[var(--medium)]" />
                     <span>Action Required: Supervisor Authorization</span>
                   </h4>
@@ -416,6 +500,7 @@ export default function IncidentDetail() {
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button
                     onClick={handleConfirm}
+                    disabled={loading}
                     style={{
                       background: 'var(--low)',
                       color: '#fff',
@@ -424,12 +509,16 @@ export default function IncidentDetail() {
                       borderRadius: '8px',
                       fontWeight: '700',
                       fontSize: 'var(--caption-size)',
-                      cursor: 'pointer',
-                      transition: 'opacity 0.15s ease'
+                      cursor: loading ? 'wait' : 'pointer',
+                      transition: 'opacity 0.15s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
                     }}
                     className="hover:opacity-90 active:scale-95"
                   >
-                    Authorize Dispatch
+                    {loading ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
+                    <span>Authorize Dispatch</span>
                   </button>
                   <button
                     onClick={() => setShowOverrideForm(!showOverrideForm)}
@@ -451,7 +540,7 @@ export default function IncidentDetail() {
                 </div>
 
                 {showOverrideForm && (
-                  <form onSubmit={handleOverrideSubmit} style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <form onSubmit={handleOverrideSubmit} style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px', animation: 'cardFadeIn 0.2s ease' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
                       <label style={{ fontSize: 'var(--caption-size)', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Target Dispatch Status</label>
                       <select
@@ -505,13 +594,17 @@ export default function IncidentDetail() {
                         borderRadius: '8px',
                         fontWeight: '700',
                         fontSize: 'var(--caption-size)',
-                        cursor: 'pointer',
+                        cursor: isSubmittingOverride ? 'wait' : 'pointer',
                         alignSelf: 'flex-start',
-                        transition: 'opacity 0.15s ease'
+                        transition: 'opacity 0.15s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
                       }}
                       className="hover:opacity-90 active:scale-95"
                     >
-                      {isSubmittingOverride ? 'Saving...' : 'Apply Status Override'}
+                      {isSubmittingOverride && <Loader2 size={13} className="animate-spin" />}
+                      <span>{isSubmittingOverride ? 'Saving...' : 'Apply Status Override'}</span>
                     </button>
                   </form>
                 )}
@@ -542,7 +635,9 @@ export default function IncidentDetail() {
             borderTop: '4px solid var(--accent)',
             borderRadius: 'var(--card-radius)',
             padding: 'var(--card-padding)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            animation: 'cardFadeIn 0.35s ease both',
+            animationDelay: '180ms'
           }}>
             <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Paperclip size={20} className="text-[var(--accent)]" />
@@ -562,9 +657,15 @@ export default function IncidentDetail() {
                 padding: 'var(--card-padding)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px'
+                gap: '12px',
+                transition: 'border-color 0.2s ease'
               }}>
-                <FileText size={24} className="text-[var(--accent)]" />
+                <div style={{
+                  width: '40px', height: '40px', borderRadius: '10px',
+                  background: 'var(--accent)18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                  <FileText size={20} className="text-[var(--accent)]" />
+                </div>
                 <div>
                   <span style={{ display: 'block', fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff' }}>incident_dossier.pdf</span>
                   <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)' }}>PDF Report • 142 KB</span>
@@ -579,9 +680,15 @@ export default function IncidentDetail() {
                 padding: 'var(--card-padding)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px'
+                gap: '12px',
+                transition: 'border-color 0.2s ease'
               }}>
-                <Play size={24} className="text-[var(--accent)]" />
+                <div style={{
+                  width: '40px', height: '40px', borderRadius: '10px',
+                  background: 'var(--accent)18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                  <Play size={20} className="text-[var(--accent)]" />
+                </div>
                 <div>
                   <span style={{ display: 'block', fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff' }}>security_feed_gate4.mp4</span>
                   <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)' }}>CCTV Capture • 1.2 MB</span>
@@ -596,9 +703,15 @@ export default function IncidentDetail() {
                 padding: 'var(--card-padding)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px'
+                gap: '12px',
+                transition: 'border-color 0.2s ease'
               }}>
-                <File size={24} className="text-[var(--accent)]" />
+                <div style={{
+                  width: '40px', height: '40px', borderRadius: '10px',
+                  background: 'var(--accent)18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                  <File size={20} className="text-[var(--accent)]" />
+                </div>
                 <div>
                   <span style={{ display: 'block', fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff' }}>telemetry_log.json</span>
                   <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)' }}>JSON Dataset • 48 KB</span>
@@ -619,7 +732,9 @@ export default function IncidentDetail() {
             borderTop: '4px solid var(--accent)',
             borderRadius: 'var(--card-radius)',
             padding: 'var(--card-padding)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            animation: 'cardFadeIn 0.35s ease both',
+            animationDelay: '90ms'
           }}>
             <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 24px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Clock size={18} className="text-[var(--accent)]" />
@@ -629,7 +744,7 @@ export default function IncidentDetail() {
             {/* Vertical Timeline sequence */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative' }}>
               
-              {/* Timeline center line */}
+              {/* Timeline center line — base (unfilled) */}
               <div style={{
                 position: 'absolute',
                 left: '7px',
@@ -638,6 +753,18 @@ export default function IncidentDetail() {
                 width: '2px',
                 background: 'var(--border)',
                 zIndex: 0
+              }} />
+              {/* Timeline center line — filled progress, animates in on load */}
+              <div style={{
+                position: 'absolute',
+                left: '7px',
+                top: '6px',
+                height: `${timelineFillPct}%`,
+                width: '2px',
+                background: 'linear-gradient(180deg, var(--low), var(--accent))',
+                zIndex: 0,
+                transition: 'height 0.6s ease',
+                borderRadius: '2px'
               }} />
 
               {/* Step 1: Reported */}
@@ -648,7 +775,8 @@ export default function IncidentDetail() {
                   borderRadius: '50%',
                   background: 'var(--low)',
                   border: '3px solid var(--bg-card)',
-                  marginTop: '2px'
+                  marginTop: '2px',
+                  animation: 'dotPop 0.3s ease both'
                 }} />
                 <div>
                   <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>Reported</span>
@@ -666,7 +794,9 @@ export default function IncidentDetail() {
                   borderRadius: '50%',
                   background: 'var(--low)',
                   border: '3px solid var(--bg-card)',
-                  marginTop: '2px'
+                  marginTop: '2px',
+                  animation: 'dotPop 0.3s ease both',
+                  animationDelay: '80ms'
                 }} />
                 <div>
                   <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>AI Classified</span>
@@ -684,7 +814,9 @@ export default function IncidentDetail() {
                   borderRadius: '50%',
                   background: tReviewed ? 'var(--low)' : 'var(--medium)',
                   border: '3px solid var(--bg-card)',
-                  marginTop: '2px'
+                  marginTop: '2px',
+                  animation: tReviewed ? 'dotPop 0.3s ease both' : 'activePulse 1.6s ease-in-out infinite',
+                  animationDelay: tReviewed ? '160ms' : '0ms'
                 }} />
                 <div>
                   <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>Supervisor Reviewed</span>
@@ -702,7 +834,9 @@ export default function IncidentDetail() {
                   borderRadius: '50%',
                   background: tDispatched ? 'var(--low)' : 'var(--border)',
                   border: '3px solid var(--bg-card)',
-                  marginTop: '2px'
+                  marginTop: '2px',
+                  animation: tDispatched ? 'dotPop 0.3s ease both' : 'none',
+                  animationDelay: '240ms'
                 }} />
                 <div>
                   <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>Team Dispatched</span>
@@ -720,7 +854,9 @@ export default function IncidentDetail() {
                   borderRadius: '50%',
                   background: tResolved ? 'var(--low)' : 'var(--border)',
                   border: '3px solid var(--bg-card)',
-                  marginTop: '2px'
+                  marginTop: '2px',
+                  animation: tResolved ? 'dotPop 0.3s ease both' : 'none',
+                  animationDelay: '320ms'
                 }} />
                 <div>
                   <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>Resolved</span>

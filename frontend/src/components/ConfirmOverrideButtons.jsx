@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ShieldCheck, PenLine, X, AlertTriangle, Loader2, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 export default function ConfirmOverrideButtons({ incidentId, onConfirm, onOverride }) {
   const [showOverrideForm, setShowOverrideForm] = useState(false);
@@ -29,6 +30,7 @@ export default function ConfirmOverrideButtons({ incidentId, onConfirm, onOverri
 
     setLoading(true);
     setError('');
+    
     try {
       await onOverride(newStatus, overrideReason.trim());
       setShowOverrideForm(false);
@@ -42,52 +44,130 @@ export default function ConfirmOverrideButtons({ incidentId, onConfirm, onOverri
   };
 
   return (
-    <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-      <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
-        <span>🛡️</span> Incident Control Operations
-      </h3>
-      <p className="text-xs text-slate-400 leading-relaxed">
+    <div
+      className="relative bg-slate-900/60 backdrop-blur-xl border rounded-2xl p-6 shadow-xl space-y-4 overflow-hidden transition-all duration-300"
+      style={{
+        borderColor: showOverrideForm ? 'rgba(239, 68, 68, 0.4)' : 'rgb(30, 41, 59)',
+        boxShadow: showOverrideForm
+          ? '0 0 0 1px rgba(239, 68, 68, 0.15), 0 0 32px rgba(239, 68, 68, 0.12), 0 10px 30px rgba(0,0,0,0.3)'
+          : '0 10px 30px rgba(0,0,0,0.25)'
+      }}
+    >
+      <style>{`
+        @keyframes authPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.3); }
+        }
+        @keyframes panelSlide {
+          from { opacity: 0; transform: translateY(-6px); max-height: 0; }
+          to { opacity: 1; transform: translateY(0); max-height: 400px; }
+        }
+        @keyframes errorShake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-3px); }
+          75% { transform: translateX(3px); }
+        }
+        @keyframes checkBurst {
+          0% { transform: scale(0.4); opacity: 0; }
+          60% { transform: scale(1.2); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+
+      {/* ambient red wash while in override mode */}
+      {showOverrideForm && (
+        <div style={{
+          position: 'absolute',
+          top: '-40%',
+          right: '-15%',
+          width: '220px',
+          height: '220px',
+          borderRadius: '50%',
+          background: 'rgb(239, 68, 68)',
+          opacity: 0.08,
+          filter: 'blur(40px)',
+          pointerEvents: 'none'
+        }} />
+      )}
+
+      <div className="relative flex items-center justify-between">
+        <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+          <ShieldCheck size={16} className="text-emerald-400" />
+          Incident Control Operations
+        </h3>
+        {!showOverrideForm && (
+          <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-400/90">
+            <span style={{
+              width: '5px',
+              height: '5px',
+              borderRadius: '50%',
+              background: 'rgb(251, 191, 36)',
+              animation: 'authPulse 1.6s ease-in-out infinite'
+            }} />
+            Awaiting auth
+          </span>
+        )}
+      </div>
+
+      <p className="relative text-xs text-slate-400 leading-relaxed">
         This incident has been flagged as high/critical severity and requires manual authorization before dispatch instructions are finalised.
       </p>
 
       {error && (
-        <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-xs">
-          {error}
+        <div
+          className="relative p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-xs flex items-center gap-2"
+          style={{ animation: 'errorShake 0.4s ease' }}
+        >
+          <AlertTriangle size={13} className="flex-shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
       {!showOverrideForm ? (
-        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+        <div className="relative flex flex-col sm:flex-row gap-3 pt-2">
           <button
             onClick={handleConfirmClick}
             disabled={loading}
-            className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.99] text-slate-950 font-bold py-3 px-4 rounded-xl text-sm transition duration-150 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 cursor-pointer"
+            className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.99] disabled:opacity-70 text-slate-950 font-bold py-3 px-4 rounded-xl text-sm transition-all duration-150 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 cursor-pointer"
           >
             {loading ? (
-              'Processing...'
+              <>
+                <Loader2 size={15} className="animate-spin" />
+                <span>Processing...</span>
+              </>
             ) : (
               <>
-                <span>✅</span> Confirm Recommendation
+                <CheckCircle2 size={15} />
+                <span>Confirm Recommendation</span>
               </>
             )}
           </button>
           <button
             onClick={() => setShowOverrideForm(true)}
             disabled={loading}
-            className="flex-1 bg-slate-800 hover:bg-slate-700/80 active:scale-[0.99] text-red-400 hover:text-red-300 font-bold py-3 px-4 border border-slate-700 hover:border-slate-650 rounded-xl text-sm transition duration-150 flex items-center justify-center gap-2 cursor-pointer"
+            className="flex-1 bg-slate-800 hover:bg-slate-700/80 active:scale-[0.99] disabled:opacity-70 text-red-400 hover:text-red-300 font-bold py-3 px-4 border border-slate-700 hover:border-red-500/40 rounded-xl text-sm transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span>✍️</span> Override Decision
+            <PenLine size={14} />
+            <span>Override Decision</span>
           </button>
         </div>
       ) : (
-        <form onSubmit={handleOverrideSubmit} className="space-y-4 pt-2 border-t border-slate-800/50">
+        <form
+          onSubmit={handleOverrideSubmit}
+          className="relative space-y-4 pt-2 border-t border-slate-800/50"
+          style={{ animation: 'panelSlide 0.25s ease' }}
+        >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-red-400 uppercase tracking-wider">Override Console</span>
+            <span className="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
+              <ShieldAlert size={13} />
+              Override Console
+            </span>
             <button
               type="button"
               onClick={() => setShowOverrideForm(false)}
-              className="text-xs text-slate-500 hover:text-slate-300"
+              className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors"
             >
+              <X size={12} />
               Cancel
             </button>
           </div>
@@ -100,7 +180,7 @@ export default function ConfirmOverrideButtons({ incidentId, onConfirm, onOverri
               <select
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-red-500 transition duration-200 text-xs"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/30 transition-all duration-200 text-xs"
               >
                 <option value="resolved">Resolved (Close case)</option>
                 <option value="escalated">Escalated (Manual Dispatch)</option>
@@ -116,7 +196,7 @@ export default function ConfirmOverrideButtons({ incidentId, onConfirm, onOverri
                 value={overrideReason}
                 onChange={(e) => setOverrideReason(e.target.value)}
                 placeholder="Explain why decision is being changed"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-red-500 transition duration-200 text-xs"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/30 transition-all duration-200 text-xs"
                 required
               />
             </div>
@@ -125,9 +205,19 @@ export default function ConfirmOverrideButtons({ incidentId, onConfirm, onOverri
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-red-600 hover:bg-red-500 active:scale-[0.99] text-slate-100 font-bold py-2.5 px-4 rounded-xl text-xs transition duration-150 flex items-center justify-center gap-1.5 shadow-lg shadow-red-650/15 cursor-pointer"
+            className="w-full bg-red-600 hover:bg-red-500 active:scale-[0.99] disabled:opacity-70 text-slate-100 font-bold py-2.5 px-4 rounded-xl text-xs transition-all duration-150 flex items-center justify-center gap-1.5 shadow-lg shadow-red-600/20 cursor-pointer"
           >
-            {loading ? 'Submitting Override...' : 'Apply Force Override'}
+            {loading ? (
+              <>
+                <Loader2 size={13} className="animate-spin" />
+                <span>Submitting Override...</span>
+              </>
+            ) : (
+              <>
+                <ShieldAlert size={13} />
+                <span>Apply Force Override</span>
+              </>
+            )}
           </button>
         </form>
       )}

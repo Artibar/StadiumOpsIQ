@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { Download, Search, RefreshCw, ChevronLeft, ChevronRight, Eye, FilterX, AlertCircle, Loader2 } from 'lucide-react';
+import {
+  Download, Search, ChevronLeft, ChevronRight, Eye, FilterX, AlertCircle, Loader2, Inbox,
+  Ambulance, Siren, CheckCircle2, Flag, MessageSquare, Mail, Zap, History
+} from 'lucide-react';
 import { getIncidents } from '../services/api.js';
 
 const LANGUAGE_FLAGS = {
@@ -21,6 +24,17 @@ const LANGUAGE_FLAGS = {
   ur: { name: 'Urdu', label: 'UR' },
   nl: { name: 'Dutch', label: 'NL' },
   ml: { name: 'Malayalam', label: 'ML' }
+};
+
+// Presentational only — maps the same action strings used below to an icon + label,
+// doesn't change which actions are considered valid.
+const ACTION_META = {
+  dispatchMedical: { icon: Ambulance, title: 'Medical Dispatch', color: 'var(--critical)' },
+  escalateToSecurity: { icon: Siren, title: 'Security Escalation', color: 'var(--high)' },
+  resolveAsLowPriority: { icon: CheckCircle2, title: 'Auto Resolved', color: 'var(--low)' },
+  flagForHumanReview: { icon: Flag, title: 'Human Review', color: 'var(--medium)' },
+  sendDiscordNotification: { icon: MessageSquare, title: 'Discord Alert', color: 'var(--accent)' },
+  sendReportEmail: { icon: Mail, title: 'Report Emailed', color: 'var(--accent)' }
 };
 
 export default function AuditLog() {
@@ -140,12 +154,36 @@ export default function AuditLog() {
 
   return (
     <div className="page-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: 'var(--section-spacing) 0' }}>
+      <style>{`
+        @keyframes rowIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes ledgerPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.55; }
+        }
+      `}</style>
+
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border)] pb-6" style={{ marginBottom: 'var(--section-spacing)' }}>
         <div>
           <h1 className="font-semibold tracking-tight text-white flex items-center gap-2.5" style={{ fontSize: 'var(--title-size)', margin: 0 }}>
-            <span>Operational Audit Log</span> 
-            <span className="font-bold tracking-wider uppercase bg-[var(--border)] text-[var(--text-secondary)] border border-[var(--border)] rounded px-2.5 py-1" style={{ fontSize: 'var(--caption-size)' }}>{incidents.length} LEDGERS</span>
+            <History size={20} className="text-[var(--accent)]" />
+            <span>Operational Audit Log</span>
+            <span
+              className="font-bold tracking-wider uppercase bg-[var(--border)] text-[var(--text-secondary)] border border-[var(--border)] rounded px-2.5 py-1 flex items-center gap-1.5"
+              style={{ fontSize: 'var(--caption-size)' }}
+            >
+              <span style={{
+                width: '5px',
+                height: '5px',
+                borderRadius: '50%',
+                background: 'var(--low)',
+                animation: 'ledgerPulse 2s ease-in-out infinite'
+              }} />
+              {incidents.length} LEDGERS
+            </span>
           </h1>
           <p className="text-[var(--text-secondary)] mt-1.5 font-medium" style={{ fontSize: 'var(--caption-size)' }}>
             Historical audit records of language translations, climate analytics, automated actions, and supervisor approvals.
@@ -153,6 +191,7 @@ export default function AuditLog() {
         </div>
         <button
           disabled
+          title="Export coming soon"
           className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-muted)] font-bold cursor-not-allowed opacity-50 flex items-center gap-2 transition"
           style={{ fontSize: 'var(--caption-size)' }}
         >
@@ -160,6 +199,13 @@ export default function AuditLog() {
           <span>Export Log (CSV)</span>
         </button>
       </div>
+
+      {error && (
+        <div className="mb-5 p-3.5 bg-[var(--critical)]/10 border border-[var(--critical)]/20 text-[var(--critical)] rounded-lg font-semibold flex items-center gap-2" style={{ fontSize: 'var(--caption-size)' }}>
+          <AlertCircle size={14} />
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* FILTER ROW (All controls same height) */}
       <div className="bg-[var(--bg-card)] border border-[var(--border)] shadow-sm space-y-4" style={{ padding: 'var(--card-padding)', borderRadius: 'var(--card-radius)', borderTop: '4px solid var(--accent)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)', marginBottom: 'var(--section-spacing)' }}>
@@ -182,7 +228,7 @@ export default function AuditLog() {
                   setCurrentPage(1);
                 }}
                 placeholder="Query narrative..."
-                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-3 py-2 pl-8 text-[var(--body-size)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition"
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-3 py-2 pl-8 text-[var(--body-size)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition"
                 style={{ height: '36px' }}
               />
             </div>
@@ -197,7 +243,7 @@ export default function AuditLog() {
                 setFilterSeverity(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
+              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition cursor-pointer"
               style={{ height: '36px' }}
             >
               <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Severities</option>
@@ -217,7 +263,7 @@ export default function AuditLog() {
                 setFilterStatus(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
+              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition cursor-pointer"
               style={{ height: '36px' }}
             >
               <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Statuses</option>
@@ -238,7 +284,7 @@ export default function AuditLog() {
                 setFilterType(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
+              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition cursor-pointer"
               style={{ height: '36px' }}
             >
               <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Types</option>
@@ -261,7 +307,7 @@ export default function AuditLog() {
                 setFilterStadium(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] transition cursor-pointer"
+              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition cursor-pointer"
               style={{ height: '36px' }}
             >
               <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Stadiums</option>
@@ -275,12 +321,12 @@ export default function AuditLog() {
         {/* Stats Row & Clear Filters button */}
         <div className="flex items-center justify-between border-t border-[var(--border)]/40 pt-4 font-semibold" style={{ fontSize: 'var(--caption-size)' }}>
           <span className="text-[var(--text-muted)]">
-            Showing {filteredIncidents.length} of {incidents.length} logs
+            Showing <strong className="text-[var(--text-secondary)]">{filteredIncidents.length}</strong> of {incidents.length} logs
           </span>
           {(filterSeverity !== 'all' || filterStatus !== 'all' || filterType !== 'all' || filterStadium !== 'all' || searchQuery.trim() !== '') && (
             <button
               onClick={handleClearFilters}
-              className="text-[var(--accent)] hover:underline border-none bg-transparent cursor-pointer font-bold flex items-center gap-1 leading-none"
+              className="text-[var(--accent)] hover:underline border-none bg-transparent cursor-pointer font-bold flex items-center gap-1 leading-none transition-transform hover:scale-105"
             >
               <FilterX size={12} />
               <span>Reset Filters</span>
@@ -333,7 +379,7 @@ export default function AuditLog() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]/40 select-none text-[var(--text-primary)]" style={{ fontSize: 'var(--body-size)' }}>
-                {paginatedIncidents.map((inc) => {
+                {paginatedIncidents.map((inc, idx) => {
                   const hasOverride = inc.humanOverride;
                   const langKey = inc.detectedLanguage || 'en';
                   const langConfig = LANGUAGE_FLAGS[langKey] || { name: 'English', label: 'EN' };
@@ -345,9 +391,15 @@ export default function AuditLog() {
                   const typeColor = typeColors[inc.type] || 'var(--text-muted)';
                   const severityColor = severityColors[inc.severity] || 'var(--low)';
                   const statusColor = statusColors[inc.status] || 'var(--accent)';
+                  const confidencePct = Math.round(inc.confidence * 100);
+                  const confidenceColor = inc.confidence >= 0.8 ? 'var(--low)' : inc.confidence >= 0.6 ? 'var(--medium)' : 'var(--critical)';
 
                   return (
-                    <tr key={inc._id} className={`${rowClass} transition duration-150`} style={{ height: '52px' }}>
+                    <tr
+                      key={inc._id}
+                      className={`${rowClass} transition duration-150`}
+                      style={{ height: '52px', animation: 'rowIn 0.25s ease both', animationDelay: `${Math.min(idx, 20) * 20}ms` }}
+                    >
                       {/* 1. Time */}
                       <td className="px-6 py-2 text-[var(--text-secondary)] font-mono whitespace-nowrap">
                         {new Date(inc.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
@@ -408,15 +460,16 @@ export default function AuditLog() {
                       {/* 7. Confidence */}
                       <td className="px-6 py-2 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-[var(--text-secondary)]">
-                            {Math.round(inc.confidence * 100)}%
+                          <span className="font-bold" style={{ color: confidenceColor }}>
+                            {confidencePct}%
                           </span>
-                          <div className="w-10 h-1 bg-[var(--border)] rounded overflow-hidden">
+                          <div className="w-12 h-1.5 bg-[var(--border)] rounded overflow-hidden">
                             <div
-                              className="h-full"
+                              className="h-full rounded transition-all duration-500"
                               style={{
-                                width: `${Math.round(inc.confidence * 100)}%`,
-                                backgroundColor: inc.confidence >= 0.8 ? 'var(--low)' : inc.confidence >= 0.6 ? 'var(--medium)' : 'var(--critical)'
+                                width: `${confidencePct}%`,
+                                backgroundColor: confidenceColor,
+                                boxShadow: `0 0 6px ${confidenceColor}80`
                               }}
                             />
                           </div>
@@ -432,21 +485,19 @@ export default function AuditLog() {
                       </td>
 
                       {/* 9. Actions Badges */}
-                      <td className="px-6 py-2 max-w-[120px] truncate">
+                      <td className="px-6 py-2 max-w-[120px]">
                         <div className="flex items-center gap-1.5">
                           {(inc.actionsTaken || []).map((action, actionIdx) => {
-                            let icon = '⚡';
-                            let title = action;
-                            if (action === 'dispatchMedical') { icon = '🚑'; title = 'Medical Dispatch'; }
-                            else if (action === 'escalateToSecurity') { icon = '🚔'; title = 'Security Escalation'; }
-                            else if (action === 'resolveAsLowPriority') { icon = '✅'; title = 'Auto Resolved'; }
-                            else if (action === 'flagForHumanReview') { icon = '🚩'; title = 'Human Review'; }
-                            else if (action === 'sendDiscordNotification') { icon = '📢'; title = 'Discord Alert'; }
-                            else if (action === 'sendReportEmail') { icon = '📧'; title = 'Report Emailed'; }
-
+                            const meta = ACTION_META[action] || { icon: Zap, title: action, color: 'var(--text-muted)' };
+                            const ActionIcon = meta.icon;
                             return (
-                              <span key={actionIdx} title={title} className="cursor-help font-normal">
-                                {icon}
+                              <span
+                                key={actionIdx}
+                                title={meta.title}
+                                className="cursor-help flex items-center justify-center rounded"
+                                style={{ width: '20px', height: '20px', background: meta.color + '18' }}
+                              >
+                                <ActionIcon size={11} style={{ color: meta.color }} />
                               </span>
                             );
                           })}
@@ -464,7 +515,7 @@ export default function AuditLog() {
                       <td className="px-6 py-2">
                         <RouterLink
                           to={`/incidents/${inc._id}`}
-                          className="px-2.5 py-1 bg-[var(--border)] text-[var(--text-secondary)] hover:text-white rounded transition hover:bg-[var(--bg-card-hover)] font-bold inline-flex items-center"
+                          className="px-2.5 py-1 bg-[var(--border)] text-[var(--text-secondary)] hover:text-white rounded transition-all hover:bg-[var(--bg-card-hover)] hover:scale-105 font-bold inline-flex items-center"
                           style={{ fontSize: 'var(--caption-size)' }}
                         >
                           <Eye size={12} />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, Globe, Landmark, MapPin, Send, CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertCircle, Globe, Landmark, MapPin, Send, CheckCircle2, Loader2, Search, Tag, Radar, Sparkles, BellRing } from 'lucide-react';
 import { createIncident } from '../services/api.js';
 
 const PLACEHOLDERS = [
@@ -24,11 +24,11 @@ const PLACEHOLDERS = [
 ];
 
 const AGENT_STEPS = [
-  "Analyzing report intake and matching stadium...",
-  "Classifying incident severity...",
-  "Retrieving local operational context...",
-  "Generating action recommendations...",
-  "Compiling operations team notification..."
+  { label: "Analyzing report intake and matching stadium...", icon: Search },
+  { label: "Classifying incident severity...", icon: Tag },
+  { label: "Retrieving local operational context...", icon: Radar },
+  { label: "Generating action recommendations...", icon: Sparkles },
+  { label: "Compiling operations team notification...", icon: BellRing }
 ];
 
 function detectScriptLanguage(text) {
@@ -187,8 +187,38 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
     setIsSubmitting(false);
   };
 
+  const severityGlow = {
+    critical: 'var(--critical)',
+    high: 'var(--high)',
+    medium: 'var(--medium)',
+    low: 'var(--low)'
+  };
+
   return (
     <section className="relative overflow-hidden select-none flex flex-col justify-between h-full" style={{ minHeight: '420px' }} aria-labelledby="form-title">
+      <style>{`
+        @keyframes bannerPop {
+          from { opacity: 0; transform: scale(0.97) translateY(-4px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes stepPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(124, 92, 255, 0.4); }
+          50% { box-shadow: 0 0 0 6px rgba(124, 92, 255, 0); }
+        }
+        @keyframes checkPop {
+          0% { transform: scale(0.5); opacity: 0; }
+          60% { transform: scale(1.15); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes langBadgeIn {
+          from { opacity: 0; transform: translateX(-4px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+      `}</style>
       <div>
         <h2 id="form-title" className="text-white mb-1.5 flex items-center gap-2.5 font-semibold" style={{ fontSize: 'var(--section-title-size)' }}>
           <AlertCircle size={18} className="text-[var(--critical)]" /> 
@@ -199,21 +229,42 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
         </p>
 
         {submitError && (
-          <div className="mb-5 p-3.5 bg-[var(--critical)]/10 border border-[var(--critical)]/20 text-[var(--critical)] rounded-lg font-semibold flex items-center gap-2" style={{ fontSize: 'var(--caption-size)' }} aria-live="assertive">
+          <div className="mb-5 p-3.5 bg-[var(--critical)]/10 border border-[var(--critical)]/20 text-[var(--critical)] rounded-lg font-semibold flex items-center gap-2" style={{ fontSize: 'var(--caption-size)', animation: 'bannerPop 0.25s ease' }} aria-live="assertive">
             <AlertCircle size={14} />
             <span>{submitError}</span>
           </div>
         )}
 
         {submitSuccess && (
-          <div className="mb-5 p-4 bg-[var(--low)]/10 border border-[var(--low)]/20 text-[var(--low)] rounded-xl font-semibold flex flex-col gap-2.5" style={{ fontSize: 'var(--caption-size)' }} aria-live="polite">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 size={14} />
-              <span>Report processed successfully: <strong className="capitalize">{submitSuccess.type}</strong> severity level: <strong className="uppercase">{submitSuccess.severity}</strong></span>
+          <div
+            className="mb-5 p-4 bg-[var(--low)]/10 border rounded-xl font-semibold flex flex-col gap-2.5 relative overflow-hidden"
+            style={{
+              fontSize: 'var(--caption-size)',
+              borderColor: 'var(--low)',
+              boxShadow: '0 0 24px rgba(52, 211, 153, 0.18)',
+              animation: 'bannerPop 0.35s ease'
+            }}
+            aria-live="polite"
+          >
+            <div className="flex items-center gap-1.5 text-[var(--low)]">
+              <CheckCircle2 size={15} style={{ animation: 'checkPop 0.4s ease' }} />
+              <span>
+                Report processed successfully:{' '}
+                <strong className="capitalize">{submitSuccess.type}</strong> severity level:{' '}
+                <strong
+                  className="uppercase px-1.5 py-0.5 rounded"
+                  style={{
+                    color: severityGlow[submitSuccess.severity] || 'var(--low)',
+                    background: (severityGlow[submitSuccess.severity] || 'var(--low)') + '1a'
+                  }}
+                >
+                  {submitSuccess.severity}
+                </strong>
+              </span>
             </div>
             <Link
               to={`/incidents/${submitSuccess._id}`}
-              className="text-[var(--accent)] hover:underline inline-flex items-center gap-1 font-bold"
+              className="text-[var(--accent)] hover:underline inline-flex items-center gap-1 font-bold w-fit"
             >
               View Dispatch Details →
             </Link>
@@ -233,14 +284,24 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={PLACEHOLDERS[placeholderIndex]}
-                className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] rounded-xl p-3 text-[var(--body-size)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition resize-none leading-relaxed"
+                className="w-full bg-[var(--bg-primary)] border rounded-xl p-3 text-[var(--body-size)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none transition-all duration-200 resize-none leading-relaxed"
+                style={{
+                  borderColor: detectedLang ? 'var(--low)' : 'rgba(255,255,255,0.15)',
+                  boxShadow: detectedLang ? '0 0 0 1px rgba(52, 211, 153, 0.25)' : 'none'
+                }}
+                onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; e.target.style.boxShadow = '0 0 0 3px rgba(124, 92, 255, 0.15)'; }}
+                onBlur={(e) => { e.target.style.borderColor = detectedLang ? 'var(--low)' : 'rgba(255,255,255,0.15)'; e.target.style.boxShadow = detectedLang ? '0 0 0 1px rgba(52, 211, 153, 0.25)' : 'none'; }}
                 disabled={isSubmitting}
                 required
               />
             </div>
             <div className="mt-2 min-h-[18px]">
               {detectedLang ? (
-                <span className="font-semibold flex items-center gap-1.5 text-[var(--low)]" style={{ fontSize: 'var(--caption-size)' }}>
+                <span
+                  key={detectedLang.label}
+                  className="font-semibold inline-flex items-center gap-1.5 text-[var(--low)] px-2 py-0.5 rounded-full"
+                  style={{ fontSize: 'var(--caption-size)', background: 'rgba(52, 211, 153, 0.1)', animation: 'langBadgeIn 0.25s ease' }}
+                >
                   <Globe size={12} />
                   <span>[{detectedLang.label}] {detectedLang.lang} detected — auto-translating narrative</span>
                 </span>
@@ -265,7 +326,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                   id="stadium-select"
                   value={stadiumName}
                   onChange={(e) => setStadiumName(e.target.value)}
-                  className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] rounded-xl p-2.5 pl-9 text-[var(--body-size)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition appearance-none cursor-pointer"
+                  className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] rounded-xl p-2.5 pl-9 text-[var(--body-size)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 transition-all appearance-none cursor-pointer"
                   disabled={isSubmitting}
                   required
                 >
@@ -291,7 +352,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                   value={zoneLocation}
                   onChange={(e) => setZoneLocation(e.target.value)}
                   placeholder="e.g. Gate 4, Concourse Section 12"
-                  className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] rounded-xl p-2.5 pl-9 text-[var(--body-size)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition"
+                  className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] rounded-xl p-2.5 pl-9 text-[var(--body-size)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 transition-all"
                   disabled={isSubmitting}
                   required
                 />
@@ -302,26 +363,65 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
           {/* Submit Progress State / Button */}
           <div className="pt-2">
             {isSubmitting ? (
-              <div className="space-y-3" aria-live="polite" aria-atomic="true">
+              <div
+                className="space-y-3 p-3.5 rounded-xl border"
+                style={{ borderColor: 'rgba(124, 92, 255, 0.25)', background: 'rgba(124, 92, 255, 0.06)' }}
+                aria-live="polite"
+                aria-atomic="true"
+              >
                 <div className="font-semibold text-[var(--text-primary)] flex items-center gap-2" style={{ fontSize: 'var(--caption-size)' }}>
                   <Loader2 size={14} className="animate-spin text-[var(--accent)]" />
-                  <span>{AGENT_STEPS[agentStep]}</span>
+                  <span>{AGENT_STEPS[agentStep].label}</span>
                 </div>
-                {/* Progress bar */}
-                <div className="w-full h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-[var(--accent)] rounded-full transition-all duration-300"
-                    style={{ width: `${(agentStep + 1) * 20}%` }}
-                  />
+
+                {/* Step tracker */}
+                <div className="flex items-center gap-1.5">
+                  {AGENT_STEPS.map((step, i) => {
+                    const StepIcon = step.icon;
+                    const done = i < agentStep;
+                    const active = i === agentStep;
+                    return (
+                      <React.Fragment key={i}>
+                        <div
+                          className="flex items-center justify-center rounded-full transition-all duration-300"
+                          style={{
+                            width: '22px',
+                            height: '22px',
+                            flexShrink: 0,
+                            background: done ? 'var(--accent)' : active ? 'rgba(124, 92, 255, 0.15)' : 'var(--bg-primary)',
+                            border: `1px solid ${done || active ? 'var(--accent)' : 'var(--border)'}`,
+                            animation: active ? 'stepPulse 1.6s ease-in-out infinite' : 'none'
+                          }}
+                        >
+                          {done ? (
+                            <CheckCircle2 size={12} color="#fff" />
+                          ) : (
+                            <StepIcon size={11} style={{ color: active ? 'var(--accent)' : 'var(--text-muted)' }} />
+                          )}
+                        </div>
+                        {i < AGENT_STEPS.length - 1 && (
+                          <div
+                            className="flex-1 h-[2px] rounded-full transition-all duration-500"
+                            style={{ background: done ? 'var(--accent)' : 'var(--border)' }}
+                          />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
               </div>
             ) : (
               <button
                 type="submit"
-                className="w-full h-[46px] bg-[var(--accent)] hover:bg-[var(--accent)]/95 text-white font-bold rounded-xl cursor-pointer transition select-none flex items-center justify-center gap-2 active:scale-[0.99] shadow-md"
-                style={{ fontSize: 'var(--body-size)' }}
+                className="w-full h-[46px] text-white font-bold rounded-xl cursor-pointer transition-all select-none flex items-center justify-center gap-2 active:scale-[0.98] shadow-md relative overflow-hidden group"
+                style={{
+                  fontSize: 'var(--body-size)',
+                  background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent) 45%, #9b87ff 50%, var(--accent) 55%, var(--accent) 100%)',
+                  backgroundSize: '250% 100%',
+                  animation: 'shimmer 4s linear infinite'
+                }}
               >
-                <Send size={14} />
+                <Send size={14} className="transition-transform group-hover:translate-x-0.5" />
                 <span>Submit Intake Dispatch</span>
               </button>
             )}
