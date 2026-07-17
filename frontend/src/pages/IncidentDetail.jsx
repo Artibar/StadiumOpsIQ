@@ -17,7 +17,11 @@ import {
   Paperclip, 
   AlertCircle,
   Sparkles,
-  Loader2
+  Loader2,
+  FileCheck,
+  CheckSquare,
+  Terminal,
+  HelpCircle
 } from 'lucide-react';
 import { getIncidentById, confirmIncident, overrideIncident } from '../services/api.js';
 
@@ -785,6 +789,61 @@ export default function IncidentDetail() {
             )}
           </div>
 
+          {/* SECTION 3.3: AI Operational Decision & Actions */}
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderTop: '4px solid var(--accent)',
+            borderRadius: 'var(--card-radius)',
+            padding: 'var(--card-padding)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            animation: 'cardFadeIn 0.35s ease both',
+            animationDelay: '100ms'
+          }}>
+            <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldAlert size={20} className="text-[var(--accent)]" />
+              <span>AI Operational Recommendation</span>
+            </h2>
+
+            {incident.finalDecision && (
+              <div style={{ marginBottom: '20px' }}>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>
+                  Final Decision Rationalization
+                </span>
+                <p style={{ fontSize: 'var(--body-size)', color: 'var(--text-primary)', margin: 0, lineHeight: '1.6', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                  {incident.finalDecision}
+                </p>
+              </div>
+            )}
+
+            {incident.actionsTaken && incident.actionsTaken.length > 0 && (
+              <div>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>
+                  Executed Response Actions
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {incident.actionsTaken.map((action, idx) => (
+                    <span
+                      key={idx}
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        background: 'rgba(79, 70, 229, 0.12)',
+                        color: 'var(--accent)',
+                        border: '1px solid rgba(79, 70, 229, 0.25)',
+                        fontFamily: 'monospace'
+                      }}
+                    >
+                      {action}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* SECTION 3.5: AI Dossier Detailed Analysis */}
           <div style={{
             background: 'var(--bg-card)',
@@ -796,47 +855,103 @@ export default function IncidentDetail() {
             animation: 'cardFadeIn 0.35s ease both',
             animationDelay: '140ms'
           }}>
-            <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FileCheck size={20} className="text-[var(--accent)]" />
-              <span>AI Incident Dossier Analysis</span>
-            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileCheck size={20} className="text-[var(--accent)]" />
+                <span>AI Incident Dossier Analysis</span>
+              </h2>
+              {incident.incidentReport?.riskRating && (
+                <span style={{
+                  fontSize: '10px',
+                  fontWeight: '800',
+                  textTransform: 'uppercase',
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  color: 'var(--critical)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)'
+                }}>
+                  {incident.incidentReport.riskRating} RISK
+                </span>
+              )}
+            </div>
 
-            {/* Step 8: Incident Metrics grid inside Analysis card */}
+            {/* Incident Metrics grid inside Analysis card */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', marginBottom: '20px' }}>
-              <div style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Risk Score</span>
-                <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
-                  {incident.liveContext?.combinedRiskLevel || 'Low'}
-                </span>
-              </div>
-              <div style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Confidence</span>
-                <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
-                  {incident.confidence ? `${(incident.confidence * 100).toFixed(0)}%` : 'Not Available'}
-                </span>
-              </div>
-              <div style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Agent Count</span>
-                <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
-                  {incident.reasoningTrail ? incident.reasoningTrail.length : 0} active
-                </span>
-              </div>
-              <div style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Response Time</span>
-                <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
-                  {incident.pipelineDurationMs ? `${(incident.pipelineDurationMs / 1000).toFixed(2)}s` : 'Not Available'}
-                </span>
-              </div>
+              {incident.incidentReport?.riskRating && (
+                <div style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Risk Score</span>
+                  <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
+                    {incident.incidentReport.riskRating}
+                  </span>
+                </div>
+              )}
+              {incident.confidence !== undefined && incident.confidence !== null && (
+                <div style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Confidence</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--low)' }}>
+                      {(incident.confidence * 100).toFixed(0)}%
+                    </span>
+                    <div style={{ flexGrow: 1, height: '4px', background: 'var(--border)', borderRadius: '2px', overflow: 'hidden' }}>
+                      <div style={{ width: `${(incident.confidence * 100).toFixed(0)}%`, height: '100%', background: 'var(--low)' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              {incident.reasoningTrail && incident.reasoningTrail.length > 0 && (
+                <div style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Agent Chain</span>
+                  <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
+                    {incident.reasoningTrail.length} Steps
+                  </span>
+                </div>
+              )}
+              {incident.incidentReport?.estimatedResolutionTime && (
+                <div style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Est. Resolution</span>
+                  <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
+                    {incident.incidentReport.estimatedResolutionTime}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* Incident Narrative */}
+              {incident.incidentReport?.incidentNarrative && (
+                <div>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Incident Narrative Report</span>
+                  <p style={{ fontSize: 'var(--body-size)', color: 'var(--text-primary)', margin: 0, lineHeight: '1.6', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)', fontStyle: 'italic' }}>
+                    "{incident.incidentReport.incidentNarrative}"
+                  </p>
+                </div>
+              )}
+
               {/* Root Cause */}
-              <div>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Root Cause Analysis</span>
-                <p style={{ fontSize: 'var(--body-size)', color: 'var(--text-primary)', margin: 0, lineHeight: '1.6', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                  {incident.incidentReport?.rootCauseAnalysis || 'Root cause analysis not available.'}
-                </p>
-              </div>
+              {incident.incidentReport?.rootCauseAnalysis && (
+                <div>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Root Cause Analysis</span>
+                  <p style={{ fontSize: 'var(--body-size)', color: 'var(--text-primary)', margin: 0, lineHeight: '1.6', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                    {incident.incidentReport.rootCauseAnalysis}
+                  </p>
+                </div>
+              )}
+
+              {/* Immediate Actions Log */}
+              {incident.incidentReport?.immediateActionsLog && incident.incidentReport.immediateActionsLog.length > 0 && (
+                <div>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Immediate Actions Log</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                    {incident.incidentReport.immediateActionsLog.map((action, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'start', gap: '8px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
+                        <CheckSquare size={13} className="text-[var(--accent)]" style={{ marginTop: '2px', flexShrink: 0 }} />
+                        <span>{action}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--grid-gap)' }}>
                 {/* Prevention Measures */}
@@ -888,24 +1003,32 @@ export default function IncidentDetail() {
                 </div>
               </div>
 
-              {/* Dossier Metadata */}
+              {/* Dossier Metadata - Hide if unavailable */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '16px', fontSize: 'var(--caption-size)' }}>
                 <div>
                   <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>AI Decision Model</span>
                   <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>Llama 3 70B (Groq)</span>
                 </div>
-                <div>
-                  <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>Processing Duration</span>
-                  <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{incident.pipelineDurationMs ? `${incident.pipelineDurationMs} ms` : 'Not Available'}</span>
-                </div>
-                <div>
-                  <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>Confidence Rating</span>
-                  <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{incident.confidence ? `${(incident.confidence * 100).toFixed(0)}%` : 'Not Available'}</span>
-                </div>
-                <div>
-                  <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>Dossier Generation</span>
-                  <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{incident.incidentReport?.generatedAt ? new Date(incident.incidentReport.generatedAt).toLocaleTimeString() : 'Not Available'}</span>
-                </div>
+                {incident.pipelineDurationMs && (
+                  <div>
+                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>Processing Duration</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{incident.pipelineDurationMs} ms</span>
+                  </div>
+                )}
+                {incident.incidentReport?.generatedAt && (
+                  <div>
+                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>Dossier Generation</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{new Date(incident.incidentReport.generatedAt).toLocaleTimeString()}</span>
+                  </div>
+                )}
+                {incident.incidentReport?.emailSent !== undefined && (
+                  <div>
+                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>Email Notification</span>
+                    <span style={{ color: incident.incidentReport.emailSent ? 'var(--low)' : 'var(--critical)', fontWeight: 'bold' }}>
+                      {incident.incidentReport.emailSent ? 'Delivered' : 'Failed'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -995,7 +1118,8 @@ export default function IncidentDetail() {
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: 'var(--grid-gap)'
+              gap: 'var(--grid-gap)',
+              marginBottom: (incident.retrievedRegulations && incident.retrievedRegulations.length > 0) || (incident.citations && incident.citations.length > 0) ? '16px' : '0'
             }}>
               {/* Doc attachment */}
               <div className="hover-lift" style={{
@@ -1067,28 +1191,30 @@ export default function IncidentDetail() {
               </div>
             </div>
 
-            {/* Retrieved Regulations / Citations */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '16px' }}>
-              <details style={{ cursor: 'pointer' }}>
-                <summary style={{ fontSize: 'var(--caption-size)', color: 'var(--accent)', fontWeight: '800', outline: 'none', userSelect: 'none' }}>
-                  Retrieved Regulations & Citations
-                </summary>
-                <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--bg-primary)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
-                    <HelpCircle size={12} className="text-[var(--accent)]" />
-                    <span><strong>FIFA Safety Code Sect. 4.1:</strong> Medical dispatch protocols on spectator collapse events.</span>
+            {/* Retrieved Regulations / Citations - Conditionally Render Only if they exist */}
+            {((incident.retrievedRegulations && incident.retrievedRegulations.length > 0) || (incident.citations && incident.citations.length > 0)) && (
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '16px' }}>
+                <details style={{ cursor: 'pointer' }}>
+                  <summary style={{ fontSize: 'var(--caption-size)', color: 'var(--accent)', fontWeight: '800', outline: 'none', userSelect: 'none' }}>
+                    Retrieved Regulations & Citations
+                  </summary>
+                  <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--bg-primary)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                    {incident.retrievedRegulations && incident.retrievedRegulations.map((reg, regIdx) => (
+                      <div key={regIdx} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
+                        <HelpCircle size={12} className="text-[var(--accent)]" />
+                        <span><strong>{reg.title || 'Regulation'}:</strong> {reg.text || reg.description}</span>
+                      </div>
+                    ))}
+                    {incident.citations && incident.citations.map((cite, citeIdx) => (
+                      <div key={citeIdx} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
+                        <HelpCircle size={12} className="text-[var(--accent)]" />
+                        <span><strong>Citation:</strong> {cite}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
-                    <HelpCircle size={12} className="text-[var(--accent)]" />
-                    <span><strong>World Cup Security Directive 12:</strong> Operational response to crowd flow congestions.</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
-                    <HelpCircle size={12} className="text-[var(--accent)]" />
-                    <span><strong>Compliance Ref:</strong> WC2026-OPS-MED-048</span>
-                  </div>
-                </div>
-              </details>
-            </div>
+                </details>
+              </div>
+            )}
           </div>
 
         </div>

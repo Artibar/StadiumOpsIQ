@@ -386,7 +386,9 @@ export default function AuditLog() {
 
                   const rowClass = hasOverride 
                     ? 'bg-[rgba(234,179,8,0.06)] border-l-2 border-l-[var(--medium)]' 
-                    : 'hover:bg-[var(--bg-card-hover)]/30';
+                    : idx % 2 === 1
+                      ? 'bg-[rgba(255,255,255,0.015)] hover:bg-[var(--bg-card-hover)]/30'
+                      : 'hover:bg-[var(--bg-card-hover)]/30';
 
                   const typeColor = typeColors[inc.type] || 'var(--text-muted)';
                   const severityColor = severityColors[inc.severity] || 'var(--low)';

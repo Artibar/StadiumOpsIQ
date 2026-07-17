@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, Globe, Landmark, MapPin, Send, CheckCircle2, Loader2, Search, Tag, Radar, Sparkles, BellRing } from 'lucide-react';
+import { AlertCircle, Globe, Landmark, MapPin, Send, CheckCircle2, Loader2, Search, Tag, Radar, Sparkles, BellRing, Paperclip } from 'lucide-react';
 import { createIncident } from '../services/api.js';
 
 const PLACEHOLDERS = [
@@ -107,6 +107,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [agentStep, setAgentStep] = useState(0);
   const [detectedLang, setDetectedLang] = useState(null);
+  const [attachedFiles, setAttachedFiles] = useState([]);
 
   // Cycle placeholders
   useEffect(() => {
@@ -178,6 +179,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
       setSubmitSuccess(result.incident);
       setDescription('');
       setZoneLocation('');
+      setAttachedFiles([]);
       if (onIncidentCreated) {
         onIncidentCreated(result.incident);
       }
@@ -357,6 +359,54 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                   required
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2" style={{ fontSize: 'var(--caption-size)' }}>
+                Supporting Evidence / Attachments (Optional)
+              </label>
+              <div 
+                onClick={() => {
+                  if (isSubmitting) return;
+                  const mockNames = ['cctv_log_gate4.mp4', 'stadium_telemetry.json', 'crowd_density_snapshot.png', 'first_responder_note.txt'];
+                  const nextFile = mockNames[attachedFiles.length % mockNames.length];
+                  if (!attachedFiles.includes(nextFile)) {
+                    setAttachedFiles([...attachedFiles, nextFile]);
+                  }
+                }}
+                className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] border-dashed rounded-xl p-4 text-center cursor-pointer hover:border-[var(--accent)] transition-all flex flex-col items-center justify-center gap-1.5"
+              >
+                <Paperclip size={16} className="text-[var(--text-muted)]" />
+                <span className="text-[var(--body-size)] text-[var(--text-secondary)] font-semibold">
+                  Drag & drop files or click to attach evidence
+                </span>
+                <span className="text-[10px] text-[var(--text-muted)]">
+                  Supports MP4, PNG, JPG, JSON, PDF (Max 10MB)
+                </span>
+              </div>
+              {attachedFiles.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {attachedFiles.map((file, fIdx) => (
+                    <span 
+                      key={fIdx}
+                      className="inline-flex items-center gap-1.5 text-[10px] font-semibold bg-[rgba(255,255,255,0.05)] border border-[var(--border)] text-[var(--text-secondary)] px-2.5 py-1 rounded-lg"
+                    >
+                      <Paperclip size={10} />
+                      <span>{file}</span>
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAttachedFiles(attachedFiles.filter((_, i) => i !== fIdx));
+                        }}
+                        className="text-[var(--text-muted)] hover:text-white border-none bg-transparent cursor-pointer font-bold leading-none p-0"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
