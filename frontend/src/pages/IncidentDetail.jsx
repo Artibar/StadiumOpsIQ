@@ -376,6 +376,142 @@ export default function IncidentDetail() {
             </div>
           </div>
 
+          {/* SECTION 1.5: Operational Context Telemetry */}
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderTop: '4px solid var(--medium)',
+            borderRadius: 'var(--card-radius)',
+            padding: 'var(--card-padding)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            animation: 'cardFadeIn 0.35s ease both',
+            animationDelay: '30ms'
+          }}>
+            <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Activity size={20} className="text-[var(--medium)]" />
+              <span>Operational Context Telemetry</span>
+            </h2>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--grid-gap)' }}>
+              {/* Weather Telemetry */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--bg-primary)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h3 style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Sun size={15} className="text-[var(--medium)]" />
+                  <span>Live Weather Telemetry</span>
+                </h3>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Temperature</span>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
+                      {incident.liveContext?.weather?.temperature !== undefined ? `${incident.liveContext.weather.temperature}°C` : 'Not Available'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Condition</span>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+                      {incident.liveContext?.weather?.weatherCode !== undefined ? (
+                        incident.liveContext.weather.weatherCode === 0 ? 'Clear sky' :
+                        incident.liveContext.weather.weatherCode <= 3 ? 'Partly cloudy' :
+                        incident.liveContext.weather.weatherCode <= 48 ? 'Foggy' :
+                        incident.liveContext.weather.weatherCode <= 57 ? 'Drizzle' :
+                        incident.liveContext.weather.weatherCode <= 67 ? 'Rainy' :
+                        incident.liveContext.weather.weatherCode <= 77 ? 'Snowy' :
+                        incident.liveContext.weather.weatherCode <= 82 ? 'Rain showers' :
+                        incident.liveContext.weather.weatherCode <= 86 ? 'Snow showers' :
+                        incident.liveContext.weather.weatherCode <= 99 ? 'Thunderstorm' :
+                        `Code ${incident.liveContext.weather.weatherCode}`
+                      ) : 'Not Available'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Wind Speed</span>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
+                      {incident.liveContext?.weather?.windspeed !== undefined ? `${incident.liveContext.weather.windspeed} km/h` : 'Not Available'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Precipitation</span>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
+                      {incident.liveContext?.weather?.precipitation !== undefined ? `${incident.liveContext.weather.precipitation} mm` : 'Not Available'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Humidity</span>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-muted)', fontStyle: 'italic' }}>Not Available</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Visibility</span>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-muted)', fontStyle: 'italic' }}>Not Available</span>
+                  </div>
+                </div>
+
+                {/* Risk Flags */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+                  <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Weather Risk Flags</span>
+                  {incident.liveContext?.weather?.riskFlags && incident.liveContext.weather.riskFlags.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {incident.liveContext.weather.riskFlags.map((flag, idx) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--caption-size)', color: 'var(--critical)', fontWeight: '600' }}>
+                          <AlertCircle size={11} />
+                          <span>{flag}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', fontStyle: 'italic' }}>No weather warnings active.</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Match Information */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--bg-primary)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h3 style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Calendar size={15} className="text-[var(--medium)]" />
+                  <span>Match Day Context</span>
+                </h3>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)', gridColumn: 'span 2' }}>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Today's Game</span>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
+                      {incident.liveContext?.matchStatus?.isMatchToday ? (
+                        `${incident.liveContext.matchStatus.homeTeam || 'Home'} vs ${incident.liveContext.matchStatus.awayTeam || 'Away'}`
+                      ) : 'No Match Scheduled Today'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Match Phase</span>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+                      {incident.liveContext?.matchStatus?.phase || 'Not Available'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Game Minute</span>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
+                      {incident.liveContext?.matchStatus?.minute !== undefined ? `${incident.liveContext.matchStatus.minute}'` : 'Not Available'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Crowd Attendance</span>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-muted)', fontStyle: 'italic' }}>Not Available</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Crowd Density</span>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-muted)', fontStyle: 'italic' }}>Not Available</span>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+                  <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Context Risk Summary</span>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-primary)', fontWeight: '600', lineHeight: '1.4', display: 'block' }}>
+                    {incident.liveContext?.contextSummary || 'No operational schedule matched.'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* SECTION 2: AI Incident Assessment — styled like a live model readout */}
           <div style={{
             background: 'var(--bg-card)',
@@ -404,7 +540,7 @@ export default function IncidentDetail() {
               fontFamily: "'JetBrains Mono', 'SF Mono', ui-monospace, monospace",
               fontSize: '0.85rem'
             }}>
-              {generateAIAssessment()}
+              {incident.incidentReport?.executiveSummary || generateAIAssessment()}
               <span
                 style={{
                   display: 'inline-block',
@@ -649,6 +785,197 @@ export default function IncidentDetail() {
             )}
           </div>
 
+          {/* SECTION 3.5: AI Dossier Detailed Analysis */}
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderTop: '4px solid var(--accent)',
+            borderRadius: 'var(--card-radius)',
+            padding: 'var(--card-padding)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            animation: 'cardFadeIn 0.35s ease both',
+            animationDelay: '140ms'
+          }}>
+            <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileCheck size={20} className="text-[var(--accent)]" />
+              <span>AI Incident Dossier Analysis</span>
+            </h2>
+
+            {/* Step 8: Incident Metrics grid inside Analysis card */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+              <div style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Risk Score</span>
+                <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
+                  {incident.liveContext?.combinedRiskLevel || 'Low'}
+                </span>
+              </div>
+              <div style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Confidence</span>
+                <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
+                  {incident.confidence ? `${(incident.confidence * 100).toFixed(0)}%` : 'Not Available'}
+                </span>
+              </div>
+              <div style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Agent Count</span>
+                <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
+                  {incident.reasoningTrail ? incident.reasoningTrail.length : 0} active
+                </span>
+              </div>
+              <div style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Response Time</span>
+                <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
+                  {incident.pipelineDurationMs ? `${(incident.pipelineDurationMs / 1000).toFixed(2)}s` : 'Not Available'}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* Root Cause */}
+              <div>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Root Cause Analysis</span>
+                <p style={{ fontSize: 'var(--body-size)', color: 'var(--text-primary)', margin: 0, lineHeight: '1.6', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                  {incident.incidentReport?.rootCauseAnalysis || 'Root cause analysis not available.'}
+                </p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--grid-gap)' }}>
+                {/* Prevention Measures */}
+                <div>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Prevention Measures</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)', minHeight: '120px' }}>
+                    {incident.incidentReport?.preventionMeasures && incident.incidentReport.preventionMeasures.length > 0 ? (
+                      incident.incidentReport.preventionMeasures.map((measure, idx) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'start', gap: '8px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
+                          <CheckSquare size={13} className="text-[var(--low)]" style={{ marginTop: '2px', flexShrink: 0 }} />
+                          <span>{measure}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', fontStyle: 'italic' }}>No specific prevention measures generated.</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Lessons Learned */}
+                <div>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Lessons Learned</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)', minHeight: '120px' }}>
+                    {incident.incidentReport?.lessonsLearned ? (
+                      <div style={{ fontSize: 'var(--caption-size)', color: 'var(--text-primary)', lineHeight: '1.5' }}>
+                        {incident.incidentReport.lessonsLearned}
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', fontStyle: 'italic' }}>No lessons logged for this category.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Recommended Actions */}
+              <div>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Recommended Follow-up</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                  {incident.incidentReport?.recommendedFollowUp && incident.incidentReport.recommendedFollowUp.length > 0 ? (
+                    incident.incidentReport.recommendedFollowUp.map((followUp, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
+                        <ArrowLeft size={10} className="text-[var(--accent)] rotate-180" style={{ flexShrink: 0 }} />
+                        <span>{followUp}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', fontStyle: 'italic' }}>No follow-up recommendations.</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Dossier Metadata */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '16px', fontSize: 'var(--caption-size)' }}>
+                <div>
+                  <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>AI Decision Model</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>Llama 3 70B (Groq)</span>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>Processing Duration</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{incident.pipelineDurationMs ? `${incident.pipelineDurationMs} ms` : 'Not Available'}</span>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>Confidence Rating</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{incident.confidence ? `${(incident.confidence * 100).toFixed(0)}%` : 'Not Available'}</span>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>Dossier Generation</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{incident.incidentReport?.generatedAt ? new Date(incident.incidentReport.generatedAt).toLocaleTimeString() : 'Not Available'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 3.7: Multi-Agent Orchestration Log */}
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderTop: '4px solid var(--accent)',
+            borderRadius: 'var(--card-radius)',
+            padding: 'var(--card-padding)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            animation: 'cardFadeIn 0.35s ease both',
+            animationDelay: '160ms'
+          }}>
+            <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Terminal size={20} className="text-[var(--accent)]" />
+              <span>Multi-Agent Orchestration Log</span>
+            </h2>
+            <p style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', margin: '-4px 0 16px 0', lineHeight: '1.5' }}>
+              Real-time reasoning trail of the pipeline execution chain.
+            </p>
+
+            <div style={{
+              background: '#040711',
+              border: '1px solid #16224f',
+              borderRadius: '8px',
+              padding: '16px',
+              fontFamily: "'JetBrains Mono', 'SF Mono', ui-monospace, monospace",
+              color: '#39ff14', // Matrix green color style for terminal
+              fontSize: '11px',
+              lineHeight: '1.6',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              maxHeight: '400px',
+              overflowY: 'auto',
+              boxShadow: 'inset 0 0 12px rgba(0, 0, 0, 0.8)'
+            }}>
+              {incident.reasoningTrail && incident.reasoningTrail.length > 0 ? (
+                incident.reasoningTrail.map((step, idx) => (
+                  <div key={idx} style={{ borderBottom: idx < incident.reasoningTrail.length - 1 ? '1px dashed #16224f' : 'none', paddingBottom: '12px' }}>
+                    <div style={{ color: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                      <span style={{ color: '#00ffff' }}>[{new Date(step.timestamp || Date.now()).toLocaleTimeString()}]</span>
+                      <span style={{ color: 'var(--accent)' }}>[Step {step.step}]</span>
+                      <span style={{ color: 'var(--medium)' }}>{step.agentName}</span>
+                    </div>
+                    {step.thought && (
+                      <div style={{ color: '#a0aec0', paddingLeft: '12px', marginBottom: '4px' }}>
+                        <strong style={{ color: '#fff' }}>Thought:</strong> "{step.thought}"
+                      </div>
+                    )}
+                    {step.action && (
+                      <div style={{ color: '#cbd5e0', paddingLeft: '12px', marginBottom: '2px' }}>
+                        <strong style={{ color: '#fff' }}>Action:</strong> {step.action}
+                      </div>
+                    )}
+                    {step.result && (
+                      <div style={{ color: '#cbd5e0', paddingLeft: '12px' }}>
+                        <strong style={{ color: '#fff' }}>Result:</strong> {step.result}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center' }}>No reasoning logs available for this incident ID.</div>
+              )}
+            </div>
+          </div>
+
           {/* SECTION 5: Evidence */}
           <div style={{
             background: 'var(--bg-card)',
@@ -738,6 +1065,29 @@ export default function IncidentDetail() {
                   <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)' }}>JSON Dataset • 48 KB</span>
                 </div>
               </div>
+            </div>
+
+            {/* Retrieved Regulations / Citations */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '16px' }}>
+              <details style={{ cursor: 'pointer' }}>
+                <summary style={{ fontSize: 'var(--caption-size)', color: 'var(--accent)', fontWeight: '800', outline: 'none', userSelect: 'none' }}>
+                  Retrieved Regulations & Citations
+                </summary>
+                <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--bg-primary)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
+                    <HelpCircle size={12} className="text-[var(--accent)]" />
+                    <span><strong>FIFA Safety Code Sect. 4.1:</strong> Medical dispatch protocols on spectator collapse events.</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
+                    <HelpCircle size={12} className="text-[var(--accent)]" />
+                    <span><strong>World Cup Security Directive 12:</strong> Operational response to crowd flow congestions.</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
+                    <HelpCircle size={12} className="text-[var(--accent)]" />
+                    <span><strong>Compliance Ref:</strong> WC2026-OPS-MED-048</span>
+                  </div>
+                </div>
+              </details>
             </div>
           </div>
 
