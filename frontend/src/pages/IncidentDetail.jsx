@@ -190,7 +190,7 @@ export default function IncidentDetail() {
   const timelineFillPct = ((completedCount - 1) / (timelineSteps.length - 1)) * 100;
 
   return (
-    <div className="page-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: 'var(--section-spacing) 0', display: 'flex', flexDirection: 'column', gap: 'var(--section-spacing)' }}>
+    <div className="page-container" style={{ maxWidth: '1400px', margin: '0 auto', paddingTop: 'var(--section-spacing)', paddingBottom: 'var(--section-spacing)', display: 'flex', flexDirection: 'column', gap: 'var(--section-spacing)' }}>
       <style>{`
         @keyframes cardFadeIn {
           from { opacity: 0; transform: translateY(8px); }
