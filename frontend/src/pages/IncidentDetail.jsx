@@ -240,7 +240,7 @@ export default function IncidentDetail() {
       `}</style>
 
       {/* BREADCRUMB HEADER */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link
             to="/"
@@ -292,11 +292,11 @@ export default function IncidentDetail() {
         </h1>
       </div>
 
-      {/* Grid Layout - 12 Columns */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--grid-gap)', alignItems: 'start' }}>
+      {/* Grid Layout - 12 Columns, stacks to 1 column below lg */}
+      <div className="grid grid-cols-1 lg:grid-cols-12" style={{ gap: 'var(--grid-gap)', alignItems: 'start' }}>
         
-        {/* Left Column (8 cols): Summary, Assessment, Actions, Evidence */}
-        <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 'var(--section-spacing)' }}>
+        {/* Left Column (8 cols on desktop, full width on mobile): Summary, Assessment, Actions, Evidence */}
+        <div className="lg:col-span-8" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--section-spacing)' }}>
           
           {/* SECTION 1: Incident Summary (Large Hero Card) */}
           <div style={{
@@ -328,7 +328,7 @@ export default function IncidentDetail() {
               </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--grid-gap)', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
+            <div className="grid grid-cols-2 sm:grid-cols-4" style={{ gap: 'var(--grid-gap)', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
                 <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Incident ID</span>
                 <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0, fontFamily: 'monospace' }}>
@@ -358,7 +358,7 @@ export default function IncidentDetail() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--grid-gap)', paddingTop: '20px', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
+            <div className="grid grid-cols-2 sm:grid-cols-4" style={{ gap: 'var(--grid-gap)', paddingTop: '20px', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
                 <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <MapPin size={11} />
@@ -637,7 +637,7 @@ export default function IncidentDetail() {
               <span>Operational Recommendation</span>
             </h2>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--grid-gap)', marginBottom: '24px' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 'var(--grid-gap)', marginBottom: '24px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
                 <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Priority Rating</span>
                 <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: severityColors[incident.severity] || 'var(--low)', textTransform: 'uppercase' }}>
@@ -720,7 +720,7 @@ export default function IncidentDetail() {
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <button
                     onClick={handleConfirm}
                     disabled={loading}
@@ -1217,8 +1217,8 @@ export default function IncidentDetail() {
 
         </div>
 
-        {/* Right Column (4 cols): Timeline */}
-        <div style={{ gridColumn: 'span 4' }}>
+        {/* Right Column (4 cols on desktop, full width on mobile): Timeline */}
+        <div className="lg:col-span-4">
 
           {/* SECTION 4: Incident Timeline */}
           <div style={{

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import {
   Download, Search, ChevronLeft, ChevronRight, Eye, FilterX, AlertCircle, Loader2, Inbox,
-  Ambulance, Siren, CheckCircle2, Flag, MessageSquare, Mail, Zap, History
+  Ambulance, Siren, CheckCircle2, Flag, MessageSquare, Mail, Zap
 } from 'lucide-react';
 import { getIncidents } from '../services/api.js';
 
@@ -155,69 +155,6 @@ export default function AuditLog() {
   return (
     <div className="page-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: 'var(--section-spacing) 0' }}>
       <style>{`
-        .page-container {
-          --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
-          --bg-primary: #090d16;
-          --bg-card: linear-gradient(180deg, rgba(17,23,38,0.92), rgba(9,13,22,0.98));
-          --bg-card-hover: rgba(139,124,246,0.08);
-          --border: rgba(148,163,184,0.16);
-          --text-primary: #e9edf6;
-          --text-secondary: #93a1b8;
-          --text-muted: #5b667c;
-          --accent: #8b7cf6;
-          --accent-soft: rgba(139,124,246,0.12);
-          --critical: #ff5470;
-          --high: #ff9f43;
-          --medium: #ffcc66;
-          --low: #2dd4d4;
-          --card-radius: 12px;
-          --card-padding: 22px;
-          --section-spacing: 26px;
-          --title-size: 22px;
-          --section-title-size: 15px;
-          --body-size: 13px;
-          --caption-size: 10.5px;
-          --field-gap: 14px;
-          --label-value-gap: 6px;
-          --grid-gap: 16px;
-          --medical: #2dd4d4;
-          --security: #ff9f43;
-          --crowd: #a78bfa;
-          --fire: #ff5470;
-          --weather: #38bdf8;
-          --lost-item: #f5b942;
-          --other: #94a3b8;
-          font-family: var(--font-mono);
-          color: var(--text-primary);
-        }
-        .soft-input {
-          background: rgba(6,9,16,0.85);
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          color: var(--text-primary);
-          font-family: var(--font-mono);
-        }
-        .soft-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
-        .soft-button {
-          background: rgba(148,163,184,0.06);
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          color: var(--text-secondary);
-          font-family: var(--font-mono);
-        }
-        .soft-button:hover { border-color: var(--accent); color: var(--text-primary); }
-        .soft-label {
-          font-size: var(--caption-size);
-          font-weight: 700;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: var(--text-secondary);
-        }
-        .surface-card {
-          background: var(--bg-card);
-          border: 1px solid var(--border);
-          border-radius: var(--card-radius);
-        }
         @keyframes rowIn {
           from { opacity: 0; transform: translateY(4px); }
           to { opacity: 1; transform: translateY(0); }
@@ -228,23 +165,15 @@ export default function AuditLog() {
         }
       `}</style>
 
-      {/* HEADER */}
-      <div className="mb-6 flex flex-col gap-4 border-b border-[var(--border)] pb-6 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[rgba(99,102,241,0.08)]">
-              <History size={18} className="text-[var(--accent)]" />
-            </div>
-            <h1 className="m-0 text-white" style={{ fontSize: 'var(--title-size)', fontWeight: 700, letterSpacing: '-0.04em' }}>
-              FIFA Decision Review Board
-            </h1>
-            <span className="rounded-full border border-[var(--accent)]/20 bg-[var(--accent-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
-              <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)] align-middle" style={{ animation: 'ledgerPulse 2s ease-in-out infinite' }} />
-              Live Review
-            </span>
-          </div>
-          <p className="text-[var(--text-secondary)]" style={{ fontSize: 'var(--caption-size)' }}>
-            Historical audit records of language translations, climate analytics, automated actions, and supervisor approvals.
+      {/* HEADER — page title/tabs already live in the topbar, so this stays slim */}
+      <div className="mb-6 flex flex-col gap-3 border-b border-[var(--border)] pb-5 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="rounded-full border border-[var(--accent)]/20 bg-[var(--accent-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
+            <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)] align-middle" style={{ animation: 'ledgerPulse 2s ease-in-out infinite' }} />
+            Live Review
+          </span>
+          <p className="m-0 text-[var(--text-secondary)]" style={{ fontSize: 'var(--caption-size)' }}>
+            Historical audit records of translations, climate analytics, automated actions, and supervisor approvals.
           </p>
         </div>
         <button
