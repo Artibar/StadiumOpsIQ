@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   AlertCircle, MapPin, Send, CheckCircle2, Loader2,
   HeartPulse, ShieldAlert, Users, Flame, CloudRain, Search as SearchIcon, HelpCircle,
-  Hash
+  Hash, Landmark
 } from 'lucide-react';
 import { createIncident } from '../services/api.js';
 
@@ -73,8 +73,19 @@ function IconInput({ icon: Icon, ...inputProps }) {
   );
 }
 
+// Normalizes a stadium entry into a stable { key, name } pair regardless of
+// whether `stadiums` is an array of plain strings or objects (e.g. { name }
+// or { stadiumName }), so the <select> never breaks on shape mismatches.
+function normalizeStadium(s, idx) {
+  if (typeof s === 'string') return { key: s || idx, name: s };
+  const name = s?.name || s?.stadiumName || '';
+  const key = s?.id || s?._id || name || idx;
+  return { key, name };
+}
+
 export default function IncidentForm({ stadiums, onIncidentCreated }) {
   const [incidentType, setIncidentType] = useState('');
+  const [stadiumName, setStadiumName] = useState('');
   const [zoneLocation, setZoneLocation] = useState('');
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState('');
@@ -86,6 +97,8 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
 
   const refCode = React.useRef(`2026-OP-${Math.floor(100 + Math.random() * 900)}`);
 
+  const stadiumOptions = (stadiums || []).map(normalizeStadium).filter((s) => s.name);
+
   useEffect(() => {
     let timer = null;
     if (submitSuccess) {
@@ -96,6 +109,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
 
   const resetForm = () => {
     setIncidentType('');
+    setStadiumName('');
     setZoneLocation('');
     setDescription('');
     setSeverity('');
@@ -106,6 +120,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!incidentType) { setSubmitError('Please select an incident type.'); return; }
+    if (!stadiumName) { setSubmitError('Please select a stadium.'); return; }
     if (!zoneLocation.trim()) { setSubmitError('Please specify the location zone.'); return; }
     if (!description.trim()) { setSubmitError('Please provide an incident description.'); return; }
     if (!severity) { setSubmitError('Please select a severity level.'); return; }
@@ -116,6 +131,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
 
     const result = await createIncident({
       type: incidentType,
+      stadiumName,
       zoneLocation: zoneLocation.trim(),
       description: description.trim(),
       severity,
@@ -124,6 +140,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
 
     if (result.success) {
       setSubmitSuccess(result.incident);
+      setStadiumName('');
       setZoneLocation('');
       setDescription('');
       setSeverity('');
@@ -279,6 +296,26 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
             <option value="">Select incident type...</option>
             {INCIDENT_TYPES.map((t) => (
               <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div style={fieldWrapStyle}>
+          <label htmlFor="stadium-select" style={labelStyle}>Stadium</label>
+          <select
+            id="stadium-select"
+            value={stadiumName}
+            onChange={(e) => setStadiumName(e.target.value)}
+            className="soft-input"
+            style={{ width: '100%', height: '46px', padding: `0 ${SPACE.md}`, fontSize: 'var(--body-size)' }}
+            disabled={isSubmitting || stadiumOptions.length === 0}
+            required
+          >
+            <option value="">
+              {stadiumOptions.length === 0 ? 'Loading stadiums...' : 'Select stadium...'}
+            </option>
+            {stadiumOptions.map((s) => (
+              <option key={s.key} value={s.name}>{s.name}</option>
             ))}
           </select>
         </div>
