@@ -230,7 +230,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
       `}</style>
 
       <div>
-        <div className="mb-5 flex items-center justify-between gap-2 border-b pb-3.5" style={{ borderColor: 'var(--border)' }}>
+        <div className="mb-6 flex items-center justify-between gap-2 border-b pb-4" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-2.5">
             <div
               className="flex h-8 w-8 items-center justify-center rounded-lg"
@@ -304,10 +304,10 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Textarea description */}
           <div>
-            <label htmlFor="incident-desc" className="mb-2 block" style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.01em', color: 'var(--text-secondary)' }}>
+            <label htmlFor="incident-desc" className="mb-2.5 block" style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.01em', color: 'var(--text-secondary)' }}>
               Incident Description
             </label>
             <div className="relative">
@@ -317,7 +317,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={PLACEHOLDERS[placeholderIndex]}
-                className="soft-input w-full resize-none p-3 leading-relaxed"
+                className="soft-input w-full resize-none p-4 leading-relaxed"
                 style={{
                   fontSize: 'var(--body-size)',
                   borderColor: detectedLang ? 'rgba(45,212,212,0.6)' : undefined,
@@ -347,9 +347,9 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
           </div>
 
           {/* Stadium select & zone inputs */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <label htmlFor="stadium-select" className="mb-2 block" style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.01em', color: 'var(--text-secondary)' }}>
+              <label htmlFor="stadium-select" className="mb-2.5 block" style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.01em', color: 'var(--text-secondary)' }}>
                 Stadium Venue
               </label>
               <div className="relative">
@@ -358,7 +358,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                   id="stadium-select"
                   value={stadiumName}
                   onChange={(e) => setStadiumName(e.target.value)}
-                  className="soft-input w-full appearance-none p-2.5 pl-9"
+                  className="soft-input w-full appearance-none p-3 pl-9"
                   style={{ fontSize: 'var(--body-size)' }}
                   disabled={isSubmitting}
                   required
@@ -374,7 +374,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
             </div>
 
             <div>
-              <label htmlFor="zone-input" className="mb-2 block" style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.01em', color: 'var(--text-secondary)' }}>
+              <label htmlFor="zone-input" className="mb-2.5 block" style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.01em', color: 'var(--text-secondary)' }}>
                 Zone / Location Inside Venue
               </label>
               <div className="relative">
@@ -385,7 +385,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
                   value={zoneLocation}
                   onChange={(e) => setZoneLocation(e.target.value)}
                   placeholder="e.g. Gate 4, Concourse Section 12"
-                  className="soft-input w-full p-2.5 pl-9"
+                  className="soft-input w-full p-3 pl-9"
                   style={{ fontSize: 'var(--body-size)' }}
                   disabled={isSubmitting}
                   required
@@ -394,7 +394,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
             </div>
 
             <div>
-              <label className="mb-2 block" style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.01em', color: 'var(--text-secondary)' }}>
+              <label className="mb-2.5 block" style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.01em', color: 'var(--text-secondary)' }}>
                 Supporting Evidence / Attachments (Optional)
               </label>
               <div
@@ -446,7 +446,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
           </div>
 
           {/* Submit Progress State / Buttons */}
-          <div className="pt-2">
+          <div className="pt-4">
             {isSubmitting ? (
               <div
                 className="space-y-3 p-3.5 rounded-xl border"

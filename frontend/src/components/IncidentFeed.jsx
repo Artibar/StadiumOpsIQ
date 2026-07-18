@@ -81,7 +81,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
       `}</style>
 
       <div>
-        <div className="mb-4 flex items-center justify-between gap-3 border-b pb-3.5" style={{ borderColor: 'var(--border)' }}>
+        <div className="mb-6 flex items-center justify-between gap-3 border-b pb-4" style={{ borderColor: 'var(--border)' }}>
           <div className="space-y-1">
             <span id="feed-title" className="flex items-center gap-2" style={{ fontSize: 'var(--section-title-size)', fontWeight: 700, letterSpacing: '0.02em' }}>
               <Radio size={14} className="text-[var(--low)]" />
@@ -146,7 +146,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
           </div>
         )}
 
-        <div className="space-y-3 overflow-y-auto pr-1" style={{ maxHeight: '440px' }} aria-live="polite">
+        <div className="space-y-4 overflow-y-auto pr-1" style={{ maxHeight: '440px' }} aria-live="polite">
           {filteredIncidents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center" style={{ color: 'var(--text-muted)' }}>
               <Inbox size={30} className="mb-2.5" />
@@ -171,7 +171,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
                 <div
                   key={inc._id}
                   onClick={() => navigate(`/incidents/${inc._id}`)}
-                  className="hover-lift relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-[12px] border p-4 transition-all duration-200"
+                  className="hover-lift relative flex cursor-pointer flex-col gap-3.5 overflow-hidden rounded-[12px] border p-5 transition-all duration-200"
                   style={{
                     borderColor: `${sideColor}40`,
                     background: 'linear-gradient(180deg, rgba(15,20,33,0.94), rgba(9,13,22,0.98))',

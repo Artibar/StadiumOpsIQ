@@ -57,17 +57,17 @@ export default function Layout({ children }) {
           --high: #ff9f43;
           --medium: #ffcc66;
           --low: #2dd4d4;
-          --card-radius: 12px;
-          --card-padding: 22px;
-          --section-spacing: 26px;
+          --card-radius: 14px;
+          --card-padding: 28px;
+          --section-spacing: 36px;
           --title-size: 22px;
           --section-title-size: 15px;
           --body-size: 13px;
           --caption-size: 10.5px;
           --kpi-size: 32px;
-          --field-gap: 14px;
-          --label-value-gap: 6px;
-          --grid-gap: 16px;
+          --field-gap: 18px;
+          --label-value-gap: 8px;
+          --grid-gap: 22px;
           --medical: #2dd4d4;
           --security: #ff9f43;
           --crowd: #a78bfa;
@@ -108,8 +108,8 @@ export default function Layout({ children }) {
         .hover-lift { transition: transform 0.18s ease, border-color 0.18s ease; }
         .hover-lift:hover { transform: translateY(-2px); }
         .nav-link {
-          display: flex; align-items: center; gap: 10px;
-          padding: 10px 14px; border-radius: 8px; text-decoration: none;
+          display: flex; align-items: center; gap: 12px;
+          padding: 12px 16px; border-radius: 8px; text-decoration: none;
           font-size: 12.5px; font-weight: 700; color: var(--text-secondary);
           transition: background 0.15s ease, color 0.15s ease;
         }
@@ -147,7 +147,7 @@ export default function Layout({ children }) {
           width: '260px',
           background: '#0b0f1a',
           borderRight: '1px solid var(--border)',
-          padding: '24px 16px',
+          padding: '30px 20px',
           flexDirection: 'column',
           zIndex: 50,
           transition: 'left 0.2s ease',
@@ -165,7 +165,7 @@ export default function Layout({ children }) {
           flexShrink: 0,
           background: '#0b0f1a',
           borderRight: '1px solid var(--border)',
-          padding: '24px 16px',
+          padding: '30px 20px',
           flexDirection: 'column',
           position: 'sticky',
           top: 0,
@@ -187,7 +187,7 @@ export default function Layout({ children }) {
             background: 'rgba(9,13,22,0.92)',
             backdropFilter: 'blur(8px)',
             borderBottom: '1px solid var(--border)',
-            padding: '14px 20px'
+            padding: '20px 28px'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
@@ -268,7 +268,7 @@ export default function Layout({ children }) {
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, padding: '0 20px', maxWidth: '1500px', width: '100%', margin: '0 auto' }}>
+        <main style={{ flex: 1, padding: '0 28px', maxWidth: '1500px', width: '100%', margin: '0 auto' }}>
           {children}
         </main>
 
@@ -276,7 +276,7 @@ export default function Layout({ children }) {
         <footer
           style={{
             borderTop: '1px solid var(--border)',
-            padding: '10px 20px',
+            padding: '14px 28px',
             display: 'flex',
             flexWrap: 'wrap',
             gap: '8px 20px',
@@ -306,7 +306,7 @@ export default function Layout({ children }) {
 function SidebarContent({ onNavigate, isDashboard, isAuditLog }) {
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
         <Link to="/" onClick={onNavigate} style={{ textDecoration: 'none' }}>
           <span style={{ fontSize: '19px', fontWeight: 800, color: '#fff', lineHeight: 1.15, display: 'block' }}>
             StadiumOps<br />IQ
@@ -328,7 +328,7 @@ function SidebarContent({ onNavigate, isDashboard, isAuditLog }) {
         style={{
           display: 'flex', alignItems: 'center', gap: '10px',
           border: '1px solid var(--border)', borderRadius: '10px', padding: '10px',
-          marginBottom: '14px', background: 'rgba(148,163,184,0.04)'
+          marginBottom: '18px', background: 'rgba(148,163,184,0.04)'
         }}
       >
         <div
@@ -352,14 +352,14 @@ function SidebarContent({ onNavigate, isDashboard, isAuditLog }) {
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
           background: 'var(--accent)', color: '#0a0d16', fontWeight: 800, fontSize: '12px',
-          padding: '10px', borderRadius: '10px', textDecoration: 'none', marginBottom: '20px'
+          padding: '12px', borderRadius: '10px', textDecoration: 'none', marginBottom: '26px'
         }}
       >
         <Plus size={14} />
         New Dispatch
       </Link>
 
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
         {NAV_ITEMS.map((item) => {
           const active = item.to === '/' ? isDashboard : item.to === '/audit' ? isAuditLog : false;
           if (!item.to) {
@@ -384,7 +384,7 @@ function SidebarContent({ onNavigate, isDashboard, isAuditLog }) {
         })}
       </nav>
 
-      <div style={{ marginTop: '20px', borderTop: '1px solid var(--border)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <div style={{ marginTop: '26px', borderTop: '1px solid var(--border)', paddingTop: '18px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
         <span className="nav-link disabled" title="Coming soon">
           <HelpCircle size={15} />
           Support

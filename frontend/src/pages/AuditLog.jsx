@@ -195,7 +195,7 @@ export default function AuditLog() {
       )}
 
       {/* FILTER ROW (All controls same height) */}
-      <div className="surface-card space-y-4" style={{ padding: 'var(--card-padding)', borderTop: '4px solid var(--accent)', marginBottom: 'var(--section-spacing)' }}>
+      <div className="surface-card space-y-6" style={{ padding: 'var(--card-padding)', borderTop: '4px solid var(--accent)', marginBottom: 'var(--section-spacing)' }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -215,7 +215,7 @@ export default function AuditLog() {
                   setCurrentPage(1);
                 }}
                 placeholder="Query narrative..."
-                className="soft-input w-full px-3 py-2 pl-8 text-[var(--body-size)]"
+                className="soft-input w-full px-3 py-3 pl-8 text-[var(--body-size)]"
                 style={{ height: '36px' }}
               />
             </div>
@@ -306,7 +306,7 @@ export default function AuditLog() {
         </div>
 
         {/* Stats Row & Clear Filters button */}
-        <div className="flex flex-col gap-3 border-t border-[var(--border)]/40 pt-4 font-semibold sm:flex-row sm:items-center sm:justify-between" style={{ fontSize: 'var(--caption-size)' }}>
+        <div className="flex flex-col gap-3 border-t border-[var(--border)]/40 pt-5 font-semibold sm:flex-row sm:items-center sm:justify-between" style={{ fontSize: 'var(--caption-size)' }}>
           <span className="text-[var(--text-muted)]">
             Showing <strong className="text-[var(--text-secondary)]">{filteredIncidents.length}</strong> of {incidents.length} records
           </span>
@@ -391,25 +391,25 @@ export default function AuditLog() {
                     <tr
                       key={inc._id}
                       className={`${rowClass} transition duration-150`}
-                      style={{ height: '52px', animation: 'rowIn 0.25s ease both', animationDelay: `${Math.min(idx, 20) * 20}ms` }}
+                      style={{ height: '58px', animation: 'rowIn 0.25s ease both', animationDelay: `${Math.min(idx, 20) * 20}ms` }}
                     >
                       {/* 1. Time */}
-                      <td className="px-3 py-2 font-mono whitespace-nowrap text-[var(--text-secondary)] md:px-6">
+                      <td className="px-3 py-3 font-mono whitespace-nowrap text-[var(--text-secondary)] md:px-6">
                         {new Date(inc.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
                       </td>
                       
                       {/* 2. Stadium */}
-                      <td className="px-3 py-2 font-bold md:px-6">
+                      <td className="px-3 py-3 font-bold md:px-6">
                         {inc.stadiumName}
                       </td>
 
                       {/* 3. Zone */}
-                      <td className="px-3 py-2 text-[var(--text-secondary)] md:px-6">
+                      <td className="px-3 py-3 text-[var(--text-secondary)] md:px-6">
                         {inc.zoneLocation}
                       </td>
 
                       {/* 4. Type */}
-                      <td className="px-3 py-2 md:px-6">
+                      <td className="px-3 py-3 md:px-6">
                         <span
                           className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border"
                           style={{ 
@@ -423,7 +423,7 @@ export default function AuditLog() {
                       </td>
 
                       {/* 5. Severity */}
-                      <td className="px-3 py-2 md:px-6">
+                      <td className="px-3 py-3 md:px-6">
                         <span
                           className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border"
                           style={{ 
@@ -437,7 +437,7 @@ export default function AuditLog() {
                       </td>
 
                       {/* 6. Status */}
-                      <td className="px-3 py-2 md:px-6">
+                      <td className="px-3 py-3 md:px-6">
                         <span
                           className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border"
                           style={{ 
@@ -451,7 +451,7 @@ export default function AuditLog() {
                       </td>
 
                       {/* 7. Approval */}
-                      <td className="px-3 py-2 whitespace-nowrap md:px-6">
+                      <td className="px-3 py-3 whitespace-nowrap md:px-6">
                         <span
                           className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border"
                           style={{
@@ -465,7 +465,7 @@ export default function AuditLog() {
                       </td>
 
                       {/* 8. Confidence */}
-                      <td className="px-3 py-2 whitespace-nowrap md:px-6">
+                      <td className="px-3 py-3 whitespace-nowrap md:px-6">
                         <div className="flex items-center gap-2">
                           <span className="font-bold" style={{ color: confidenceColor }}>
                             {confidencePct}%
@@ -484,7 +484,7 @@ export default function AuditLog() {
                       </td>
 
                       {/* 9. Language */}
-                      <td className="px-3 py-2 whitespace-nowrap font-semibold text-[var(--text-secondary)] md:px-6">
+                      <td className="px-3 py-3 whitespace-nowrap font-semibold text-[var(--text-secondary)] md:px-6">
                         <span className="mr-1.5 text-[10px] px-1.5 py-0.5 rounded bg-[var(--border)] text-[var(--text-muted)]">
                           {langConfig.label}
                         </span> 
@@ -492,7 +492,7 @@ export default function AuditLog() {
                       </td>
 
                       {/* 10. Actions Badges */}
-                      <td className="max-w-[120px] px-3 py-2 md:px-6">
+                      <td className="max-w-[120px] px-3 py-3 md:px-6">
                         <div className="flex items-center gap-1.5">
                           {(inc.actionsTaken || []).map((action, actionIdx) => {
                             const meta = ACTION_META[action] || { icon: Zap, title: action, color: 'var(--text-muted)' };
@@ -512,14 +512,14 @@ export default function AuditLog() {
                       </td>
 
                       {/* 11. Override marker */}
-                      <td className="px-3 py-2 text-center md:px-6">
+                      <td className="px-3 py-3 text-center md:px-6">
                         {hasOverride ? (
                           <AlertCircle size={14} className="text-[var(--medium)] mx-auto cursor-help" title="Supervisor Override Applied" />
                         ) : null}
                       </td>
 
                       {/* 12. Details Link */}
-                      <td className="px-3 py-2 md:px-6">
+                      <td className="px-3 py-3 md:px-6">
                         <RouterLink
                           to={`/incidents/${inc._id}`}
                           className="px-2.5 py-1 bg-[var(--border)] text-[var(--text-secondary)] hover:text-white rounded transition-all hover:bg-[var(--bg-card-hover)] hover:scale-105 font-bold inline-flex items-center"

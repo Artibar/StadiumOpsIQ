@@ -36,11 +36,11 @@ function StatCard({ card, index }) {
         background: 'linear-gradient(180deg, rgba(17,23,38,0.96), rgba(9,13,22,0.98))',
         border: `1px solid ${card.color}4d`,
         borderRadius: 'var(--card-radius)',
-        padding: '16px 18px',
+        padding: '22px 24px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        height: '104px',
+        height: '128px',
         overflow: 'hidden',
         cursor: 'default',
         boxShadow: isCritical
@@ -120,14 +120,14 @@ export default function StatsBar({ stats }) {
         background: 'linear-gradient(180deg, rgba(17,23,38,0.98), rgba(9,13,22,0.98))',
         border: '1px solid var(--border)',
         borderRadius: 'var(--card-radius)',
-        height: '104px'
+        height: '128px'
       }}
     />
   ));
 
   if (!stats) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" style={{ padding: '8px 0' }}>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5" style={{ padding: '8px 0' }}>
         {kpiSkeleton}
       </div>
     );
@@ -159,7 +159,7 @@ export default function StatsBar({ stats }) {
           50% { opacity: 0.4; transform: scale(1.4); }
         }
       `}</style>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" style={{ padding: '8px 0' }}>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5" style={{ padding: '8px 0' }}>
         {cards.map((card, index) => (
           <StatCard key={index} card={card} index={index} />
         ))}
