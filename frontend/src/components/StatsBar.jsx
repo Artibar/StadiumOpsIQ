@@ -45,21 +45,28 @@ function StatCard({ card, index }) {
         animationDelay: `${index * 60}ms`
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-        <span className="soft-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
+        {/* whiteSpace: nowrap + overflow ellipsis is a safety net so a label
+            can never wrap to a second line and break the row's shared baseline —
+            it'll truncate gracefully instead, with the full label in the title attr */}
+        <span
+          className="soft-label"
+          title={card.label}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+        >
           {card.label}
           {isCritical && (
             <span
               className="pulsing-dot"
-              style={{ width: '5px', height: '5px', borderRadius: '50%', background: card.color }}
+              style={{ width: '5px', height: '5px', borderRadius: '50%', background: card.color, flexShrink: 0 }}
             />
           )}
         </span>
         <div
           style={{
-            width: '26px',
-            height: '26px',
-            borderRadius: '8px',
+            width: '32px',
+            height: '32px',
+            borderRadius: '9px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -68,7 +75,7 @@ function StatCard({ card, index }) {
             flexShrink: 0
           }}
         >
-          <card.icon size={13} style={{ color: card.color }} />
+          <card.icon size={15} style={{ color: card.color }} />
         </div>
       </div>
 
@@ -133,7 +140,9 @@ export default function StatsBar({ stats }) {
     { label: 'High', value: highCount, color: 'var(--high)', icon: AlertTriangle, pad: 2, suffix: highCount > 0 ? 'Active' : 'Clear', suffixColor: highCount > 0 ? 'var(--high)' : 'var(--text-muted)' },
     { label: 'Pending', value: stats.byStatus?.['pending-confirmation'] ?? 0, color: 'var(--medium)', icon: Clock, pad: 2, SuffixIcon: Hourglass, suffixColor: 'var(--medium)' },
     { label: 'Resolved', value: stats.byStatus?.resolved ?? 0, color: 'var(--low)', icon: CheckCircle2, SuffixIcon: CheckCircle2, suffixColor: 'var(--low)' },
-    { label: 'Avg Confidence', value: confidencePct + '%', color: 'var(--accent)', icon: Percent, suffix: confidenceLabel, suffixColor: confidencePct >= 75 ? 'var(--low)' : confidencePct >= 50 ? 'var(--medium)' : 'var(--critical)' }
+    // Shortened from "Avg Confidence" — that label was the one two-line
+    // wrap breaking the row's shared baseline against five one-line labels.
+    { label: 'Confidence', value: confidencePct + '%', color: 'var(--accent)', icon: Percent, suffix: confidenceLabel, suffixColor: confidencePct >= 75 ? 'var(--low)' : confidencePct >= 50 ? 'var(--medium)' : 'var(--critical)' }
   ];
 
   return (
