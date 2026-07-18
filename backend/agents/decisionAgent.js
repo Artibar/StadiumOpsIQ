@@ -7,7 +7,8 @@ let groq = null;
 function getGroqClient() {
   if (!groq) {
     groq = new Groq({
-      apiKey: process.env.GROQ_API_KEY || ''
+      apiKey: process.env.GROQ_API_KEY || '',
+      maxRetries: 0
     });
   }
   return groq;

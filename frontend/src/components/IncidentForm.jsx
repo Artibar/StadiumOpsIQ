@@ -283,6 +283,29 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
         </div>
       )}
 
+      {isSubmitting && (
+        <div
+          style={{
+            marginBottom: SPACE.lg,
+            padding: SPACE.md,
+            borderRadius: '10px',
+            border: '1px solid rgba(59,130,246,0.25)',
+            background: 'rgba(59,130,246,0.08)',
+            color: 'var(--accent)',
+            fontSize: 'var(--caption-size)',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: SPACE.sm,
+            animation: 'bannerPop 0.25s ease'
+          }}
+          aria-live="polite"
+        >
+          <Loader2 size={14} className="animate-spin" style={{ flexShrink: 0 }} />
+          <span>Processing your report — this can take up to a minute while our AI agents classify and route it</span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
         <div style={fieldWrapStyle}>
           <label htmlFor="incident-type" style={labelStyle}>Incident Type</label>

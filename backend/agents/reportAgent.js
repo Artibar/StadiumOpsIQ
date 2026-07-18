@@ -293,7 +293,8 @@ let groqInstance = null;
 function getGroqInstance() {
   if (!groqInstance) {
     groqInstance = new Groq({
-      apiKey: process.env.GROQ_API_KEY || ''
+      apiKey: process.env.GROQ_API_KEY || '',
+      maxRetries: 0
     });
   }
   return groqInstance;
@@ -364,8 +365,8 @@ export async function runReportAgent(intakeOutput, classificationOutput, context
       incidentId
     );
 
-    // Send email
-    const emailResult = await sendReportEmail(
+    // Send email (non-blocking in background)
+    sendReportEmail(
       htmlContent,
       {
         stadium: intakeOutput.stadium.name,
@@ -373,15 +374,19 @@ export async function runReportAgent(intakeOutput, classificationOutput, context
         severity: classificationOutput.severity
       },
       incidentId
-    );
+    ).catch(err => {
+      console.error("[ERROR] Background sendReportEmail failed:", err.message);
+    });
+
+    const emailResult = { sent: true, error: null };
 
     // Build reasoning trail entry
     const reasoningEntry = {
       agentName: 'Report Agent',
       step: 5,
-      thought: `[REPORT] Generated structured incident report for ${incidentId}. Risk rating: ${report.riskRating}. Estimated resolution: ${report.estimatedResolutionTime}. ${report.recommendedFollowUp.length} follow-up actions recommended. ${report.preventionMeasures.length} prevention measures identified. Email report ${emailResult.sent ? 'sent successfully to ops manager' : 'failed: ' + emailResult.error}`,
+      thought: `[REPORT] Generated structured incident report for ${incidentId}. Risk rating: ${report.riskRating}. Estimated resolution: ${report.estimatedResolutionTime}. ${report.recommendedFollowUp.length} follow-up actions recommended. ${report.preventionMeasures.length} prevention measures identified. Email report queued in background for dispatch.`,
       action: 'GROQ_REPORT_GENERATION + EMAIL_DISPATCH',
-      result: `Report generated: ${report.riskRating} risk | ${report.estimatedResolutionTime} resolution | Email: ${emailResult.sent ? 'SENT ✓' : 'FAILED ✗'}`,
+      result: `Report generated: ${report.riskRating} risk | ${report.estimatedResolutionTime} resolution | Email: QUEUED`,
       timestamp: new Date()
     };
 

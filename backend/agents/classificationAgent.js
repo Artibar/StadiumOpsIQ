@@ -138,7 +138,7 @@ export async function runClassificationAgent(intakeOutput) {
   }
 
   try {
-    const groq = new Groq({ apiKey });
+    const groq = new Groq({ apiKey, maxRetries: 0 });
 
     const userMessage = `
 INCIDENT REPORT:
