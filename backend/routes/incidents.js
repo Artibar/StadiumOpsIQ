@@ -3,11 +3,100 @@ import mongoose from 'mongoose';
 import rateLimit from 'express-rate-limit';
 import Incident from '../models/Incident.js';
 import { runPipeline } from '../pipeline/agentPipeline.js';
+import { runContextAgent } from '../agents/contextAgent.js';
+import { runReportAgent } from '../agents/reportAgent.js';
 
 import fetch from 'node-fetch';
 
 const router = express.Router();
 const statsRouter = express.Router();
+
+// ---------------------------------------------------------------------------
+// Helpers for backfilling a dossier when an incident skipped Agents 3-5
+// (low-confidence path) but a human later confirms/overrides it.
+// ---------------------------------------------------------------------------
+
+// Reconstructs the shape Agent 3 (Context) and Agent 5 (Report) expect,
+// using data already saved on the incident document.
+function rebuildAgentInputs(incident) {
+  const intakeOutput = {
+    detectedLanguage: incident.detectedLanguage,
+    translatedText: incident.translatedDescription,
+    stadium: {
+      name: incident.stadiumName,
+      city: incident.stadiumCity,
+      capacity: incident.stadiumCapacity,
+      latitude: incident.stadiumCoordinates?.latitude,
+      longitude: incident.stadiumCoordinates?.longitude
+    }
+  };
+  const classificationOutput = {
+    type: incident.type,
+    severity: incident.severity,
+    confidence: incident.confidence
+  };
+  return { intakeOutput, classificationOutput };
+}
+
+// Generates and attaches incidentReport if one doesn't already exist.
+// Safe to call from both /confirm and /override — no-ops if a report
+// already exists, and fails soft (logs + continues) so it never blocks
+// the human-review save.
+async function ensureReportGenerated(incident) {
+  if (incident.incidentReport) return;
+
+  try {
+    const { intakeOutput, classificationOutput } = rebuildAgentInputs(incident);
+
+    // Low-confidence path never ran the Context Agent — backfill it if missing.
+    const contextOutput = incident.liveContext
+      ? {
+          weather: incident.liveContext.weather,
+          matchStatus: incident.liveContext.matchStatus,
+          combinedRisk: incident.liveContext.combinedRiskLevel,
+          contextSummary: incident.liveContext.contextSummary
+        }
+      : await runContextAgent(intakeOutput, classificationOutput);
+
+    if (!incident.liveContext) {
+      incident.liveContext = {
+        weather: contextOutput.weather,
+        matchStatus: contextOutput.matchStatus,
+        combinedRiskLevel: contextOutput.combinedRisk,
+        contextSummary: contextOutput.contextSummary,
+        fetchedAt: new Date()
+      };
+    }
+
+    // Don't re-run the Decision Agent here — that would risk re-dispatching
+    // Discord/email side effects. Describe the decision that already
+    // happened via human review instead.
+    const decisionOutput = {
+      finalStatus: incident.status,
+      finalDecision: incident.finalDecision || 'Resolved via human review',
+      actionsTaken: incident.actionsTaken || []
+    };
+
+    const reportOutput = await runReportAgent(
+      intakeOutput,
+      classificationOutput,
+      contextOutput,
+      decisionOutput,
+      incident._id.toString()
+    );
+
+    incident.incidentReport = {
+      ...reportOutput.report,
+      generatedAt: new Date(),
+      emailSent: reportOutput.emailSent
+    };
+    incident.reasoningTrail.push(reportOutput.reasoningEntry);
+  } catch (err) {
+    console.error('[REPORT-BACKFILL] Failed to generate report on human review:', err);
+    // Intentionally swallow — a failed report backfill should not block
+    // the confirm/override action itself.
+  }
+}
 
 router.get('/stadiums', async (req, res) => {
   try {
@@ -116,7 +205,7 @@ router.patch('/:id/confirm', async (req, res, next) => {
       result: 'Status changed to escalated',
       timestamp: new Date()
     });
-
+    await ensureReportGenerated(incident);
     await incident.save();
     res.json(incident);
   } catch (error) {
@@ -147,7 +236,7 @@ router.patch('/:id/override', async (req, res, next) => {
       result: `Status changed to ${newStatus}`,
       timestamp: new Date()
     });
-
+    await ensureReportGenerated(incident);
     await incident.save();
     res.json(incident);
   } catch (error) {
