@@ -8,9 +8,7 @@ import {
 const NAV_ITEMS = [
   { label: 'Command Center', icon: Shield, to: '/' },
   { label: 'Incidents', icon: AlertTriangle, to: '/audit' },
-  { label: 'Resources', icon: Users, to: null },
-  { label: 'Analytics', icon: BarChart2, to: null },
-  { label: 'Archives', icon: RotateCcw, to: null }
+  
 ];
 
 export default function Layout({ children }) {
