@@ -103,7 +103,7 @@ export default function Dashboard() {
 
       <StatsBar stats={stats} />
 
-      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[4fr_6fr]">
+      <div className="mt-8 pt-10 grid grid-cols-1 gap-6 lg:grid-cols-[4fr_6fr]">
         <div className="surface-card p-[var(--card-padding)]" style={{ animation: 'gridIn 0.4s ease both' }}>
           <IncidentForm stadiums={stadiums} onIncidentCreated={handleIncidentCreated} />
         </div>
