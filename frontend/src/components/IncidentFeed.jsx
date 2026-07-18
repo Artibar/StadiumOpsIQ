@@ -54,6 +54,10 @@ const statusLabels = {
   'flagged-for-review': 'Flagged For Review'
 };
 
+// Fixed spacing scale — same tokens used across the whole dashboard now,
+// so cards line up with the form and stat cards instead of drifting.
+const SPACE = { xs: '6px', sm: '10px', md: '16px', lg: '24px' };
+
 export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
   const navigate = useNavigate();
   const [filterType, setFilterType] = useState('all');
@@ -78,176 +82,236 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
   });
 
   return (
-    <section className="flex h-full flex-col justify-between" style={{ minHeight: '420px' }} aria-labelledby="feed-title">
-      <div>
-        <div className="mb-6 flex items-center justify-between gap-3 border-b pb-4" style={{ borderColor: 'var(--border)' }}>
-          <div className="space-y-1">
-            <span id="feed-title" className="flex items-center gap-2" style={{ fontSize: 'var(--section-title-size)', fontWeight: 700 }}>
-              <Radio size={14} style={{ color: 'var(--low)' }} />
-              Live Incident Feed
-              <span className="pulsing-dot" style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--critical)', flexShrink: 0 }} />
-            </span>
-            <span className="soft-label flex items-center gap-1.5" aria-live="polite">
-              <span className="pulsing-dot" style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--low)', flexShrink: 0 }} />
-              Updated {secondsSinceUpdate}s ago
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setFiltersOpen((v) => !v)}
-              className="soft-button flex h-[30px] w-[30px] items-center justify-center"
-              style={{ color: filtersOpen ? 'var(--accent)' : undefined, borderColor: filtersOpen ? 'var(--accent)' : undefined }}
-              aria-label="Toggle filters"
-            >
-              <SlidersHorizontal size={13} />
-            </button>
-            <button
-              onClick={onRefresh}
-              className="soft-button flex items-center gap-1.5 px-3 py-1.5 font-bold transition-all duration-200 active:scale-[0.98]"
-              style={{ fontSize: 'var(--caption-size)' }}
-            >
-              <RefreshCw size={12} />
-              <span>REFRESH</span>
-            </button>
-          </div>
+    <section style={{ padding: '32px', display: 'flex', flexDirection: 'column', height: '100%' }} aria-labelledby="feed-title">
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: SPACE.md,
+          borderBottom: '1px solid var(--border)',
+          paddingBottom: SPACE.md,
+          marginBottom: SPACE.lg
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.xs }}>
+          <span id="feed-title" style={{ display: 'flex', alignItems: 'center', gap: SPACE.sm, fontSize: 'var(--section-title-size)', fontWeight: 700 }}>
+            <Radio size={14} style={{ color: 'var(--low)' }} />
+            Live Incident Feed
+            <span className="pulsing-dot" style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--critical)', flexShrink: 0 }} />
+          </span>
+          <span
+            style={{ display: 'flex', alignItems: 'center', gap: SPACE.xs, fontSize: 'var(--caption-size)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}
+            aria-live="polite"
+          >
+            <span className="pulsing-dot" style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--low)', flexShrink: 0 }} />
+            Updated {secondsSinceUpdate}s ago
+          </span>
         </div>
 
-        {filtersOpen && (
-          <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-            <select value={filterType} onChange={(e) => setFilterType(e.target.value)} aria-label="Filter by Incident Type" className="soft-input p-2.5 font-semibold" style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)' }}>
-              <option value="all">All Types</option>
-              <option value="medical">Medical</option>
-              <option value="security">Security</option>
-              <option value="crowd">Crowd</option>
-              <option value="fire">Fire</option>
-              <option value="weather">Weather</option>
-              <option value="lost-item">Lost Item</option>
-              <option value="other">Other</option>
-            </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: SPACE.sm, flexShrink: 0 }}>
+          <button
+            onClick={() => setFiltersOpen((v) => !v)}
+            className="soft-button"
+            style={{
+              width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: filtersOpen ? 'var(--accent)' : undefined,
+              borderColor: filtersOpen ? 'var(--accent)' : undefined
+            }}
+            aria-label="Toggle filters"
+          >
+            <SlidersHorizontal size={13} />
+          </button>
+          <button
+            onClick={onRefresh}
+            className="soft-button"
+            style={{ display: 'flex', alignItems: 'center', gap: SPACE.xs, padding: '8px 14px', fontWeight: 700, fontSize: 'var(--caption-size)' }}
+          >
+            <RefreshCw size={12} />
+            <span>REFRESH</span>
+          </button>
+        </div>
+      </div>
 
-            <select value={filterSeverity} onChange={(e) => setFilterSeverity(e.target.value)} aria-label="Filter by Incident Severity" className="soft-input p-2.5 font-semibold" style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)' }}>
-              <option value="all">All Severities</option>
-              <option value="critical">Critical</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
+      {filtersOpen && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: SPACE.sm, marginBottom: SPACE.md }}>
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} aria-label="Filter by Incident Type" className="soft-input" style={{ padding: '10px 12px', fontSize: 'var(--caption-size)', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            <option value="all">All Types</option>
+            <option value="medical">Medical</option>
+            <option value="security">Security</option>
+            <option value="crowd">Crowd</option>
+            <option value="fire">Fire</option>
+            <option value="weather">Weather</option>
+            <option value="lost-item">Lost Item</option>
+            <option value="other">Other</option>
+          </select>
 
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} aria-label="Filter by Incident Status" className="soft-input p-2.5 font-semibold" style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)' }}>
-              <option value="all">All Statuses</option>
-              <option value="open">Open</option>
-              <option value="pending-confirmation">Pending</option>
-              <option value="escalated">Escalated</option>
-              <option value="resolved">Resolved</option>
-              <option value="flagged-for-review">Flagged</option>
-            </select>
+          <select value={filterSeverity} onChange={(e) => setFilterSeverity(e.target.value)} aria-label="Filter by Incident Severity" className="soft-input" style={{ padding: '10px 12px', fontSize: 'var(--caption-size)', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            <option value="all">All Severities</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} aria-label="Filter by Incident Status" className="soft-input" style={{ padding: '10px 12px', fontSize: 'var(--caption-size)', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            <option value="all">All Statuses</option>
+            <option value="open">Open</option>
+            <option value="pending-confirmation">Pending</option>
+            <option value="escalated">Escalated</option>
+            <option value="resolved">Resolved</option>
+            <option value="flagged-for-review">Flagged</option>
+          </select>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.md, overflowY: 'auto', paddingRight: '4px', maxHeight: '520px' }} aria-live="polite">
+        {filteredIncidents.length === 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <Inbox size={30} style={{ marginBottom: SPACE.sm }} />
+            <h3 style={{ fontSize: 'var(--body-size)', fontWeight: 700, color: 'var(--text-secondary)', margin: 0 }}>
+              No active incidents matched
+            </h3>
+            <p style={{ margin: `${SPACE.xs} auto 0`, maxWidth: '280px', lineHeight: 1.6, fontSize: 'var(--caption-size)' }}>
+              Incidents matching selected criteria will display here.
+            </p>
           </div>
-        )}
+        ) : (
+          filteredIncidents.map((inc, idx) => {
+            const typeColor = TYPE_COLORS[inc.type] || 'var(--text-muted)';
+            const severityColor = SEVERITY_COLORS[inc.severity] || 'var(--low)';
+            const descPreview = inc.translatedDescription || inc.originalDescription || inc.description || '';
+            const descDisplay = descPreview.length > 120 ? `${descPreview.substring(0, 120)}...` : descPreview;
+            const temp = inc.liveContext?.weather?.temperature;
+            const phase = inc.liveContext?.matchStatus?.phase;
+            const TypeIcon = TYPE_ICONS[inc.type] || HelpCircle;
+            const isUrgent = inc.severity === 'critical' || inc.status === 'escalated';
 
-        <div className="space-y-4 overflow-y-auto pr-1" style={{ maxHeight: '440px' }} aria-live="polite">
-          {filteredIncidents.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center" style={{ color: 'var(--text-muted)' }}>
-              <Inbox size={30} className="mb-2.5" />
-              <h3 style={{ fontSize: 'var(--body-size)', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                No active incidents matched
-              </h3>
-              <p className="mx-auto mt-1.5 max-w-xs leading-relaxed" style={{ fontSize: 'var(--caption-size)' }}>
-                Incidents matching selected criteria will display here.
-              </p>
-            </div>
-          ) : (
-            filteredIncidents.map((inc, idx) => {
-              const typeColor = TYPE_COLORS[inc.type] || 'var(--text-muted)';
-              const severityColor = SEVERITY_COLORS[inc.severity] || 'var(--low)';
-              const descPreview = inc.translatedDescription || inc.originalDescription || inc.description || '';
-              const descDisplay = descPreview.length > 90 ? `${descPreview.substring(0, 90)}...` : descPreview;
-              const temp = inc.liveContext?.weather?.temperature;
-              const phase = inc.liveContext?.matchStatus?.phase;
-              const TypeIcon = TYPE_ICONS[inc.type] || HelpCircle;
-              const isUrgent = inc.severity === 'critical' || inc.status === 'escalated';
-
-              return (
-                <div
-                  key={inc._id}
-                  onClick={() => navigate(`/incidents/${inc._id}`)}
-                  className="hover-lift surface-card relative flex cursor-pointer flex-col gap-3 p-5"
-                  style={{
-                    borderColor: `${severityColor}40`,
-                    boxShadow: isUrgent ? `0 0 0 1px ${severityColor}22, 0 10px 26px rgba(0,0,0,0.3)` : undefined,
-                    animation: 'subtle-rise 0.35s ease both',
-                    animationDelay: `${Math.min(idx, 8) * 45}ms`
-                  }}
-                >
-                  {/* Corner severity + type badge */}
-                  <span
-                    className="absolute right-0 top-0 font-bold uppercase"
-                    style={{
-                      fontSize: '9px',
-                      letterSpacing: '0.08em',
-                      padding: '6px 12px',
-                      color: severityColor,
-                      background: `${severityColor}1f`,
-                      borderBottomLeftRadius: '12px',
-                      borderLeft: `1px solid ${severityColor}55`,
-                      borderBottom: `1px solid ${severityColor}55`
-                    }}
-                  >
-                    {inc.severity === 'critical' && (
-                      <span className="pulsing-dot mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle" style={{ background: severityColor }} />
-                    )}
-                    {inc.severity} {inc.type}
-                  </span>
-
-                  <div className="flex items-start gap-3 pr-24">
+            return (
+              <div
+                key={inc._id}
+                onClick={() => navigate(`/incidents/${inc._id}`)}
+                className="hover-lift surface-card"
+                style={{
+                  cursor: 'pointer',
+                  padding: SPACE.lg,
+                  borderColor: `${severityColor}40`,
+                  boxShadow: isUrgent ? `0 0 0 1px ${severityColor}22, 0 10px 26px rgba(0,0,0,0.3)` : undefined,
+                  animation: 'subtle-rise 0.35s ease both',
+                  animationDelay: `${Math.min(idx, 8) * 45}ms`
+                }}
+              >
+                {/* Header: icon + title on the left, badge on the right — normal
+                    flex flow, never absolutely positioned, so long titles and
+                    long badges (e.g. "CRITICAL MEDICAL") wrap instead of colliding */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: SPACE.sm, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: SPACE.sm, minWidth: 0, flex: '1 1 200px' }}>
                     <div
-                      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg"
-                      style={{ background: `${typeColor}1a`, border: `1px solid ${typeColor}40` }}
+                      style={{
+                        width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: `${typeColor}1a`, border: `1px solid ${typeColor}40`
+                      }}
                     >
                       <TypeIcon size={16} style={{ color: typeColor }} />
                     </div>
-
-                    <div className="min-w-0 flex-1 space-y-1.5">
-                      <div className="flex items-center gap-1.5 flex-wrap" style={{ fontSize: 'var(--body-size)', fontWeight: 700, color: 'var(--text-primary)' }}>
-                        <MapPin size={11} className="flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
-                        <span className="truncate">{inc.stadiumName || 'Command Station 04'}</span>
+                    <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: SPACE.xs, flexWrap: 'wrap', fontSize: 'var(--body-size)', fontWeight: 700, color: 'var(--text-primary)' }}>
+                        <MapPin size={11} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                        <span>{inc.stadiumName || 'Command Station 04'}</span>
                         <span style={{ color: 'var(--text-muted)' }}>|</span>
-                        <span className="whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>Zone {inc.zoneLocation}</span>
-                      </div>
-                      <div style={{ fontSize: 'var(--body-size)', lineHeight: 1.55, color: 'var(--text-secondary)' }}>
-                        {descDisplay}
+                        <span style={{ color: 'var(--text-secondary)' }}>Zone {inc.zoneLocation}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span
-                      className="inline-block rounded-md px-2 py-1 font-bold uppercase"
-                      style={{ fontSize: '9px', letterSpacing: '0.06em', color: 'var(--text-secondary)', background: 'rgba(148,163,184,0.08)', border: '1px solid var(--border)' }}
-                    >
-                      {statusLabels[inc.status] || inc.status}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-3 border-t pt-3" style={{ borderColor: 'var(--border)', fontSize: 'var(--caption-size)', fontWeight: 700, color: 'var(--text-muted)' }}>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="flex items-center gap-1"><Clock size={11} /><span>{formatTimeAgo(inc.createdAt)}</span></span>
-                      {temp !== undefined && temp !== null && <span className="flex items-center gap-1"><Thermometer size={11} /><span>{temp}°C</span></span>}
-                      {phase && phase !== 'inactive' && <span className="flex items-center gap-1 uppercase"><ShieldAlert size={11} /><span>{phase}</span></span>}
-                    </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/incidents/${inc._id}`); }}
-                      className="border-none bg-transparent p-0 hover:underline"
-                      style={{ fontSize: 'var(--caption-size)', fontWeight: 700, color: 'var(--accent)' }}
-                    >
-                      VIEW DETAILS <ArrowRight size={12} className="ml-1 inline" />
-                    </button>
-                  </div>
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      fontSize: '9px',
+                      fontWeight: 700,
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      padding: '6px 10px',
+                      borderRadius: '8px',
+                      color: severityColor,
+                      background: `${severityColor}1f`,
+                      border: `1px solid ${severityColor}40`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {inc.severity === 'critical' && (
+                      <span className="pulsing-dot" style={{ width: '5px', height: '5px', borderRadius: '50%', background: severityColor, flexShrink: 0 }} />
+                    )}
+                    {inc.severity} {inc.type}
+                  </span>
                 </div>
-              );
-            })
-          )}
-        </div>
+
+                {/* Description */}
+                <div style={{ marginTop: SPACE.sm, fontSize: 'var(--body-size)', lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+                  {descDisplay}
+                </div>
+
+                {/* Status pill */}
+                <div style={{ marginTop: SPACE.md }}>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      fontSize: '9px',
+                      fontWeight: 700,
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                      padding: '6px 10px',
+                      borderRadius: '8px',
+                      color: 'var(--text-secondary)',
+                      background: 'rgba(148,163,184,0.08)',
+                      border: '1px solid var(--border)'
+                    }}
+                  >
+                    {statusLabels[inc.status] || inc.status}
+                  </span>
+                </div>
+
+                {/* Footer */}
+                <div
+                  style={{
+                    marginTop: SPACE.md,
+                    paddingTop: SPACE.sm,
+                    borderTop: '1px solid var(--border)',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: SPACE.sm,
+                    fontSize: 'var(--caption-size)',
+                    fontWeight: 700,
+                    color: 'var(--text-muted)'
+                  }}
+                >
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: SPACE.md }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={11} /><span>{formatTimeAgo(inc.createdAt)}</span></span>
+                    {temp !== undefined && temp !== null && (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Thermometer size={11} /><span>{temp}°C</span></span>
+                    )}
+                    {phase && phase !== 'inactive' && (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px', textTransform: 'uppercase' }}><ShieldAlert size={11} /><span>{phase}</span></span>
+                    )}
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); navigate(`/incidents/${inc._id}`); }}
+                    style={{ border: 'none', background: 'transparent', padding: 0, fontSize: 'var(--caption-size)', fontWeight: 700, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                  >
+                    VIEW DETAILS <ArrowRight size={12} />
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </section>
   );
