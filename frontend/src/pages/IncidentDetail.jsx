@@ -190,6 +190,24 @@ export default function IncidentDetail() {
 
   const currentSeverityColor = severityColors[incident.severity] || 'var(--low)';
 
+  const formatTimestamp = (value) => {
+    if (!value) return 'Pending';
+    return new Date(value).toLocaleString([], {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
+  };
+
+  const overrideLogEntry = Array.isArray(incident.reasoningTrail)
+    ? incident.reasoningTrail
+        .filter((step) => step?.action === 'HUMAN_OVERRIDE')
+        .slice(-1)[0]
+    : null;
+
+  const humanOverrideReason = overrideLogEntry?.thought
+    ? overrideLogEntry.thought.replace(/^\[HUMAN\]\s*Human operator overrode AI decision\.\s*Reason:\s*/i, '')
+    : '';
+
   // Presentational only — how far along the timeline visually fills, based on the same completed-step booleans below
   const timelineSteps = [true, true, !!tReviewed, !!tDispatched, !!tResolved];
   const completedCount = timelineSteps.filter(Boolean).length;
@@ -310,7 +328,7 @@ export default function IncidentDetail() {
               </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--grid-gap)', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--grid-gap)', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
                 <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Incident ID</span>
                 <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0, fontFamily: 'monospace' }}>
@@ -332,9 +350,15 @@ export default function IncidentDetail() {
                   {incident.stadiumName}
                 </p>
               </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>City / Capacity</span>
+                <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
+                  {incident.stadiumCity || 'Unknown'}{incident.stadiumCapacity ? ` • ${incident.stadiumCapacity}` : ''}
+                </p>
+              </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--grid-gap)', paddingTop: '20px', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--grid-gap)', paddingTop: '20px', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
                 <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <MapPin size={11} />
@@ -354,6 +378,14 @@ export default function IncidentDetail() {
                 <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Reporter Language</span>
                 <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                   {getLanguageLabel(incident.detectedLanguage)}
+                </p>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Coordinates</span>
+                <p style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
+                  {incident.stadiumCoordinates?.latitude !== undefined && incident.stadiumCoordinates?.longitude !== undefined
+                    ? `${incident.stadiumCoordinates.latitude}, ${incident.stadiumCoordinates.longitude}`
+                    : 'Not Available'}
                 </p>
               </div>
             </div>
@@ -399,6 +431,34 @@ export default function IncidentDetail() {
             </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--grid-gap)' }}>
+              {/* Combined Risk + Timestamp Summary */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--bg-primary)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h3 style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ShieldAlert size={15} className="text-[var(--medium)]" />
+                  <span>Context Risk Summary</span>
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Combined Risk</span>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+                      {incident.liveContext?.combinedRiskLevel || 'Not Available'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Context Fetched</span>
+                    <span style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: 'var(--text-primary)' }}>
+                      {incident.liveContext?.fetchedAt ? formatTimestamp(incident.liveContext.fetchedAt) : 'Not Available'}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+                  <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Context Summary</span>
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-primary)', fontWeight: '600', lineHeight: '1.4', display: 'block' }}>
+                    {incident.liveContext?.contextSummary || 'No operational schedule matched.'}
+                  </span>
+                </div>
+              </div>
+
               {/* Weather Telemetry */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--bg-primary)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
                 <h3 style={{ fontSize: 'var(--body-size)', fontWeight: '800', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -1020,7 +1080,19 @@ export default function IncidentDetail() {
                 {incident.incidentReport?.generatedAt && (
                   <div>
                     <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>Dossier Generation</span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{new Date(incident.incidentReport.generatedAt).toLocaleTimeString()}</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{formatTimestamp(incident.incidentReport.generatedAt)}</span>
+                  </div>
+                )}
+                {incident.humanConfirmedAt && (
+                  <div>
+                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>Supervisor Approval</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{formatTimestamp(incident.humanConfirmedAt)}</span>
+                  </div>
+                )}
+                {incident.resolvedAt && (
+                  <div>
+                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>Resolution Logged</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{formatTimestamp(incident.resolvedAt)}</span>
                   </div>
                 )}
                 {incident.incidentReport?.emailSent !== undefined && (
@@ -1117,83 +1189,7 @@ export default function IncidentDetail() {
               <span>Evidence Ledger</span>
             </h2>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: 'var(--grid-gap)',
-              marginBottom: (incident.retrievedRegulations && incident.retrievedRegulations.length > 0) || (incident.citations && incident.citations.length > 0) ? '16px' : '0'
-            }}>
-              {/* Doc attachment */}
-              <div className="hover-lift" style={{
-                background: 'var(--bg-primary)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--card-radius)',
-                padding: 'var(--card-padding)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                transition: 'border-color 0.2s ease'
-              }}>
-                <div style={{
-                  width: '40px', height: '40px', borderRadius: '10px',
-                  background: 'rgba(79, 70, 229, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                }}>
-                  <FileText size={20} className="text-[var(--accent)]" />
-                </div>
-                <div>
-                  <span style={{ display: 'block', fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff' }}>incident_dossier.pdf</span>
-                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)' }}>PDF Report • 142 KB</span>
-                </div>
-              </div>
-
-              {/* Video attachment */}
-              <div className="hover-lift" style={{
-                background: 'var(--bg-primary)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--card-radius)',
-                padding: 'var(--card-padding)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                transition: 'border-color 0.2s ease'
-              }}>
-                <div style={{
-                  width: '40px', height: '40px', borderRadius: '10px',
-                  background: 'rgba(79, 70, 229, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                }}>
-                  <Play size={20} className="text-[var(--accent)]" />
-                </div>
-                <div>
-                  <span style={{ display: 'block', fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff' }}>security_feed_gate4.mp4</span>
-                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)' }}>CCTV Capture • 1.2 MB</span>
-                </div>
-              </div>
-
-              {/* Telemetry attachment */}
-              <div className="hover-lift" style={{
-                background: 'var(--bg-primary)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--card-radius)',
-                padding: 'var(--card-padding)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                transition: 'border-color 0.2s ease'
-              }}>
-                <div style={{
-                  width: '40px', height: '40px', borderRadius: '10px',
-                  background: 'rgba(79, 70, 229, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                }}>
-                  <File size={20} className="text-[var(--accent)]" />
-                </div>
-                <div>
-                  <span style={{ display: 'block', fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff' }}>telemetry_log.json</span>
-                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)' }}>JSON Dataset • 48 KB</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Retrieved Regulations / Citations - Conditionally Render Only if they exist */}
+            {/* Evidence is shown only when fields are present in the backend payload */}
             {((incident.retrievedRegulations && incident.retrievedRegulations.length > 0) || (incident.citations && incident.citations.length > 0)) && (
               <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '16px' }}>
                 <details style={{ cursor: 'pointer' }}>
@@ -1223,7 +1219,7 @@ export default function IncidentDetail() {
 
         {/* Right Column (4 cols): Timeline */}
         <div style={{ gridColumn: 'span 4' }}>
-          
+
           {/* SECTION 4: Incident Timeline */}
           <div style={{
             background: 'var(--bg-card)',
@@ -1242,7 +1238,7 @@ export default function IncidentDetail() {
 
             {/* Vertical Timeline sequence */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative' }}>
-              
+
               {/* Timeline center line — base (unfilled) */}
               <div style={{
                 position: 'absolute',
@@ -1280,7 +1276,7 @@ export default function IncidentDetail() {
                 <div>
                   <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>Reported</span>
                   <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
-                    {tReported ? tReported.toLocaleString() : 'Pending'}
+                    {tReported ? formatTimestamp(tReported) : 'Pending'}
                   </span>
                 </div>
               </div>
@@ -1300,7 +1296,7 @@ export default function IncidentDetail() {
                 <div>
                   <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>AI Classified</span>
                   <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
-                    {tClassified ? tClassified.toLocaleString() : 'Pending'}
+                    {tClassified ? formatTimestamp(tClassified) : 'Pending'}
                   </span>
                 </div>
               </div>
@@ -1320,7 +1316,7 @@ export default function IncidentDetail() {
                 <div>
                   <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>Supervisor Reviewed</span>
                   <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
-                    {tReviewed ? tReviewed.toLocaleString() : 'Pending verification'}
+                    {tReviewed ? formatTimestamp(tReviewed) : 'Pending verification'}
                   </span>
                 </div>
               </div>
@@ -1340,7 +1336,7 @@ export default function IncidentDetail() {
                 <div>
                   <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>Team Dispatched</span>
                   <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
-                    {tDispatched ? tDispatched.toLocaleString() : 'Awaiting dispatch confirmation'}
+                    {tDispatched ? formatTimestamp(tDispatched) : 'Awaiting dispatch confirmation'}
                   </span>
                 </div>
               </div>
@@ -1360,7 +1356,7 @@ export default function IncidentDetail() {
                 <div>
                   <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: '#fff', display: 'block' }}>Resolved</span>
                   <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
-                    {tResolved ? tResolved.toLocaleString() : 'Active event'}
+                    {tResolved ? formatTimestamp(tResolved) : 'Active event'}
                   </span>
                 </div>
               </div>

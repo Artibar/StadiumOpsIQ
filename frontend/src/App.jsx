@@ -11,7 +11,9 @@ function Navbar() {
   useEffect(() => {
     const checkBackendStatus = async () => {
       try {
-        const baseURL = import.meta.env.VITE_API_URL || 'https://stadiumopsiq.onrender.com';
+        const baseURL = typeof window !== 'undefined' && window.location?.hostname === 'localhost'
+          ? 'http://localhost:5000'
+          : (import.meta.env.VITE_API_URL || 'https://stadiumopsiq.onrender.com');
         const res = await fetch(`${baseURL}/api/incidents`, { method: 'GET' });
         setIsOnline(res.status === 200);
       } catch (err) {
@@ -25,67 +27,65 @@ function Navbar() {
   }, []);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg-card)] border-b border-[var(--border)]" style={{ height: '56px' }}>
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[var(--border)] bg-[rgba(10,15,26,0.92)] backdrop-blur-sm" style={{ height: '64px' }}>
       <div style={{
         maxWidth: '1400px',
         margin: '0 auto',
         height: '100%',
-        padding: '0 32px',
+        padding: '0 20px',
         display: 'grid',
         gridTemplateColumns: '1fr auto 1fr',
-        alignItems: 'center'
+        alignItems: 'center',
+        gap: '16px'
       }}>
-        {/* Left Section */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <Link to="/" className="flex items-center gap-2 select-none decoration-none text-[var(--text-primary)] hover:opacity-90">
-            <Shield size={18} className="text-[var(--accent)]" />
-            <span className="text-sm font-black tracking-tight text-white">
-              StadiumOps IQ
-            </span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--accent-soft)]">
+              <Shield size={16} className="text-[var(--accent)]" />
+            </div>
+            <div className="min-w-0">
+              <span className="block text-sm font-semibold tracking-tight text-white">
+                StadiumOps IQ
+              </span>
+              <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                Enterprise Command Center
+              </span>
+            </div>
           </Link>
-          <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--border)] text-[var(--text-muted)] font-bold tracking-wider uppercase">
-            FIFA 2026
-          </span>
         </div>
 
-        {/* Center Section (Nav Links) */}
-        <div className="flex items-center h-full gap-6">
+        <div className="flex items-center h-full gap-4 md:gap-6">
           <NavLink
             to="/"
             className={({ isActive }) =>
-              `flex items-center h-full text-[11px] uppercase tracking-wider font-bold border-b-2 transition duration-200 ${
+              `flex items-center h-full text-[11px] uppercase tracking-[0.16em] font-bold border-b-2 transition duration-200 ${
                 isActive
                   ? 'text-[var(--accent)] border-[var(--accent)]'
                   : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'
               }`
             }
-            style={{ height: '56px' }}
+            style={{ height: '64px' }}
           >
             Dashboard
           </NavLink>
           <NavLink
             to="/audit"
             className={({ isActive }) =>
-              `flex items-center h-full text-[11px] uppercase tracking-wider font-bold border-b-2 transition duration-200 ${
+              `flex items-center h-full text-[11px] uppercase tracking-[0.16em] font-bold border-b-2 transition duration-200 ${
                 isActive
                   ? 'text-[var(--accent)] border-[var(--accent)]'
                   : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'
               }`
             }
-            style={{ height: '56px' }}
+            style={{ height: '64px' }}
           >
             Audit Log
           </NavLink>
         </div>
 
-        {/* Right Section */}
         <div className="flex items-center gap-2 select-none justify-self-end">
-          <span
-            className={`w-2 h-2 rounded-full pulsing-dot ${
-              isOnline ? 'bg-[var(--low)]' : 'bg-[var(--critical)]'
-            }`}
-          />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] hide-mobile">
+          <span className={`w-2 h-2 rounded-full pulsing-dot ${isOnline ? 'bg-[var(--low)]' : 'bg-[var(--critical)]'}`} />
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)] hide-mobile">
             {isOnline ? 'System Online' : 'System Offline'}
           </span>
         </div>
@@ -97,12 +97,10 @@ function Navbar() {
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-        {/* Fixed Header */}
+      <div className="flex min-h-screen flex-col" style={{ background: 'var(--bg-primary)' }}>
         <Navbar />
 
-        {/* Offset fixed navbar */}
-        <main className="flex-grow pt-14" style={{ paddingBottom: '32px' }}>
+        <main className="flex-1 pt-16 pb-8">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/incidents/:id" element={<IncidentDetail />} />
@@ -110,8 +108,7 @@ export default function App() {
           </Routes>
         </main>
 
-        {/* Simple Operations Footer */}
-        <footer className="py-4 text-center text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-t border-[var(--border)] bg-[var(--bg-card)]">
+        <footer className="border-t border-[var(--border)] bg-[rgba(10,15,26,0.75)] py-4 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
           © {new Date().getFullYear()} StadiumOps IQ • Operational Intelligence Command Center
         </footer>
       </div>

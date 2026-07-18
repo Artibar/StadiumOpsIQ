@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RefreshCw, MapPin, Clock, Thermometer, ShieldAlert, ArrowRight, Inbox, Radio } from 'lucide-react';
+import {
+  RefreshCw, MapPin, Clock, Thermometer, ShieldAlert, ArrowRight, Inbox, Radio,
+  HeartPulse, Flame, Users, CloudRain, Search as SearchIcon, HelpCircle, SlidersHorizontal
+} from 'lucide-react';
 
 function formatTimeAgo(dateInput) {
   const date = new Date(dateInput);
@@ -16,14 +19,24 @@ function formatTimeAgo(dateInput) {
   return `${diffDays}d ago`;
 }
 
+const TYPE_ICONS = {
+  medical: HeartPulse,
+  security: ShieldAlert,
+  crowd: Users,
+  fire: Flame,
+  weather: CloudRain,
+  'lost-item': SearchIcon,
+  other: HelpCircle
+};
+
 export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
   const navigate = useNavigate();
   const [filterType, setFilterType] = useState('all');
   const [filterSeverity, setFilterSeverity] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
-  // Counter to show "Updated X seconds ago"
   useEffect(() => {
     setSecondsSinceUpdate(0);
     const timer = setInterval(() => {
@@ -32,7 +45,6 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
     return () => clearInterval(timer);
   }, [lastUpdated]);
 
-  // Client-side filtering logic
   const filteredIncidents = (incidents || []).filter((inc) => {
     if (filterType !== 'all' && inc.type !== filterType) return false;
     if (filterSeverity !== 'all' && inc.severity !== filterSeverity) return false;
@@ -48,15 +60,15 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
   };
 
   const statusLabels = {
-    'open': 'Open',
-    'pending-confirmation': 'Pending',
-    'escalated': 'Escalated',
-    'resolved': 'Resolved',
-    'flagged-for-review': 'Flagged'
+    open: 'Open',
+    'pending-confirmation': 'Pending Confirmation',
+    escalated: 'Escalated',
+    resolved: 'Resolved',
+    'flagged-for-review': 'Flagged For Review'
   };
 
   return (
-    <section className="select-none flex flex-col justify-between h-full" style={{ minHeight: '420px' }} aria-labelledby="feed-title">
+    <section className="flex h-full flex-col justify-between select-none" style={{ minHeight: '420px' }} aria-labelledby="feed-title">
       <style>{`
         @keyframes feedCardIn {
           from { opacity: 0; transform: translateX(-6px); }
@@ -67,231 +79,168 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
           50% { opacity: 0.4; transform: scale(1.2); }
         }
       `}</style>
+
       <div>
-        {/* Header Row */}
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-3.5" style={{ marginBottom: '16px' }}>
-          <div className="flex flex-col">
-            <span id="feed-title" className="font-semibold text-white flex items-center gap-2" style={{ fontSize: 'var(--section-title-size)' }}>
-              <Radio size={15} style={{ color: 'var(--low)' }} />
+        <div className="mb-4 flex items-center justify-between gap-3 border-b pb-3.5" style={{ borderColor: 'var(--border)' }}>
+          <div className="space-y-1">
+            <span id="feed-title" className="flex items-center gap-2" style={{ fontSize: 'var(--section-title-size)', fontWeight: 700, letterSpacing: '0.02em' }}>
+              <Radio size={14} className="text-[var(--low)]" />
               Live Incident Feed
             </span>
-            <span className="text-[var(--text-muted)] font-bold uppercase tracking-wider mt-0.5 flex items-center gap-1.5" style={{ fontSize: 'var(--caption-size)' }} aria-live="polite">
-              <span style={{
-                width: '6px',
-                height: '6px',
-                borderRadius: '50%',
-                background: 'var(--low)',
-                animation: 'livePulse 1.8s ease-in-out infinite',
-                flexShrink: 0
-              }} />
+            <span className="flex items-center gap-1.5" style={{ fontSize: 'var(--caption-size)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-muted)' }} aria-live="polite">
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--low)', animation: 'livePulse 1.8s ease-in-out infinite', flexShrink: 0 }} />
               Updated {secondsSinceUpdate}s ago
             </span>
           </div>
-          <button
-            onClick={onRefresh}
-            className="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)] hover:text-white transition-all duration-200 cursor-pointer flex items-center gap-1.5 font-bold hover:border-[var(--accent)] active:scale-95"
-            style={{ fontSize: 'var(--caption-size)' }}
-          >
-            <RefreshCw size={12} />
-            <span>Refresh</span>
-          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setFiltersOpen((v) => !v)}
+              className="soft-button flex h-[30px] w-[30px] items-center justify-center"
+              style={{ color: filtersOpen ? 'var(--accent)' : undefined, borderColor: filtersOpen ? 'var(--accent)' : undefined }}
+              aria-label="Toggle filters"
+            >
+              <SlidersHorizontal size={13} />
+            </button>
+            <button
+              onClick={onRefresh}
+              className="soft-button flex items-center gap-1.5 px-3 py-1.5 font-bold transition-all duration-200 active:scale-[0.98]"
+              style={{ fontSize: 'var(--caption-size)' }}
+            >
+              <RefreshCw size={12} />
+              <span>REFRESH</span>
+            </button>
+          </div>
         </div>
 
-        {/* Filter Row */}
-        <div className="grid grid-cols-3" style={{ gap: 'var(--field-gap)', marginBottom: '16px' }}>
-          {/* Type Filter */}
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            aria-label="Filter by Incident Type"
-            className="bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] font-semibold cursor-pointer transition-colors"
-            style={{ fontSize: 'var(--caption-size)' }}
-          >
-            <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Types</option>
-            <option value="medical" style={{ background: '#151B2E', color: '#fff' }}>Medical</option>
-            <option value="security" style={{ background: '#151B2E', color: '#fff' }}>Security</option>
-            <option value="crowd" style={{ background: '#151B2E', color: '#fff' }}>Crowd</option>
-            <option value="fire" style={{ background: '#151B2E', color: '#fff' }}>Fire</option>
-            <option value="weather" style={{ background: '#151B2E', color: '#fff' }}>Weather</option>
-            <option value="lost-item" style={{ background: '#151B2E', color: '#fff' }}>Lost Item</option>
-            <option value="other" style={{ background: '#151B2E', color: '#fff' }}>Other</option>
-          </select>
+        {filtersOpen && (
+          <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <select value={filterType} onChange={(e) => setFilterType(e.target.value)} aria-label="Filter by Incident Type" className="soft-input p-2.5 font-semibold" style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)' }}>
+              <option value="all">All Types</option>
+              <option value="medical">Medical</option>
+              <option value="security">Security</option>
+              <option value="crowd">Crowd</option>
+              <option value="fire">Fire</option>
+              <option value="weather">Weather</option>
+              <option value="lost-item">Lost Item</option>
+              <option value="other">Other</option>
+            </select>
 
-          {/* Severity Filter */}
-          <select
-            value={filterSeverity}
-            onChange={(e) => setFilterSeverity(e.target.value)}
-            aria-label="Filter by Incident Severity"
-            className="bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] font-semibold cursor-pointer transition-colors"
-            style={{ fontSize: 'var(--caption-size)' }}
-          >
-            <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Severities</option>
-            <option value="critical" style={{ background: '#151B2E', color: '#fff' }}>Critical</option>
-            <option value="high" style={{ background: '#151B2E', color: '#fff' }}>High</option>
-            <option value="medium" style={{ background: '#151B2E', color: '#fff' }}>Medium</option>
-            <option value="low" style={{ background: '#151B2E', color: '#fff' }}>Low</option>
-          </select>
+            <select value={filterSeverity} onChange={(e) => setFilterSeverity(e.target.value)} aria-label="Filter by Incident Severity" className="soft-input p-2.5 font-semibold" style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)' }}>
+              <option value="all">All Severities</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
 
-          {/* Status Filter */}
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            aria-label="Filter by Incident Status"
-            className="bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--text-secondary)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] font-semibold cursor-pointer transition-colors"
-            style={{ fontSize: 'var(--caption-size)' }}
-          >
-            <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Statuses</option>
-            <option value="open" style={{ background: '#151B2E', color: '#fff' }}>Open</option>
-            <option value="pending-confirmation" style={{ background: '#151B2E', color: '#fff' }}>Pending</option>
-            <option value="escalated" style={{ background: '#151B2E', color: '#fff' }}>Escalated</option>
-            <option value="resolved" style={{ background: '#151B2E', color: '#fff' }}>Resolved</option>
-            <option value="flagged-for-review" style={{ background: '#151B2E', color: '#fff' }}>Flagged</option>
-          </select>
-        </div>
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} aria-label="Filter by Incident Status" className="soft-input p-2.5 font-semibold" style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)' }}>
+              <option value="all">All Statuses</option>
+              <option value="open">Open</option>
+              <option value="pending-confirmation">Pending</option>
+              <option value="escalated">Escalated</option>
+              <option value="resolved">Resolved</option>
+              <option value="flagged-for-review">Flagged</option>
+            </select>
+          </div>
+        )}
 
-        {/* Incidents feed container */}
-        <div className="space-y-3 pr-1 overflow-y-auto" style={{ maxHeight: '380px' }} aria-live="polite">
+        <div className="space-y-3 overflow-y-auto pr-1" style={{ maxHeight: '440px' }} aria-live="polite">
           {filteredIncidents.length === 0 ? (
-            /* Empty State */
-            <div className="flex flex-col items-center justify-center py-20 text-center text-[var(--text-muted)]">
-              <Inbox size={32} className="mb-2.5 text-[var(--text-muted)]" />
-              <h3 className="font-bold text-[var(--text-secondary)]" style={{ fontSize: 'var(--body-size)' }}>
+            <div className="flex flex-col items-center justify-center py-20 text-center" style={{ color: 'var(--text-muted)' }}>
+              <Inbox size={30} className="mb-2.5" />
+              <h3 style={{ fontSize: 'var(--body-size)', fontWeight: 700, color: 'var(--text-secondary)' }}>
                 No active incidents matched
               </h3>
-              <p className="max-w-xs mx-auto mt-1.5 leading-relaxed font-medium text-[var(--text-muted)]" style={{ fontSize: 'var(--caption-size)' }}>
-                Incidents matching selected criteria will display here. Multi-lingual support active.
+              <p className="mx-auto mt-1.5 max-w-xs leading-relaxed" style={{ fontSize: 'var(--caption-size)' }}>
+                Incidents matching selected criteria will display here.
               </p>
             </div>
           ) : (
             filteredIncidents.map((inc, idx) => {
               const sideColor = severityColors[inc.severity] || 'var(--low)';
               const descPreview = inc.translatedDescription || inc.originalDescription || '';
-              const descDisplay =
-                descPreview.length > 80
-                  ? `${descPreview.substring(0, 80)}...`
-                  : descPreview;
-
+              const descDisplay = descPreview.length > 84 ? `${descPreview.substring(0, 84)}...` : descPreview;
               const temp = inc.liveContext?.weather?.temperature;
               const phase = inc.liveContext?.matchStatus?.phase;
-
-              const statusColors = {
-                open: 'var(--accent)',
-                'pending-confirmation': 'var(--medium)',
-                escalated: 'var(--critical)',
-                resolved: 'var(--low)',
-                'flagged-for-review': 'var(--high)'
-              };
-              const statusColor = statusColors[inc.status] || 'var(--accent)';
-
+              const TypeIcon = TYPE_ICONS[inc.type] || HelpCircle;
               const isUrgent = inc.severity === 'critical' || inc.status === 'escalated';
 
               return (
                 <div
                   key={inc._id}
                   onClick={() => navigate(`/incidents/${inc._id}`)}
-                  className="hover-lift bg-[var(--bg-primary)] border cursor-pointer flex flex-col gap-3 transition-all duration-200 relative overflow-hidden"
+                  className="hover-lift relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-[12px] border p-4 transition-all duration-200"
                   style={{
-                    borderLeft: `4px solid ${sideColor}`,
-                    borderTop: '1px solid var(--border)',
-                    borderRight: '1px solid var(--border)',
-                    borderBottom: '1px solid var(--border)',
-                    borderRadius: 'var(--card-radius)',
-                    padding: 'var(--card-padding)',
-                    boxShadow: isUrgent
-                      ? `0 0 0 1px ${sideColor}30, 0 2px 8px rgba(0,0,0,0.35)`
-                      : '0 2px 6px rgba(0,0,0,0.2)',
+                    borderColor: `${sideColor}40`,
+                    background: 'linear-gradient(180deg, rgba(15,20,33,0.94), rgba(9,13,22,0.98))',
+                    boxShadow: isUrgent ? `0 0 0 1px ${sideColor}22, 0 10px 26px rgba(0,0,0,0.3)` : '0 10px 26px rgba(0,0,0,0.22)',
                     animation: `feedCardIn 0.35s ease both`,
                     animationDelay: `${Math.min(idx, 8) * 45}ms`
                   }}
                 >
-                  {/* ROW 1: Badges */}
-                  <div className="flex items-center justify-between relative">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="text-[10px] font-bold uppercase px-2.5 py-1 rounded border leading-none tracking-wider flex items-center gap-1"
-                        style={{ 
-                          color: sideColor,
-                          backgroundColor: sideColor + '15',
-                          borderColor: sideColor + '33'
-                        }}
-                      >
-                        {inc.severity === 'critical' && (
-                          <span style={{
-                            width: '5px',
-                            height: '5px',
-                            borderRadius: '50%',
-                            background: sideColor,
-                            animation: 'livePulse 1.4s ease-in-out infinite'
-                          }} />
-                        )}
-                        {inc.severity}
-                      </span>
-                      <span
-                        className="text-[10px] font-bold uppercase px-2.5 py-1 rounded border leading-none tracking-wider"
-                        style={{ 
-                          color: `var(--${inc.type})`,
-                          backgroundColor: `var(--${inc.type})15`,
-                          borderColor: `var(--${inc.type})33`
-                        }}
-                      >
-                        {inc.type}
-                      </span>
+                  {/* Corner severity + type badge */}
+                  <span
+                    className="absolute right-0 top-0 font-bold uppercase"
+                    style={{
+                      fontSize: '9px',
+                      letterSpacing: '0.1em',
+                      padding: '5px 12px',
+                      color: sideColor,
+                      background: `${sideColor}1f`,
+                      borderBottomLeftRadius: '10px',
+                      borderLeft: `1px solid ${sideColor}55`,
+                      borderBottom: `1px solid ${sideColor}55`
+                    }}
+                  >
+                    {inc.severity === 'critical' && (
+                      <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle" style={{ background: sideColor, animation: 'livePulse 1.4s ease-in-out infinite' }} />
+                    )}
+                    {inc.severity} {inc.type}
+                  </span>
+
+                  <div className="flex items-start gap-3 pr-20">
+                    <div
+                      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg"
+                      style={{ background: `${sideColor}1a`, border: `1px solid ${sideColor}40` }}
+                    >
+                      <TypeIcon size={16} style={{ color: sideColor }} />
                     </div>
-                    <span 
-                      className="text-[10px] font-bold uppercase px-2.5 py-1 rounded border leading-none tracking-wider"
-                      style={{ 
-                        color: statusColor,
-                        backgroundColor: statusColor + '15',
-                        borderColor: statusColor + '33'
-                      }}
+
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <div className="flex items-center gap-1.5" style={{ fontSize: 'var(--body-size)', fontWeight: 700, color: 'var(--text-primary)' }}>
+                        <MapPin size={11} className="flex-shrink-0 text-[var(--text-muted)]" />
+                        <span className="truncate">{inc.stadiumName}</span>
+                        <span style={{ color: 'var(--text-muted)' }}>|</span>
+                        <span className="whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>Zone {inc.zoneLocation}</span>
+                      </div>
+                      <div style={{ fontSize: 'var(--body-size)', lineHeight: 1.55, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        "{descDisplay}"
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span
+                      className="inline-block rounded-md px-2 py-1 font-bold uppercase"
+                      style={{ fontSize: '9px', letterSpacing: '0.08em', color: 'var(--text-secondary)', background: 'rgba(148,163,184,0.08)', border: '1px solid var(--border)' }}
                     >
                       {statusLabels[inc.status] || inc.status}
                     </span>
                   </div>
 
-                  {/* ROW 2: Location */}
-                  <div className="font-bold text-[var(--text-primary)] flex items-center gap-1.5 relative" style={{ fontSize: 'var(--body-size)' }}>
-                    <MapPin size={12} className="text-[var(--text-muted)]" />
-                    <span>{inc.stadiumName}</span>
-                    <span className="text-[var(--text-muted)] font-normal">|</span>
-                    <span className="text-[var(--text-secondary)]">Zone {inc.zoneLocation}</span>
-                  </div>
-
-                  {/* ROW 3: Description */}
-                  <div className="text-[var(--text-secondary)] leading-relaxed font-medium italic relative" style={{ fontSize: 'var(--body-size)' }}>
-                    "{descDisplay}"
-                  </div>
-
-                  {/* ROW 4: Footer indicators */}
-                  <div className="flex items-center justify-between border-t border-[var(--border)]/40 pt-3 mt-1 font-semibold text-[var(--text-muted)] relative" style={{ fontSize: 'var(--caption-size)' }}>
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1">
-                        <Clock size={11} />
-                        <span>{formatTimeAgo(inc.createdAt)}</span>
-                      </span>
-                      {temp !== undefined && temp !== null && (
-                        <span className="flex items-center gap-0.5">
-                          <Thermometer size={11} />
-                          <span>{temp}°C</span>
-                        </span>
-                      )}
-                      {phase && phase !== 'inactive' && (
-                        <span className="uppercase flex items-center gap-1">
-                          <ShieldAlert size={11} />
-                          <span>{phase}</span>
-                        </span>
-                      )}
+                  <div className="flex items-center justify-between gap-3 border-t pt-3" style={{ borderColor: 'var(--border)', fontSize: 'var(--caption-size)', fontWeight: 700, color: 'var(--text-muted)' }}>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="flex items-center gap-1"><Clock size={11} /><span>{formatTimeAgo(inc.createdAt)}</span></span>
+                      {temp !== undefined && temp !== null && <span className="flex items-center gap-1"><Thermometer size={11} /><span>{temp}°C</span></span>}
+                      {phase && phase !== 'inactive' && <span className="flex items-center gap-1 uppercase"><ShieldAlert size={11} /><span>{phase}</span></span>}
                     </div>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/incidents/${inc._id}`);
-                      }}
-                      className="text-[var(--accent)] hover:underline border-none bg-transparent cursor-pointer font-bold leading-none p-0 flex items-center gap-1 hover:gap-1.5 transition-all"
-                      style={{ fontSize: 'var(--caption-size)' }}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/incidents/${inc._id}`); }}
+                      className="border-none bg-transparent p-0 hover:underline"
+                      style={{ fontSize: 'var(--caption-size)', fontWeight: 700, color: 'var(--accent)' }}
                     >
-                      <span>View Details</span>
-                      <ArrowRight size={12} />
+                      VIEW DETAILS <ArrowRight size={12} className="ml-1 inline" />
                     </button>
                   </div>
                 </div>

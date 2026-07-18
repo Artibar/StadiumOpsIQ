@@ -155,6 +155,69 @@ export default function AuditLog() {
   return (
     <div className="page-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: 'var(--section-spacing) 0' }}>
       <style>{`
+        .page-container {
+          --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+          --bg-primary: #090d16;
+          --bg-card: linear-gradient(180deg, rgba(17,23,38,0.92), rgba(9,13,22,0.98));
+          --bg-card-hover: rgba(139,124,246,0.08);
+          --border: rgba(148,163,184,0.16);
+          --text-primary: #e9edf6;
+          --text-secondary: #93a1b8;
+          --text-muted: #5b667c;
+          --accent: #8b7cf6;
+          --accent-soft: rgba(139,124,246,0.12);
+          --critical: #ff5470;
+          --high: #ff9f43;
+          --medium: #ffcc66;
+          --low: #2dd4d4;
+          --card-radius: 12px;
+          --card-padding: 22px;
+          --section-spacing: 26px;
+          --title-size: 22px;
+          --section-title-size: 15px;
+          --body-size: 13px;
+          --caption-size: 10.5px;
+          --field-gap: 14px;
+          --label-value-gap: 6px;
+          --grid-gap: 16px;
+          --medical: #2dd4d4;
+          --security: #ff9f43;
+          --crowd: #a78bfa;
+          --fire: #ff5470;
+          --weather: #38bdf8;
+          --lost-item: #f5b942;
+          --other: #94a3b8;
+          font-family: var(--font-mono);
+          color: var(--text-primary);
+        }
+        .soft-input {
+          background: rgba(6,9,16,0.85);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          color: var(--text-primary);
+          font-family: var(--font-mono);
+        }
+        .soft-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+        .soft-button {
+          background: rgba(148,163,184,0.06);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          color: var(--text-secondary);
+          font-family: var(--font-mono);
+        }
+        .soft-button:hover { border-color: var(--accent); color: var(--text-primary); }
+        .soft-label {
+          font-size: var(--caption-size);
+          font-weight: 700;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--text-secondary);
+        }
+        .surface-card {
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: var(--card-radius);
+        }
         @keyframes rowIn {
           from { opacity: 0; transform: translateY(4px); }
           to { opacity: 1; transform: translateY(0); }
@@ -166,33 +229,28 @@ export default function AuditLog() {
       `}</style>
 
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border)] pb-6" style={{ marginBottom: 'var(--section-spacing)' }}>
-        <div>
-          <h1 className="font-semibold tracking-tight text-white flex items-center gap-2.5" style={{ fontSize: 'var(--title-size)', margin: 0 }}>
-            <History size={20} className="text-[var(--accent)]" />
-            <span>Operational Audit Log</span>
-            <span
-              className="font-bold tracking-wider uppercase bg-[var(--border)] text-[var(--text-secondary)] border border-[var(--border)] rounded px-2.5 py-1 flex items-center gap-1.5"
-              style={{ fontSize: 'var(--caption-size)' }}
-            >
-              <span style={{
-                width: '5px',
-                height: '5px',
-                borderRadius: '50%',
-                background: 'var(--low)',
-                animation: 'ledgerPulse 2s ease-in-out infinite'
-              }} />
-              {incidents.length} LEDGERS
+      <div className="mb-6 flex flex-col gap-4 border-b border-[var(--border)] pb-6 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[rgba(99,102,241,0.08)]">
+              <History size={18} className="text-[var(--accent)]" />
+            </div>
+            <h1 className="m-0 text-white" style={{ fontSize: 'var(--title-size)', fontWeight: 700, letterSpacing: '-0.04em' }}>
+              FIFA Decision Review Board
+            </h1>
+            <span className="rounded-full border border-[var(--accent)]/20 bg-[var(--accent-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
+              <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)] align-middle" style={{ animation: 'ledgerPulse 2s ease-in-out infinite' }} />
+              Live Review
             </span>
-          </h1>
-          <p className="text-[var(--text-secondary)] mt-1.5 font-medium" style={{ fontSize: 'var(--caption-size)' }}>
+          </div>
+          <p className="text-[var(--text-secondary)]" style={{ fontSize: 'var(--caption-size)' }}>
             Historical audit records of language translations, climate analytics, automated actions, and supervisor approvals.
           </p>
         </div>
         <button
           disabled
           title="Export coming soon"
-          className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-muted)] font-bold cursor-not-allowed opacity-50 flex items-center gap-2 transition"
+          className="soft-button flex items-center gap-2 px-4 py-2 font-bold opacity-50 disabled:cursor-not-allowed"
           style={{ fontSize: 'var(--caption-size)' }}
         >
           <Download size={13} />
@@ -208,7 +266,7 @@ export default function AuditLog() {
       )}
 
       {/* FILTER ROW (All controls same height) */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border)] shadow-sm space-y-4" style={{ padding: 'var(--card-padding)', borderRadius: 'var(--card-radius)', borderTop: '4px solid var(--accent)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)', marginBottom: 'var(--section-spacing)' }}>
+      <div className="surface-card space-y-4" style={{ padding: 'var(--card-padding)', borderTop: '4px solid var(--accent)', marginBottom: 'var(--section-spacing)' }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -217,7 +275,7 @@ export default function AuditLog() {
         }}>
           {/* Search query */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-            <label className="font-bold text-[var(--text-secondary)] uppercase tracking-wider" style={{ fontSize: 'var(--caption-size)' }}>Search Description</label>
+            <label className="soft-label">Search Description</label>
             <div className="relative">
               <Search size={13} className="absolute left-3 top-3 text-[var(--text-muted)]" />
               <input
@@ -228,7 +286,7 @@ export default function AuditLog() {
                   setCurrentPage(1);
                 }}
                 placeholder="Query narrative..."
-                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-3 py-2 pl-8 text-[var(--body-size)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition"
+                className="soft-input w-full px-3 py-2 pl-8 text-[var(--body-size)]"
                 style={{ height: '36px' }}
               />
             </div>
@@ -236,14 +294,14 @@ export default function AuditLog() {
 
           {/* Severity dropdown */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-            <label className="font-bold text-[var(--text-secondary)] uppercase tracking-wider" style={{ fontSize: 'var(--caption-size)' }}>Severity</label>
+            <label className="soft-label">Severity</label>
             <select
               value={filterSeverity}
               onChange={(e) => {
                 setFilterSeverity(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition cursor-pointer"
+              className="soft-input w-full cursor-pointer p-2 text-[var(--body-size)]"
               style={{ height: '36px' }}
             >
               <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Severities</option>
@@ -256,14 +314,14 @@ export default function AuditLog() {
 
           {/* Status dropdown */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-            <label className="font-bold text-[var(--text-secondary)] uppercase tracking-wider" style={{ fontSize: 'var(--caption-size)' }}>Status</label>
+            <label className="soft-label">Status</label>
             <select
               value={filterStatus}
               onChange={(e) => {
                 setFilterStatus(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition cursor-pointer"
+              className="soft-input w-full cursor-pointer p-2 text-[var(--body-size)]"
               style={{ height: '36px' }}
             >
               <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Statuses</option>
@@ -277,14 +335,14 @@ export default function AuditLog() {
 
           {/* Type dropdown */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-            <label className="font-bold text-[var(--text-secondary)] uppercase tracking-wider" style={{ fontSize: 'var(--caption-size)' }}>Type</label>
+            <label className="soft-label">Type</label>
             <select
               value={filterType}
               onChange={(e) => {
                 setFilterType(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition cursor-pointer"
+              className="soft-input w-full cursor-pointer p-2 text-[var(--body-size)]"
               style={{ height: '36px' }}
             >
               <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Types</option>
@@ -300,14 +358,14 @@ export default function AuditLog() {
 
           {/* Stadium dropdown */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--label-value-gap)' }}>
-            <label className="font-bold text-[var(--text-secondary)] uppercase tracking-wider" style={{ fontSize: 'var(--caption-size)' }}>Stadium</label>
+            <label className="soft-label">Stadium</label>
             <select
               value={filterStadium}
               onChange={(e) => {
                 setFilterStadium(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-[var(--bg-primary)] border border-[rgba(255,255,255,0.15)] text-[var(--body-size)] text-[var(--text-secondary)] rounded-xl p-2 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition cursor-pointer"
+              className="soft-input w-full cursor-pointer p-2 text-[var(--body-size)]"
               style={{ height: '36px' }}
             >
               <option value="all" style={{ background: '#151B2E', color: '#fff' }}>All Stadiums</option>
@@ -319,14 +377,14 @@ export default function AuditLog() {
         </div>
 
         {/* Stats Row & Clear Filters button */}
-        <div className="flex items-center justify-between border-t border-[var(--border)]/40 pt-4 font-semibold" style={{ fontSize: 'var(--caption-size)' }}>
+        <div className="flex flex-col gap-3 border-t border-[var(--border)]/40 pt-4 font-semibold sm:flex-row sm:items-center sm:justify-between" style={{ fontSize: 'var(--caption-size)' }}>
           <span className="text-[var(--text-muted)]">
-            Showing <strong className="text-[var(--text-secondary)]">{filteredIncidents.length}</strong> of {incidents.length} logs
+            Showing <strong className="text-[var(--text-secondary)]">{filteredIncidents.length}</strong> of {incidents.length} records
           </span>
           {(filterSeverity !== 'all' || filterStatus !== 'all' || filterType !== 'all' || filterStadium !== 'all' || searchQuery.trim() !== '') && (
             <button
               onClick={handleClearFilters}
-              className="text-[var(--accent)] hover:underline border-none bg-transparent cursor-pointer font-bold flex items-center gap-1 leading-none transition-transform hover:scale-105"
+              className="soft-button inline-flex items-center gap-1 px-3 py-1.5 font-bold"
             >
               <FilterX size={12} />
               <span>Reset Filters</span>
@@ -337,55 +395,57 @@ export default function AuditLog() {
 
       {/* TABLE REGISTER */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Loader2 className="animate-spin h-8 w-8 text-[var(--accent)]" />
-          <span className="font-semibold text-[var(--text-muted)]" style={{ fontSize: 'var(--caption-size)' }}>Loading Database Ledger...</span>
+        <div className="surface-card flex flex-col items-center justify-center gap-3 py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)]" />
+          <span className="font-semibold text-[var(--text-muted)]" style={{ fontSize: 'var(--caption-size)' }}>Loading review board…</span>
         </div>
       ) : paginatedIncidents.length === 0 ? (
         /* Empty State */
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-16 text-center text-[var(--text-muted)]" style={{ borderRadius: 'var(--card-radius)' }}>
+        <div className="surface-card p-16 text-center text-[var(--text-muted)]">
           <Inbox size={32} className="mx-auto mb-3" />
           <h4 className="font-bold text-[var(--text-secondary)]" style={{ fontSize: 'var(--body-size)' }}>No incidents match search criteria</h4>
           <button
             onClick={handleClearFilters}
-            className="mt-4 px-4 py-2 bg-[var(--border)] text-[var(--text-primary)] border border-[var(--border)] rounded-lg font-bold hover:bg-[var(--bg-card-hover)] cursor-pointer transition"
+            className="soft-button mt-4 px-4 py-2 font-bold"
             style={{ fontSize: 'var(--caption-size)' }}
           >
             Reset Filters
           </button>
         </div>
       ) : (
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden shadow-sm" style={{ display: 'flex', flexDirection: 'column', borderRadius: 'var(--card-radius)', borderTop: '4px solid var(--accent)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}>
+        <div className="surface-card overflow-hidden" style={{ display: 'flex', flexDirection: 'column', borderTop: '4px solid var(--accent)' }}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[var(--bg-primary)] border-b border-[var(--border)] font-bold text-[var(--text-secondary)] uppercase tracking-wider select-none sticky top-0 z-10" style={{ fontSize: 'var(--caption-size)' }}>
                   <th
                     onClick={() => setSortDirection(prev => prev === 'desc' ? 'asc' : 'desc')}
-                    className="px-6 py-4 cursor-pointer hover:text-white transition group"
+                    className="cursor-pointer px-3 py-4 transition hover:text-white md:px-6"
                   >
                     Time {sortDirection === 'desc' ? '↓' : '↑'}
                   </th>
-                  <th className="px-6 py-4">Stadium</th>
-                  <th className="px-6 py-4">Zone</th>
-                  <th className="px-6 py-4">Type</th>
-                  <th className="px-6 py-4">Severity</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Confidence</th>
-                  <th className="px-6 py-4">Language</th>
-                  <th className="px-6 py-4">Actions</th>
-                  <th className="px-6 py-4 text-center">Override</th>
-                  <th className="px-6 py-4">Details</th>
+                  <th className="px-3 py-4 md:px-6">Stadium</th>
+                  <th className="px-3 py-4 md:px-6">Zone</th>
+                  <th className="px-3 py-4 md:px-6">Type</th>
+                  <th className="px-3 py-4 md:px-6">Severity</th>
+                  <th className="px-3 py-4 md:px-6">Status</th>
+                  <th className="px-3 py-4 md:px-6">Approval</th>
+                  <th className="px-3 py-4 md:px-6">Confidence</th>
+                  <th className="px-3 py-4 md:px-6">Language</th>
+                  <th className="px-3 py-4 md:px-6">Actions</th>
+                  <th className="px-3 py-4 text-center md:px-6">Override</th>
+                  <th className="px-3 py-4 md:px-6">Details</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]/40 select-none text-[var(--text-primary)]" style={{ fontSize: 'var(--body-size)' }}>
                 {paginatedIncidents.map((inc, idx) => {
                   const hasOverride = inc.humanOverride;
+                  const hasApproval = Boolean(inc.humanConfirmedAt);
                   const langKey = inc.detectedLanguage || 'en';
                   const langConfig = LANGUAGE_FLAGS[langKey] || { name: 'English', label: 'EN' };
 
-                  const rowClass = hasOverride 
-                    ? 'bg-[rgba(234,179,8,0.06)] border-l-2 border-l-[var(--medium)]' 
+                  const rowClass = hasOverride
+                    ? 'bg-[rgba(234,179,8,0.06)] border-l-2 border-l-[var(--medium)]'
                     : idx % 2 === 1
                       ? 'bg-[rgba(255,255,255,0.015)] hover:bg-[var(--bg-card-hover)]/30'
                       : 'hover:bg-[var(--bg-card-hover)]/30';
@@ -393,6 +453,8 @@ export default function AuditLog() {
                   const typeColor = typeColors[inc.type] || 'var(--text-muted)';
                   const severityColor = severityColors[inc.severity] || 'var(--low)';
                   const statusColor = statusColors[inc.status] || 'var(--accent)';
+                  const approvalColor = hasApproval ? 'var(--low)' : inc.status === 'pending-confirmation' ? 'var(--medium)' : 'var(--text-muted)';
+                  const approvalLabel = hasApproval ? 'Supervisor Approved' : inc.status === 'pending-confirmation' ? 'Awaiting Approval' : 'No Approval';
                   const confidencePct = Math.round(inc.confidence * 100);
                   const confidenceColor = inc.confidence >= 0.8 ? 'var(--low)' : inc.confidence >= 0.6 ? 'var(--medium)' : 'var(--critical)';
 
@@ -403,22 +465,22 @@ export default function AuditLog() {
                       style={{ height: '52px', animation: 'rowIn 0.25s ease both', animationDelay: `${Math.min(idx, 20) * 20}ms` }}
                     >
                       {/* 1. Time */}
-                      <td className="px-6 py-2 text-[var(--text-secondary)] font-mono whitespace-nowrap">
+                      <td className="px-3 py-2 font-mono whitespace-nowrap text-[var(--text-secondary)] md:px-6">
                         {new Date(inc.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
                       </td>
                       
                       {/* 2. Stadium */}
-                      <td className="px-6 py-2 font-bold">
+                      <td className="px-3 py-2 font-bold md:px-6">
                         {inc.stadiumName}
                       </td>
 
                       {/* 3. Zone */}
-                      <td className="px-6 py-2 text-[var(--text-secondary)]">
+                      <td className="px-3 py-2 text-[var(--text-secondary)] md:px-6">
                         {inc.zoneLocation}
                       </td>
 
                       {/* 4. Type */}
-                      <td className="px-6 py-2">
+                      <td className="px-3 py-2 md:px-6">
                         <span
                           className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border"
                           style={{ 
@@ -432,7 +494,7 @@ export default function AuditLog() {
                       </td>
 
                       {/* 5. Severity */}
-                      <td className="px-6 py-2">
+                      <td className="px-3 py-2 md:px-6">
                         <span
                           className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border"
                           style={{ 
@@ -446,7 +508,7 @@ export default function AuditLog() {
                       </td>
 
                       {/* 6. Status */}
-                      <td className="px-6 py-2">
+                      <td className="px-3 py-2 md:px-6">
                         <span
                           className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border"
                           style={{ 
@@ -459,8 +521,22 @@ export default function AuditLog() {
                         </span>
                       </td>
 
-                      {/* 7. Confidence */}
-                      <td className="px-6 py-2 whitespace-nowrap">
+                      {/* 7. Approval */}
+                      <td className="px-3 py-2 whitespace-nowrap md:px-6">
+                        <span
+                          className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border"
+                          style={{
+                            color: approvalColor,
+                            backgroundColor: approvalColor + '15',
+                            borderColor: approvalColor + '33'
+                          }}
+                        >
+                          {approvalLabel}
+                        </span>
+                      </td>
+
+                      {/* 8. Confidence */}
+                      <td className="px-3 py-2 whitespace-nowrap md:px-6">
                         <div className="flex items-center gap-2">
                           <span className="font-bold" style={{ color: confidenceColor }}>
                             {confidencePct}%
@@ -478,16 +554,16 @@ export default function AuditLog() {
                         </div>
                       </td>
 
-                      {/* 8. Language */}
-                      <td className="px-6 py-2 text-[var(--text-secondary)] whitespace-nowrap font-semibold">
+                      {/* 9. Language */}
+                      <td className="px-3 py-2 whitespace-nowrap font-semibold text-[var(--text-secondary)] md:px-6">
                         <span className="mr-1.5 text-[10px] px-1.5 py-0.5 rounded bg-[var(--border)] text-[var(--text-muted)]">
                           {langConfig.label}
                         </span> 
                         <span>{langConfig.name}</span>
                       </td>
 
-                      {/* 9. Actions Badges */}
-                      <td className="px-6 py-2 max-w-[120px]">
+                      {/* 10. Actions Badges */}
+                      <td className="max-w-[120px] px-3 py-2 md:px-6">
                         <div className="flex items-center gap-1.5">
                           {(inc.actionsTaken || []).map((action, actionIdx) => {
                             const meta = ACTION_META[action] || { icon: Zap, title: action, color: 'var(--text-muted)' };
@@ -506,15 +582,15 @@ export default function AuditLog() {
                         </div>
                       </td>
 
-                      {/* 10. Override marker */}
-                      <td className="px-6 py-2 text-center">
+                      {/* 11. Override marker */}
+                      <td className="px-3 py-2 text-center md:px-6">
                         {hasOverride ? (
                           <AlertCircle size={14} className="text-[var(--medium)] mx-auto cursor-help" title="Supervisor Override Applied" />
                         ) : null}
                       </td>
 
-                      {/* 11. Details Link */}
-                      <td className="px-6 py-2">
+                      {/* 12. Details Link */}
+                      <td className="px-3 py-2 md:px-6">
                         <RouterLink
                           to={`/incidents/${inc._id}`}
                           className="px-2.5 py-1 bg-[var(--border)] text-[var(--text-secondary)] hover:text-white rounded transition-all hover:bg-[var(--bg-card-hover)] hover:scale-105 font-bold inline-flex items-center"
@@ -531,7 +607,7 @@ export default function AuditLog() {
           </div>
 
           {/* PAGINATION PANEL */}
-          <div className="bg-[var(--bg-primary)] border-t border-[var(--border)] p-4 flex flex-col sm:flex-row items-center justify-between gap-3.5 select-none" style={{ fontSize: 'var(--caption-size)' }}>
+          <div className="border-t border-[var(--border)] bg-[rgba(9,14,25,0.9)] p-4 flex flex-col items-center justify-between gap-3.5 select-none sm:flex-row" style={{ fontSize: 'var(--caption-size)' }}>
             {/* Left buttons */}
             <div className="flex items-center gap-3">
               <button

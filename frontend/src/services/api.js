@@ -1,9 +1,19 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'https://stadiumopsiq.onrender.com'
+const resolveApiBaseUrl = () => {
+  if (typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location?.hostname)) {
+    return 'http://localhost:5000'
+  }
+
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+
+  return 'https://stadiumopsiq.onrender.com'
+}
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: resolveApiBaseUrl(),
   timeout: 60000,
   headers: {
     'Content-Type': 'application/json'

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BarChart2, ShieldAlert, AlertTriangle, Clock, CheckCircle2, Percent, Radio } from 'lucide-react';
+import { BarChart2, ShieldAlert, AlertTriangle, Clock, CheckCircle2, Percent } from 'lucide-react';
 
 // Lightweight count-up — purely presentational, driven by the same stat value
 function useCountUp(target, duration = 700) {
@@ -33,72 +33,70 @@ function StatCard({ card, index }) {
       className="hover-lift"
       style={{
         position: 'relative',
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border)',
-        borderTop: `4px solid ${card.color}`,
+        background: 'linear-gradient(180deg, rgba(17,23,38,0.96), rgba(9,13,22,0.98))',
+        border: `1px solid ${card.color}4d`,
         borderRadius: 'var(--card-radius)',
-        padding: 'var(--card-padding)',
+        padding: '16px 18px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        height: '108px',
+        height: '104px',
         overflow: 'hidden',
         cursor: 'default',
         boxShadow: isCritical
-          ? `0 0 0 1px ${card.color}33, 0 2px 10px rgba(0,0,0,0.3)`
-          : '0 2px 10px rgba(0,0,0,0.3)',
-        transition: 'transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease',
+          ? `0 0 0 1px ${card.color}33, 0 12px 30px rgba(0,0,0,0.28)`
+          : '0 10px 24px rgba(0,0,0,0.22)',
         animation: `statCardIn 0.45s ease both`,
         animationDelay: `${index * 60}ms`
       }}
     >
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '100%',
-        position: 'relative'
-      }}>
-        <span style={{
-          fontSize: 'var(--caption-size)',
-          color: 'var(--text-secondary)',
-          fontWeight: '700',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px'
-        }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+        <span
+          style={{
+            fontSize: 'var(--caption-size)',
+            color: 'var(--text-secondary)',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.14em',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}
+        >
           {card.label}
           {isCritical && (
-            <span style={{
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              background: card.color,
-              animation: 'pulseDot 1.4s ease-in-out infinite'
-            }} />
+            <span
+              style={{
+                width: '5px',
+                height: '5px',
+                borderRadius: '50%',
+                background: card.color,
+                animation: 'pulseDot 1.4s ease-in-out infinite'
+              }}
+            />
           )}
         </span>
-        <card.icon
-          size={15}
-          style={{
-            color: card.color
-          }}
-        />
+        <card.icon size={14} style={{ color: card.color, opacity: 0.85 }} />
       </div>
 
-      <div style={{
-        fontSize: 'var(--kpi-size)',
-        fontWeight: '800',
-        color: '#fff',
-        lineHeight: '1',
-        letterSpacing: '-0.02em',
-        fontVariantNumeric: 'tabular-nums',
-        fontFamily: "'JetBrains Mono', 'SF Mono', ui-monospace, monospace",
-        position: 'relative'
-      }}>
-        {typeof card.value === 'number' ? displayValue : card.value}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+        <span
+          style={{
+            fontSize: 'var(--kpi-size)',
+            fontWeight: 800,
+            color: '#fff',
+            lineHeight: 1,
+            letterSpacing: '-0.02em',
+            fontVariantNumeric: 'tabular-nums'
+          }}
+        >
+          {typeof card.value === 'number' ? String(displayValue).padStart(card.pad || 0, '0') : card.value}
+        </span>
+        {card.suffix && (
+          <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            {card.suffix}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -106,12 +104,16 @@ function StatCard({ card, index }) {
 
 export default function StatsBar({ stats }) {
   const kpiSkeleton = [...Array(6)].map((_, i) => (
-    <div key={i} className="animate-pulse" style={{
-      background: 'var(--bg-card)',
-      border: '1px solid var(--border)',
-      borderRadius: 'var(--card-radius)',
-      height: '108px'
-    }} />
+    <div
+      key={i}
+      className="animate-pulse"
+      style={{
+        background: 'linear-gradient(180deg, rgba(17,23,38,0.98), rgba(9,13,22,0.98))',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--card-radius)',
+        height: '104px'
+      }}
+    />
   ));
 
   if (!stats) {
@@ -123,12 +125,12 @@ export default function StatsBar({ stats }) {
   }
 
   const cards = [
-    { label: 'Total Incidents', value: stats.totalIncidents ?? 0, color: 'var(--accent)', icon: BarChart2 },
-    { label: 'Critical', value: stats.bySeverity?.critical ?? 0, color: 'var(--critical)', icon: ShieldAlert },
-    { label: 'High', value: stats.bySeverity?.high ?? 0, color: 'var(--high)', icon: AlertTriangle },
-    { label: 'Pending', value: stats.byStatus?.['pending-confirmation'] ?? 0, color: 'var(--medium)', icon: Clock },
-    { label: 'Resolved', value: stats.byStatus?.resolved ?? 0, color: 'var(--low)', icon: CheckCircle2 },
-    { label: 'Avg Confidence', value: Math.round((stats.avgConfidence || 0) * 100) + '%', color: 'var(--accent)', icon: Percent }
+    { label: 'Total', value: stats.totalIncidents ?? 0, color: 'var(--accent)', icon: BarChart2 },
+    { label: 'Critical', value: stats.bySeverity?.critical ?? 0, color: 'var(--critical)', icon: ShieldAlert, pad: 2 },
+    { label: 'High', value: stats.bySeverity?.high ?? 0, color: 'var(--high)', icon: AlertTriangle, pad: 2 },
+    { label: 'Pending', value: stats.byStatus?.['pending-confirmation'] ?? 0, color: 'var(--low)', icon: Clock, pad: 2 },
+    { label: 'Resolved', value: stats.byStatus?.resolved ?? 0, color: '#cbd5e1', icon: CheckCircle2 },
+    { label: 'Avg Confidence', value: Math.round((stats.avgConfidence || 0) * 100) + '%', color: '#cbd5e1', icon: Percent }
   ];
 
   return (

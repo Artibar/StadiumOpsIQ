@@ -72,7 +72,7 @@ router.post('/', incidentLimiter, async (req, res, next) => {
 router.get('/', async (req, res, next) => {
   try {
     const incidents = await Incident.find({})
-      .select('originalDescription stadiumName zoneLocation type severity status confidence actionsTaken createdAt detectedLanguage liveContext.weather.temperature liveContext.matchStatus.phase')
+      .select('originalDescription stadiumName zoneLocation type severity status confidence actionsTaken createdAt detectedLanguage liveContext.weather.temperature liveContext.matchStatus.phase humanOverride humanConfirmedAt resolvedAt finalDecision')
       .sort({ createdAt: -1 })
       .lean();
     res.json(incidents);

@@ -22,6 +22,13 @@ export const SUPPORTED_LANGUAGES = {
   ml: 'Malayalam'
 };
 
+const ENGLISH_HINT_WORDS = [
+  'incident', 'report', 'medical', 'help', 'fire', 'security', 'crowd', 'weather',
+  'gate', 'zone', 'stadium', 'person', 'collapsed', 'needs', 'immediate',
+  'attention', 'alert', 'unknown', 'assistance', 'near', 'inside', 'outside',
+  'escalate', 'status', 'urgent', 'support', 'team', 'operator', 'safety'
+];
+
 /**
  * Sanitizes input text to protect against LLM prompt injections.
  * Clips to maximum 1000 characters.
@@ -39,15 +46,39 @@ export function sanitizeForPrompt(text) {
     .substring(0, 1000);
 }
 
+function looksLikeEnglish(text) {
+  const normalized = text.toLowerCase();
+  return ENGLISH_HINT_WORDS.some((word) => normalized.includes(word));
+}
+
 function detectLanguage(text) {
   try {
-    const results = langdetect.detect(text);
-    if (results && results.length > 0) {
-      const detected = results[0].lang;
-      if (SUPPORTED_LANGUAGES.hasOwnProperty(detected)) {
-        return detected;
+    const sanitized = (text || '').trim();
+    if (!sanitized) return 'en';
+
+    const results = langdetect.detect(sanitized);
+    if (!results || results.length === 0) return 'en';
+
+    const [topResult, secondResult] = results;
+    const topLang = topResult?.lang;
+    const topProb = Number(topResult?.prob || 0);
+    const secondProb = Number(secondResult?.prob || 0);
+    const margin = topProb - secondProb;
+
+    if (topLang === 'en') {
+      return 'en';
+    }
+
+    if (sanitized.length <= 5 || topProb < 0.8 || margin < 0.15) {
+      if (looksLikeEnglish(sanitized) || sanitized.length <= 5) {
+        return 'en';
       }
     }
+
+    if (SUPPORTED_LANGUAGES.hasOwnProperty(topLang)) {
+      return topLang;
+    }
+
     return 'en';
   } catch (error) {
     // Graceful fallback to English if detection fails on short or non-standard text
