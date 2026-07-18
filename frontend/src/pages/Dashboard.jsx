@@ -23,12 +23,17 @@ export default function Dashboard() {
 
       setIncidents(Array.isArray(incidentsRes) ? incidentsRes : []);
       setStats(statsRes || null);
-      // The /api/stadiums endpoint proxies an external API that wraps the
-      // array in a { stadiums: [...] } object rather than returning a bare
-      // array, so we unwrap it here instead of checking Array.isArray on
-      // the raw response (which would always be false and silently drop
-      // every stadium).
-      setStadiums(Array.isArray(stadiumsRes?.stadiums) ? stadiumsRes.stadiums : []);
+      // Tolerate either shape here: some api.js implementations already
+      // unwrap the external API's { stadiums: [...] } envelope before
+      // returning, others pass it through raw. Checking both means this
+      // works regardless of which one getStadiums() actually does.
+      const stadiumsList = Array.isArray(stadiumsRes)
+        ? stadiumsRes
+        : Array.isArray(stadiumsRes?.stadiums)
+          ? stadiumsRes.stadiums
+          : [];
+      console.log('[DEBUG] stadiumsRes raw:', stadiumsRes, '→ resolved list length:', stadiumsList.length);
+      setStadiums(stadiumsList);
       setLastUpdated(new Date());
       setError('');
     } catch (err) {
