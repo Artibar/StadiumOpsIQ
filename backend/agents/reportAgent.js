@@ -315,9 +315,9 @@ export async function runReportAgent(intakeOutput, classificationOutput, context
 
   try {
     const response = await getGroqInstance().chat.completions.create({
-      model: "llama-3.1-8b-instant",
+      model: "llama-3.3-70b-versatile",
       temperature: 0.3,
-      max_tokens: 2000,
+      max_tokens: 1000,
       tools: [reportTool],
       tool_choice: {
         type: "function",

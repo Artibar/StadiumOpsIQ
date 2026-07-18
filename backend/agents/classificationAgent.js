@@ -155,9 +155,9 @@ ${wasTranslated ? `NOTE: This report was originally submitted in ${detectedLangu
 Please classify this incident.`;
 
     const response = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+      model: "llama-3.3-70b-versatile",
       temperature: 0.2,
-      max_tokens: 1000,
+      max_tokens: 300,
       tools: [classificationTool],
       tool_choice: {
         type: "function",

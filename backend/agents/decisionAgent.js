@@ -277,9 +277,9 @@ export async function runDecisionAgent(intakeOutput, classificationOutput, conte
   try {
     for (let step = 0; step < 5; step++) {
       const response = await getGroqClient().chat.completions.create({
-        model: "llama-3.1-8b-instant",
+        model: "llama-3.3-70b-versatile",
         temperature: 0.2,
-        max_tokens: 1500,
+        max_tokens: 400,
         tools: DECISION_TOOLS,
         messages: messages
       });
