@@ -107,7 +107,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
           gap: SPACE.md,
           borderBottom: '1px solid var(--border)',
           paddingBottom: SPACE.md,
-          marginBottom: SPACE.lg
+          marginBottom: SPACE.md
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.xs }}>
