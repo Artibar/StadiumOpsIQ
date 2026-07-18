@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BarChart2, ShieldAlert, AlertTriangle, Clock, CheckCircle2, Percent, Hourglass } from 'lucide-react';
 
-// Lightweight count-up — purely presentational, driven by the same stat value
 function useCountUp(target, duration = 700) {
   const [value, setValue] = useState(0);
   const raf = useRef(null);
@@ -30,52 +29,47 @@ function StatCard({ card, index }) {
 
   return (
     <div
-      className="hover-lift"
+      className="hover-lift surface-card"
       style={{
         position: 'relative',
-        background: 'linear-gradient(180deg, rgba(17,23,38,0.96), rgba(9,13,22,0.98))',
-        border: `1px solid ${card.color}4d`,
-        borderRadius: 'var(--card-radius)',
-        padding: '22px 24px',
+        borderColor: `${card.color}40`,
+        padding: '20px 22px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         height: '128px',
         overflow: 'hidden',
         cursor: 'default',
-        boxShadow: isCritical
-          ? `0 0 0 1px ${card.color}33, 0 12px 30px rgba(0,0,0,0.28)`
-          : '0 10px 24px rgba(0,0,0,0.22)',
-        animation: `statCardIn 0.45s ease both`,
+        boxShadow: isCritical ? `0 0 0 1px ${card.color}33, 0 12px 30px rgba(0,0,0,0.28)` : undefined,
+        animation: 'subtle-rise 0.4s ease both',
         animationDelay: `${index * 60}ms`
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-        <span
-          style={{
-            fontSize: '12px',
-            color: 'var(--text-secondary)',
-            fontWeight: 700,
-            letterSpacing: '0.01em',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}
-        >
+        <span className="soft-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {card.label}
           {isCritical && (
             <span
-              style={{
-                width: '5px',
-                height: '5px',
-                borderRadius: '50%',
-                background: card.color,
-                animation: 'pulseDot 1.4s ease-in-out infinite'
-              }}
+              className="pulsing-dot"
+              style={{ width: '5px', height: '5px', borderRadius: '50%', background: card.color }}
             />
           )}
         </span>
-        <card.icon size={14} style={{ color: card.color, opacity: 0.85 }} />
+        <div
+          style={{
+            width: '26px',
+            height: '26px',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: `${card.color}1a`,
+            border: `1px solid ${card.color}40`,
+            flexShrink: 0
+          }}
+        >
+          <card.icon size={13} style={{ color: card.color }} />
+        </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
@@ -115,19 +109,14 @@ export default function StatsBar({ stats }) {
   const kpiSkeleton = [...Array(6)].map((_, i) => (
     <div
       key={i}
-      className="animate-pulse"
-      style={{
-        background: 'linear-gradient(180deg, rgba(17,23,38,0.98), rgba(9,13,22,0.98))',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--card-radius)',
-        height: '128px'
-      }}
+      className="animate-pulse surface-card"
+      style={{ height: '128px' }}
     />
   ));
 
   if (!stats) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5" style={{ padding: '8px 0' }}>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6" style={{ gap: 'var(--grid-gap)', padding: '8px 0' }}>
         {kpiSkeleton}
       </div>
     );
@@ -142,28 +131,16 @@ export default function StatsBar({ stats }) {
     { label: 'Total', value: stats.totalIncidents ?? 0, color: 'var(--accent)', icon: BarChart2 },
     { label: 'Critical', value: criticalCount, color: 'var(--critical)', icon: ShieldAlert, pad: 2, suffix: criticalCount > 0 ? 'Alert' : 'Clear', suffixColor: criticalCount > 0 ? 'var(--critical)' : 'var(--text-muted)' },
     { label: 'High', value: highCount, color: 'var(--high)', icon: AlertTriangle, pad: 2, suffix: highCount > 0 ? 'Active' : 'Clear', suffixColor: highCount > 0 ? 'var(--high)' : 'var(--text-muted)' },
-    { label: 'Pending', value: stats.byStatus?.['pending-confirmation'] ?? 0, color: 'var(--low)', icon: Clock, pad: 2, SuffixIcon: Hourglass, suffixColor: 'var(--low)' },
-    { label: 'Resolved', value: stats.byStatus?.resolved ?? 0, color: '#cbd5e1', icon: CheckCircle2, SuffixIcon: CheckCircle2, suffixColor: 'var(--low)' },
-    { label: 'Avg Confidence', value: confidencePct + '%', color: '#cbd5e1', icon: Percent, suffix: confidenceLabel, suffixColor: confidencePct >= 75 ? 'var(--low)' : confidencePct >= 50 ? 'var(--medium)' : 'var(--critical)' }
+    { label: 'Pending', value: stats.byStatus?.['pending-confirmation'] ?? 0, color: 'var(--medium)', icon: Clock, pad: 2, SuffixIcon: Hourglass, suffixColor: 'var(--medium)' },
+    { label: 'Resolved', value: stats.byStatus?.resolved ?? 0, color: 'var(--low)', icon: CheckCircle2, SuffixIcon: CheckCircle2, suffixColor: 'var(--low)' },
+    { label: 'Avg Confidence', value: confidencePct + '%', color: 'var(--accent)', icon: Percent, suffix: confidenceLabel, suffixColor: confidencePct >= 75 ? 'var(--low)' : confidencePct >= 50 ? 'var(--medium)' : 'var(--critical)' }
   ];
 
   return (
-    <>
-      <style>{`
-        @keyframes statCardIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulseDot {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(1.4); }
-        }
-      `}</style>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5" style={{ padding: '8px 0' }}>
-        {cards.map((card, index) => (
-          <StatCard key={index} card={card} index={index} />
-        ))}
-      </div>
-    </>
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6" style={{ gap: 'var(--grid-gap)', padding: '8px 0' }}>
+      {cards.map((card, index) => (
+        <StatCard key={index} card={card} index={index} />
+      ))}
+    </div>
   );
 }

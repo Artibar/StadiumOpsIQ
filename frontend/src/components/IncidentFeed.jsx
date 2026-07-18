@@ -29,6 +29,31 @@ const TYPE_ICONS = {
   other: HelpCircle
 };
 
+const TYPE_COLORS = {
+  medical: 'var(--medical)',
+  security: 'var(--security)',
+  crowd: 'var(--crowd)',
+  fire: 'var(--fire)',
+  weather: 'var(--weather)',
+  'lost-item': 'var(--lost-item)',
+  other: 'var(--text-muted)'
+};
+
+const SEVERITY_COLORS = {
+  critical: 'var(--critical)',
+  high: 'var(--high)',
+  medium: 'var(--medium)',
+  low: 'var(--low)'
+};
+
+const statusLabels = {
+  open: 'Open',
+  'pending-confirmation': 'Pending Confirmation',
+  escalated: 'Escalated',
+  resolved: 'Resolved',
+  'flagged-for-review': 'Flagged For Review'
+};
+
 export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
   const navigate = useNavigate();
   const [filterType, setFilterType] = useState('all');
@@ -52,44 +77,18 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
     return true;
   });
 
-  const severityColors = {
-    critical: 'var(--critical)',
-    high: 'var(--high)',
-    medium: 'var(--medium)',
-    low: 'var(--low)'
-  };
-
-  const statusLabels = {
-    open: 'Open',
-    'pending-confirmation': 'Pending Confirmation',
-    escalated: 'Escalated',
-    resolved: 'Resolved',
-    'flagged-for-review': 'Flagged For Review'
-  };
-
   return (
-    <section className="flex h-full flex-col justify-between select-none" style={{ minHeight: '420px' }} aria-labelledby="feed-title">
-      <style>{`
-        @keyframes feedCardIn {
-          from { opacity: 0; transform: translateX(-6px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes livePulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(1.2); }
-        }
-      `}</style>
-
+    <section className="flex h-full flex-col justify-between" style={{ minHeight: '420px' }} aria-labelledby="feed-title">
       <div>
         <div className="mb-6 flex items-center justify-between gap-3 border-b pb-4" style={{ borderColor: 'var(--border)' }}>
           <div className="space-y-1">
-            <span id="feed-title" className="flex items-center gap-2" style={{ fontSize: 'var(--section-title-size)', fontWeight: 700, letterSpacing: '0.02em' }}>
-              <Radio size={14} className="text-[var(--low)]" />
+            <span id="feed-title" className="flex items-center gap-2" style={{ fontSize: 'var(--section-title-size)', fontWeight: 700 }}>
+              <Radio size={14} style={{ color: 'var(--low)' }} />
               Live Incident Feed
-              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--critical)', animation: 'livePulse 1.6s ease-in-out infinite', flexShrink: 0 }} />
+              <span className="pulsing-dot" style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--critical)', flexShrink: 0 }} />
             </span>
-            <span className="flex items-center gap-1.5" style={{ fontSize: 'var(--caption-size)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-muted)' }} aria-live="polite">
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--low)', animation: 'livePulse 1.8s ease-in-out infinite', flexShrink: 0 }} />
+            <span className="soft-label flex items-center gap-1.5" aria-live="polite">
+              <span className="pulsing-dot" style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--low)', flexShrink: 0 }} />
               Updated {secondsSinceUpdate}s ago
             </span>
           </div>
@@ -159,9 +158,10 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             </div>
           ) : (
             filteredIncidents.map((inc, idx) => {
-              const sideColor = severityColors[inc.severity] || 'var(--low)';
-              const descPreview = inc.translatedDescription || inc.originalDescription || '';
-              const descDisplay = descPreview.length > 84 ? `${descPreview.substring(0, 84)}...` : descPreview;
+              const typeColor = TYPE_COLORS[inc.type] || 'var(--text-muted)';
+              const severityColor = SEVERITY_COLORS[inc.severity] || 'var(--low)';
+              const descPreview = inc.translatedDescription || inc.originalDescription || inc.description || '';
+              const descDisplay = descPreview.length > 90 ? `${descPreview.substring(0, 90)}...` : descPreview;
               const temp = inc.liveContext?.weather?.temperature;
               const phase = inc.liveContext?.matchStatus?.phase;
               const TypeIcon = TYPE_ICONS[inc.type] || HelpCircle;
@@ -171,12 +171,11 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
                 <div
                   key={inc._id}
                   onClick={() => navigate(`/incidents/${inc._id}`)}
-                  className="hover-lift relative flex cursor-pointer flex-col gap-3.5 overflow-hidden rounded-[12px] border p-5 transition-all duration-200"
+                  className="hover-lift surface-card relative flex cursor-pointer flex-col gap-3 p-5"
                   style={{
-                    borderColor: `${sideColor}40`,
-                    background: 'linear-gradient(180deg, rgba(15,20,33,0.94), rgba(9,13,22,0.98))',
-                    boxShadow: isUrgent ? `0 0 0 1px ${sideColor}22, 0 10px 26px rgba(0,0,0,0.3)` : '0 10px 26px rgba(0,0,0,0.22)',
-                    animation: `feedCardIn 0.35s ease both`,
+                    borderColor: `${severityColor}40`,
+                    boxShadow: isUrgent ? `0 0 0 1px ${severityColor}22, 0 10px 26px rgba(0,0,0,0.3)` : undefined,
+                    animation: 'subtle-rise 0.35s ease both',
                     animationDelay: `${Math.min(idx, 8) * 45}ms`
                   }}
                 >
@@ -185,46 +184,46 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
                     className="absolute right-0 top-0 font-bold uppercase"
                     style={{
                       fontSize: '9px',
-                      letterSpacing: '0.1em',
-                      padding: '5px 12px',
-                      color: sideColor,
-                      background: `${sideColor}1f`,
-                      borderBottomLeftRadius: '10px',
-                      borderLeft: `1px solid ${sideColor}55`,
-                      borderBottom: `1px solid ${sideColor}55`
+                      letterSpacing: '0.08em',
+                      padding: '6px 12px',
+                      color: severityColor,
+                      background: `${severityColor}1f`,
+                      borderBottomLeftRadius: '12px',
+                      borderLeft: `1px solid ${severityColor}55`,
+                      borderBottom: `1px solid ${severityColor}55`
                     }}
                   >
                     {inc.severity === 'critical' && (
-                      <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle" style={{ background: sideColor, animation: 'livePulse 1.4s ease-in-out infinite' }} />
+                      <span className="pulsing-dot mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle" style={{ background: severityColor }} />
                     )}
                     {inc.severity} {inc.type}
                   </span>
 
-                  <div className="flex items-start gap-3 pr-20">
+                  <div className="flex items-start gap-3 pr-24">
                     <div
                       className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg"
-                      style={{ background: `${sideColor}1a`, border: `1px solid ${sideColor}40` }}
+                      style={{ background: `${typeColor}1a`, border: `1px solid ${typeColor}40` }}
                     >
-                      <TypeIcon size={16} style={{ color: sideColor }} />
+                      <TypeIcon size={16} style={{ color: typeColor }} />
                     </div>
 
                     <div className="min-w-0 flex-1 space-y-1.5">
-                      <div className="flex items-center gap-1.5" style={{ fontSize: 'var(--body-size)', fontWeight: 700, color: 'var(--text-primary)' }}>
-                        <MapPin size={11} className="flex-shrink-0 text-[var(--text-muted)]" />
-                        <span className="truncate">{inc.stadiumName}</span>
+                      <div className="flex items-center gap-1.5 flex-wrap" style={{ fontSize: 'var(--body-size)', fontWeight: 700, color: 'var(--text-primary)' }}>
+                        <MapPin size={11} className="flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
+                        <span className="truncate">{inc.stadiumName || 'Command Station 04'}</span>
                         <span style={{ color: 'var(--text-muted)' }}>|</span>
                         <span className="whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>Zone {inc.zoneLocation}</span>
                       </div>
-                      <div style={{ fontSize: 'var(--body-size)', lineHeight: 1.55, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                        "{descDisplay}"
+                      <div style={{ fontSize: 'var(--body-size)', lineHeight: 1.55, color: 'var(--text-secondary)' }}>
+                        {descDisplay}
                       </div>
                     </div>
                   </div>
 
-                  <div>
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span
                       className="inline-block rounded-md px-2 py-1 font-bold uppercase"
-                      style={{ fontSize: '9px', letterSpacing: '0.08em', color: 'var(--text-secondary)', background: 'rgba(148,163,184,0.08)', border: '1px solid var(--border)' }}
+                      style={{ fontSize: '9px', letterSpacing: '0.06em', color: 'var(--text-secondary)', background: 'rgba(148,163,184,0.08)', border: '1px solid var(--border)' }}
                     >
                       {statusLabels[inc.status] || inc.status}
                     </span>
