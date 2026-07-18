@@ -4,7 +4,6 @@ import {
   Wind, Droplets, CalendarX, Sparkles, Clock, ShieldAlert, TrendingUp
 } from 'lucide-react';
 
-// Translates Open-Meteo weather codes into human-readable conditions
 function getWeatherCondition(code) {
   if (code === undefined || code === null) return 'Unknown';
   if (code === 0) return 'Clear Sky';
@@ -20,7 +19,6 @@ function getWeatherCondition(code) {
   return `Weather Code ${code}`;
 }
 
-// Presentational only — maps the same weather code to an icon, doesn't touch the label logic above
 function getWeatherIcon(code) {
   if (code === undefined || code === null) return HelpCircle;
   if (code === 0) return Sun;
@@ -33,10 +31,19 @@ function getWeatherIcon(code) {
   return HelpCircle;
 }
 
+// Maps risk level strings to the app's shared severity CSS variables so this
+// panel's badges line up exactly with the severity badge in Incident Summary.
+const RISK_VAR = {
+  critical: 'var(--critical)',
+  high: 'var(--high)',
+  medium: 'var(--medium)',
+  low: 'var(--low)'
+};
+
 export default function LiveContextPanel({ liveContext }) {
   if (!liveContext) {
     return (
-      <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 text-center text-slate-500 text-sm">
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--card-radius)', padding: 'var(--card-padding)', textAlign: 'center', color: 'var(--text-muted)', fontSize: 'var(--body-size)' }}>
         No context snapshot available for this incident yet.
       </div>
     );
@@ -46,114 +53,130 @@ export default function LiveContextPanel({ liveContext }) {
   const { temperature, weatherCode, windspeed, precipitation, riskFlags = [] } = weather;
   const { isMatchToday = false, phase = 'inactive', minute = 0, homeTeam = 'N/A', awayTeam = 'N/A', score = 'N/A', crowdRiskLevel = 'low' } = matchStatus;
 
-  const riskStyles = {
-    critical: 'bg-red-500/20 border-red-500/40 text-red-400',
-    high: 'bg-amber-500/20 border-amber-500/40 text-amber-400',
-    medium: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300',
-    low: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-  };
-
-  const riskGlow = {
-    critical: 'rgb(248, 113, 113)',
-    high: 'rgb(251, 191, 36)',
-    medium: 'rgb(250, 204, 21)',
-    low: 'rgb(52, 211, 153)'
-  };
-
   const riskKey = (combinedRiskLevel || 'low').toLowerCase();
-  const riskClass = riskStyles[riskKey] || riskStyles.low;
-  const riskColor = riskGlow[riskKey] || riskGlow.low;
+  const riskColor = RISK_VAR[riskKey] || RISK_VAR.low;
+  const crowdKey = (crowdRiskLevel || 'low').toLowerCase();
+  const crowdColor = RISK_VAR[crowdKey] || RISK_VAR.low;
   const WeatherIcon = getWeatherIcon(weatherCode);
   const isLivePhase = phase !== 'inactive' && phase !== 'pre-match' && phase !== 'post-match';
   const isElevatedRisk = riskKey === 'critical' || riskKey === 'high';
-  const crowdKey = (crowdRiskLevel || 'low').toLowerCase();
-  const crowdColorClass =
-    crowdKey === 'critical' ? 'text-red-400' :
-    crowdKey === 'high' ? 'text-amber-400' :
-    crowdKey === 'medium' ? 'text-yellow-400' : 'text-emerald-400';
+
+  const subPanelStyle = {
+    background: 'var(--bg-primary)',
+    border: '1px solid var(--border)',
+    borderRadius: '12px',
+    padding: '16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '14px'
+  };
+
+  const subHeadingStyle = {
+    fontSize: 'var(--caption-size)',
+    fontWeight: '800',
+    color: 'var(--text-secondary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.02em',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    borderBottom: '1px solid var(--border)',
+    paddingBottom: '10px',
+    margin: 0
+  };
 
   return (
     <div
-      className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6 relative overflow-hidden"
       style={{
-        boxShadow: `0 0 40px ${riskColor}14, 0 10px 30px rgba(0,0,0,0.3)`,
+        position: 'relative',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        borderTop: `4px solid ${riskColor}`,
+        borderRadius: 'var(--card-radius)',
+        padding: 'var(--card-padding)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px',
+        overflow: 'hidden',
         animation: isElevatedRisk ? 'borderPulse 2.4s ease-in-out infinite' : 'none'
       }}
     >
       <style>{`
-        @keyframes floatGlow { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(10px, -10px); } }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes cursorBlink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
         @keyframes tempCount { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-        @keyframes borderPulse { 0%, 100% { border-color: rgba(51, 65, 85, 1); } 50% { border-color: ${riskColor}55; } }
+        @keyframes borderPulse { 0%, 100% { border-top-color: ${riskColor}; } 50% { border-top-color: ${riskColor}88; } }
       `}</style>
 
-      <div className="absolute -left-20 -bottom-20 w-40 h-40 rounded-full blur-3xl pointer-events-none" style={{ background: `${riskColor}14`, animation: 'floatGlow 8s ease-in-out infinite' }} />
-      <div className="absolute -right-16 -top-16 w-32 h-32 rounded-full blur-3xl pointer-events-none" style={{ background: `${riskColor}0d`, animation: 'floatGlow 10s ease-in-out infinite reverse' }} />
-
-      <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', borderBottom: '1px solid var(--border)', paddingBottom: '18px' }}>
         <div>
-          <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-            <ShieldAlert size={16} style={{ color: riskColor }} />
-            Live Context Snapshot
-          </h3>
+          <h2 style={{ fontSize: 'var(--section-title-size)', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ShieldAlert size={20} style={{ color: riskColor }} />
+            <span>Live Context Snapshot</span>
+          </h2>
           {fetchedAt && (
-            <span className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
               <Clock size={10} />
-              Fetched at: {new Date(fetchedAt).toLocaleString()}
+              Fetched at {new Date(fetchedAt).toLocaleString()}
             </span>
           )}
         </div>
-        <div className={`px-4 py-1.5 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${riskClass}`}>
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: riskColor }} />
-            <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: riskColor }} />
+        <span style={{
+          fontSize: 'var(--caption-size)', fontWeight: '700', textTransform: 'uppercase',
+          padding: '4px 12px', borderRadius: '6px', color: riskColor,
+          backgroundColor: riskColor + '15', border: `1px solid ${riskColor}33`,
+          display: 'flex', alignItems: 'center', gap: '8px'
+        }}>
+          <span style={{ position: 'relative', display: 'flex', width: '8px', height: '8px' }}>
+            <span className="animate-ping" style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: riskColor, opacity: 0.6 }} />
+            <span style={{ position: 'relative', width: '8px', height: '8px', borderRadius: '50%', background: riskColor }} />
           </span>
           Risk: {combinedRiskLevel}
-        </div>
+        </span>
       </div>
 
-      <div className="relative grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: '16px' }}>
         {/* Weather Sub-panel */}
-        <div className="bg-slate-950/50 border border-slate-850 rounded-xl p-4 space-y-3 transition-all duration-200 hover:border-slate-700">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-900 pb-2">
-            <CloudSun size={13} className="text-sky-400" />
+        <div style={subPanelStyle}>
+          <h3 style={subHeadingStyle}>
+            <CloudSun size={13} style={{ color: 'var(--accent)' }} />
             Microclimate Weather
-          </h4>
+          </h3>
           {temperature !== undefined && temperature !== null ? (
-            <div className="space-y-2" style={{ animation: 'tempCount 0.35s ease' }}>
-              <div className="flex items-center justify-between">
-                <span className="text-3xl font-extrabold text-slate-100 flex items-center gap-2">
-                  <WeatherIcon size={26} className="text-sky-400" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', animation: 'tempCount 0.35s ease' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '1.9rem', fontWeight: '800', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <WeatherIcon size={26} style={{ color: 'var(--accent)' }} />
                   {temperature}°C
                 </span>
-                <span className="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700/50">
+                <span style={{ fontSize: 'var(--caption-size)', background: 'var(--bg-card)', color: 'var(--text-secondary)', padding: '4px 10px', borderRadius: '6px', border: '1px solid var(--border)' }}>
                   {getWeatherCondition(weatherCode)}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-                <div className="flex items-center gap-1.5 bg-slate-900/40 rounded-lg px-2 py-1.5 border border-slate-800/60">
-                  <Wind size={12} className="text-cyan-400 flex-shrink-0" />
-                  <span className="text-slate-400">Wind:</span>
-                  <strong className="text-slate-200">{windspeed ?? '—'} km/h</strong>
+              <div className="grid grid-cols-2" style={{ gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 10px', fontSize: 'var(--caption-size)' }}>
+                  <Wind size={12} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+                  <span style={{ color: 'var(--text-secondary)' }}>Wind:</span>
+                  <strong style={{ color: 'var(--text-primary)' }}>{windspeed ?? '—'} km/h</strong>
                 </div>
-                <div className="flex items-center gap-1.5 bg-slate-900/40 rounded-lg px-2 py-1.5 border border-slate-800/60">
-                  <Droplets size={12} className="text-blue-400 flex-shrink-0" />
-                  <span className="text-slate-400">Rain:</span>
-                  <strong className="text-slate-200">{precipitation ?? '—'} mm</strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 10px', fontSize: 'var(--caption-size)' }}>
+                  <Droplets size={12} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+                  <span style={{ color: 'var(--text-secondary)' }}>Rain:</span>
+                  <strong style={{ color: 'var(--text-primary)' }}>{precipitation ?? '—'} mm</strong>
                 </div>
               </div>
             </div>
           ) : (
-            <span className="text-xs text-slate-500 block py-2">Weather telemetry unavailable for this location.</span>
+            <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', fontStyle: 'italic', padding: '4px 0' }}>Weather telemetry unavailable for this location.</span>
           )}
 
           {riskFlags.length > 0 && (
-            <div className="mt-3 space-y-1.5">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-red-400 block">Risk Alerts:</span>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--critical)', textTransform: 'uppercase' }}>Risk Alerts</span>
               {riskFlags.map((flag, i) => (
-                <div key={i} className="text-xs bg-red-950/20 border border-red-900/30 text-red-300 px-2 py-1 rounded flex items-center gap-1.5" style={{ animation: 'fadeUp 0.3s ease both', animationDelay: `${i * 60}ms` }}>
-                  <ShieldAlert size={11} className="flex-shrink-0" />
+                <div key={i} style={{ fontSize: 'var(--caption-size)', background: 'var(--critical)15', border: '1px solid var(--critical)33', color: 'var(--critical)', padding: '6px 10px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '6px', animation: 'fadeUp 0.3s ease both', animationDelay: `${i * 60}ms` }}>
+                  <ShieldAlert size={11} style={{ flexShrink: 0 }} />
                   {flag}
                 </div>
               ))}
@@ -161,61 +184,60 @@ export default function LiveContextPanel({ liveContext }) {
           )}
         </div>
 
-        {/* Game Phase Sub-panel */}
-        <div className="bg-slate-950/50 border border-slate-850 rounded-xl p-4 space-y-3 transition-all duration-200 hover:border-slate-700">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-900 pb-2">
-            <span className="text-teal-400">⚽</span>
+        {/* Match Sub-panel */}
+        <div style={subPanelStyle}>
+          <h3 style={subHeadingStyle}>
+            <span style={{ color: 'var(--accent)' }}>⚽</span>
             FIFA Live Match Phase
-          </h4>
+          </h3>
 
           {isMatchToday ? (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                <span style={{ fontSize: 'var(--caption-size)', background: 'var(--accent)15', color: 'var(--accent)', border: '1px solid var(--accent)33', padding: '3px 10px', borderRadius: '999px', fontWeight: '700', textTransform: 'uppercase' }}>
                   {phase}
                 </span>
                 {isLivePhase && (
-                  <span className="text-xs text-red-500 font-bold flex items-center gap-1.5">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
+                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--critical)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ position: 'relative', display: 'flex', width: '6px', height: '6px' }}>
+                      <span className="animate-ping" style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'var(--critical)', opacity: 0.7 }} />
+                      <span style={{ position: 'relative', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--critical)' }} />
                     </span>
                     Live • {minute}'
                   </span>
                 )}
               </div>
-              <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-3 text-center">
-                <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1.5">Current Score</div>
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-xs font-semibold text-slate-300 truncate max-w-[80px]">{homeTeam}</span>
-                  <span className="bg-slate-950 px-3 py-1 rounded-lg text-amber-400 text-base border border-slate-800 font-mono font-bold tracking-wider">{score}</span>
-                  <span className="text-xs font-semibold text-slate-300 truncate max-w-[80px]">{awayTeam}</span>
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '6px' }}>Current Score</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: 'var(--caption-size)', fontWeight: '700', color: 'var(--text-primary)', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{homeTeam}</span>
+                  <span style={{ background: 'var(--bg-primary)', padding: '4px 12px', borderRadius: '8px', color: 'var(--medium)', fontSize: '1rem', border: '1px solid var(--border)', fontFamily: 'monospace', fontWeight: '800' }}>{score}</span>
+                  <span style={{ fontSize: 'var(--caption-size)', fontWeight: '700', color: 'var(--text-primary)', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{awayTeam}</span>
                 </div>
               </div>
-              <div className="text-xs text-slate-400 flex items-center gap-1.5">
-                <TrendingUp size={11} className={crowdColorClass} />
-                Crowd Surge Risk: <strong className={`uppercase ${crowdColorClass}`}>{crowdRiskLevel}</strong>
+              <div style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <TrendingUp size={11} style={{ color: crowdColor }} />
+                Crowd Surge Risk: <strong style={{ color: crowdColor, textTransform: 'uppercase' }}>{crowdRiskLevel}</strong>
               </div>
             </div>
           ) : (
-            <div className="text-slate-500 text-xs py-4 text-center flex flex-col items-center gap-1.5">
-              <CalendarX size={18} className="text-slate-600" />
+            <div style={{ color: 'var(--text-muted)', fontSize: 'var(--caption-size)', padding: '14px 0', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+              <CalendarX size={18} style={{ color: 'var(--text-muted)' }} />
               No match scheduled for this stadium today.
-              <span className="block mt-0.5 text-[10px] text-slate-600">Crowd density is standard</span>
+              <span style={{ fontSize: '10px' }}>Crowd density is standard</span>
             </div>
           )}
         </div>
       </div>
 
       {contextSummary && (
-        <div className="relative bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 text-slate-300 text-xs leading-relaxed font-mono overflow-hidden" style={{ animation: 'fadeUp 0.4s ease' }}>
-          <div className="absolute top-0 left-0 h-full w-[2px]" style={{ background: `linear-gradient(180deg, ${riskColor}, transparent)` }} />
-          <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5 uppercase tracking-wider mb-1.5 font-sans">
+        <div style={{ position: 'relative', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderLeft: `2px solid ${riskColor}`, borderRadius: '10px', padding: '14px 16px', fontFamily: "'JetBrains Mono', 'SF Mono', ui-monospace, monospace", fontSize: '0.8rem', color: 'var(--text-primary)', lineHeight: '1.6', animation: 'fadeUp 0.4s ease' }}>
+          <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontFamily: 'inherit' }}>
             <Sparkles size={11} style={{ color: riskColor }} />
             AI Context Summary
           </span>
-          <span>{contextSummary}</span>
-          <span className="inline-block w-[6px] h-[12px] ml-1 align-middle" style={{ background: riskColor, animation: 'cursorBlink 1s step-end infinite' }} />
+          {contextSummary}
+          <span style={{ display: 'inline-block', width: '6px', height: '12px', marginLeft: '4px', verticalAlign: 'middle', background: riskColor, animation: 'cursorBlink 1s step-end infinite' }} />
         </div>
       )}
     </div>

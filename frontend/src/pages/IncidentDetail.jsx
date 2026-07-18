@@ -185,6 +185,26 @@ export default function IncidentDetail() {
     overrideHistory.push({ timestamp: incident.humanConfirmedAt || incident.updatedAt, reason: incident.overrideReason });
   }
 
+  // The dossier fields below are only populated once the report-generation
+  // stage of the pipeline has actually run (typically on confirm/resolve).
+  // `confidence` / `reasoningTrail` come from the earlier classification
+  // stage and can exist on their own — so we check the report fields
+  // specifically rather than assuming any data at all means the dossier ran.
+  const report = incident.incidentReport;
+  const hasDossierContent = !!(
+    report && (
+      report.incidentNarrative ||
+      report.rootCauseAnalysis ||
+      (report.immediateActionsLog && report.immediateActionsLog.length > 0) ||
+      (report.preventionMeasures && report.preventionMeasures.length > 0) ||
+      report.lessonsLearned ||
+      (report.recommendedFollowUp && report.recommendedFollowUp.length > 0) ||
+      report.riskRating ||
+      report.estimatedResolutionTime ||
+      report.generatedAt
+    )
+  );
+
   const timelineSteps = [true, true, !!tReviewed, !!tDispatched, !!tResolved];
   const completedCount = timelineSteps.filter(Boolean).length;
   const timelineFillPct = ((completedCount - 1) / (timelineSteps.length - 1)) * 100;
@@ -399,83 +419,92 @@ export default function IncidentDetail() {
               )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {incident.incidentReport?.incidentNarrative && (
-                <TextBlock label="Incident Narrative Report" italic>{`"${incident.incidentReport.incidentNarrative}"`}</TextBlock>
-              )}
-              {incident.incidentReport?.rootCauseAnalysis && (
-                <TextBlock label="Root Cause Analysis">{incident.incidentReport.rootCauseAnalysis}</TextBlock>
-              )}
+            {hasDossierContent ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {report?.incidentNarrative && (
+                  <TextBlock label="Incident Narrative Report" italic>{`"${report.incidentNarrative}"`}</TextBlock>
+                )}
+                {report?.rootCauseAnalysis && (
+                  <TextBlock label="Root Cause Analysis">{report.rootCauseAnalysis}</TextBlock>
+                )}
 
-              {incident.incidentReport?.immediateActionsLog && incident.incidentReport.immediateActionsLog.length > 0 && (
-                <div>
-                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Immediate Actions Log</span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                    {incident.incidentReport.immediateActionsLog.map((action, idx) => (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'start', gap: '8px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
-                        <CheckSquare size={13} className="text-[var(--accent)]" style={{ marginTop: '2px', flexShrink: 0 }} />
-                        <span>{action}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--grid-gap)' }}>
-                <div>
-                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Prevention Measures</span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)', minHeight: '80px' }}>
-                    {incident.incidentReport?.preventionMeasures && incident.incidentReport.preventionMeasures.length > 0 ? (
-                      incident.incidentReport.preventionMeasures.map((measure, idx) => (
+                {report?.immediateActionsLog && report.immediateActionsLog.length > 0 && (
+                  <div>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Immediate Actions Log</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                      {report.immediateActionsLog.map((action, idx) => (
                         <div key={idx} style={{ display: 'flex', alignItems: 'start', gap: '8px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
-                          <CheckSquare size={13} className="text-[var(--low)]" style={{ marginTop: '2px', flexShrink: 0 }} />
-                          <span>{measure}</span>
+                          <CheckSquare size={13} className="text-[var(--accent)]" style={{ marginTop: '2px', flexShrink: 0 }} />
+                          <span>{action}</span>
                         </div>
-                      ))
-                    ) : (
-                      <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', fontStyle: 'italic' }}>No specific prevention measures generated.</span>
-                    )}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div>
-                  <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Lessons Learned</span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)', minHeight: '80px' }}>
-                    {incident.incidentReport?.lessonsLearned ? (
-                      <div style={{ fontSize: 'var(--caption-size)', color: 'var(--text-primary)', lineHeight: '1.5' }}>{incident.incidentReport.lessonsLearned}</div>
-                    ) : (
-                      <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', fontStyle: 'italic' }}>No lessons logged for this category.</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Recommended Follow-up</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                  {incident.incidentReport?.recommendedFollowUp && incident.incidentReport.recommendedFollowUp.length > 0 ? (
-                    incident.incidentReport.recommendedFollowUp.map((followUp, idx) => (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
-                        <ArrowLeft size={10} className="text-[var(--accent)] rotate-180" style={{ flexShrink: 0 }} />
-                        <span>{followUp}</span>
+                {(report?.preventionMeasures?.length > 0 || report?.lessonsLearned) && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--grid-gap)' }}>
+                    {report?.preventionMeasures?.length > 0 && (
+                      <div>
+                        <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Prevention Measures</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                          {report.preventionMeasures.map((measure, idx) => (
+                            <div key={idx} style={{ display: 'flex', alignItems: 'start', gap: '8px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
+                              <CheckSquare size={13} className="text-[var(--low)]" style={{ marginTop: '2px', flexShrink: 0 }} />
+                              <span>{measure}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))
-                  ) : (
-                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', fontStyle: 'italic' }}>No follow-up recommendations.</span>
-                  )}
-                </div>
-              </div>
+                    )}
+                    {report?.lessonsLearned && (
+                      <div>
+                        <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Lessons Learned</span>
+                        <div style={{ background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                          <div style={{ fontSize: 'var(--caption-size)', color: 'var(--text-primary)', lineHeight: '1.5' }}>{report.lessonsLearned}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '16px', fontSize: 'var(--caption-size)' }}>
-                <MetaField label="AI Decision Model" value="Llama 3 70B (Groq)" />
-                {incident.pipelineDurationMs && <MetaField label="Processing Duration" value={`${incident.pipelineDurationMs} ms`} />}
-                {incident.incidentReport?.generatedAt && <MetaField label="Dossier Generation" value={formatTimestamp(incident.incidentReport.generatedAt)} />}
-                {incident.humanConfirmedAt && <MetaField label="Supervisor Approval" value={formatTimestamp(incident.humanConfirmedAt)} />}
-                {incident.resolvedAt && <MetaField label="Resolution Logged" value={formatTimestamp(incident.resolvedAt)} />}
-                {incident.incidentReport?.emailSent !== undefined && (
-                  <MetaField label="Email Notification" value={incident.incidentReport.emailSent ? 'Delivered' : 'Failed'} valueColor={incident.incidentReport.emailSent ? 'var(--low)' : 'var(--critical)'} />
+                {report?.recommendedFollowUp?.length > 0 && (
+                  <div>
+                    <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '6px' }}>Recommended Follow-up</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'var(--bg-primary)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                      {report.recommendedFollowUp.map((followUp, idx) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--caption-size)', color: 'var(--text-primary)' }}>
+                          <ArrowLeft size={10} className="text-[var(--accent)] rotate-180" style={{ flexShrink: 0 }} />
+                          <span>{followUp}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
+            ) : (
+              <div style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '8px',
+                padding: '32px 20px', background: 'var(--bg-primary)', border: '1px dashed var(--border)', borderRadius: '12px'
+              }}>
+                <FileCheck size={22} style={{ color: 'var(--text-muted)' }} />
+                <span style={{ fontSize: 'var(--body-size)', fontWeight: '700', color: 'var(--text-secondary)' }}>Full dossier not yet generated</span>
+                <span style={{ fontSize: 'var(--caption-size)', color: 'var(--text-muted)', maxWidth: '440px', lineHeight: '1.6' }}>
+                  The narrative, root cause, prevention, and follow-up sections are produced by the report-generation stage of the pipeline,
+                  which runs after this incident is confirmed or resolved. Classification data above (confidence, agent chain) is already available.
+                </span>
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px', fontSize: 'var(--caption-size)' }}>
+              <MetaField label="AI Decision Model" value="Llama 3 70B (Groq)" />
+              {incident.pipelineDurationMs && <MetaField label="Processing Duration" value={`${incident.pipelineDurationMs} ms`} />}
+              {report?.generatedAt && <MetaField label="Dossier Generation" value={formatTimestamp(report.generatedAt)} />}
+              {incident.humanConfirmedAt && <MetaField label="Supervisor Approval" value={formatTimestamp(incident.humanConfirmedAt)} />}
+              {incident.resolvedAt && <MetaField label="Resolution Logged" value={formatTimestamp(incident.resolvedAt)} />}
+              {report?.emailSent !== undefined && (
+                <MetaField label="Email Notification" value={report.emailSent ? 'Delivered' : 'Failed'} valueColor={report.emailSent ? 'var(--low)' : 'var(--critical)'} />
+              )}
             </div>
           </div>
 
