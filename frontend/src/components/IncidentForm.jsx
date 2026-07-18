@@ -307,7 +307,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Textarea description */}
           <div>
-            <label htmlFor="incident-desc" className="mb-2 block" style={{ fontSize: 'var(--caption-size)', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+            <label htmlFor="incident-desc" className="mb-2 block" style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.01em', color: 'var(--text-secondary)' }}>
               Incident Description
             </label>
             <div className="relative">
@@ -349,7 +349,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
           {/* Stadium select & zone inputs */}
           <div className="space-y-4">
             <div>
-              <label htmlFor="stadium-select" className="mb-2 block" style={{ fontSize: 'var(--caption-size)', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+              <label htmlFor="stadium-select" className="mb-2 block" style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.01em', color: 'var(--text-secondary)' }}>
                 Stadium Venue
               </label>
               <div className="relative">
@@ -374,7 +374,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
             </div>
 
             <div>
-              <label htmlFor="zone-input" className="mb-2 block" style={{ fontSize: 'var(--caption-size)', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+              <label htmlFor="zone-input" className="mb-2 block" style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.01em', color: 'var(--text-secondary)' }}>
                 Zone / Location Inside Venue
               </label>
               <div className="relative">
@@ -394,7 +394,7 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
             </div>
 
             <div>
-              <label className="mb-2 block" style={{ fontSize: 'var(--caption-size)', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+              <label className="mb-2 block" style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.01em', color: 'var(--text-secondary)' }}>
                 Supporting Evidence / Attachments (Optional)
               </label>
               <div

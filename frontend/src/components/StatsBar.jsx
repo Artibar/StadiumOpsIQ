@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BarChart2, ShieldAlert, AlertTriangle, Clock, CheckCircle2, Percent } from 'lucide-react';
+import { BarChart2, ShieldAlert, AlertTriangle, Clock, CheckCircle2, Percent, Hourglass } from 'lucide-react';
 
 // Lightweight count-up — purely presentational, driven by the same stat value
 function useCountUp(target, duration = 700) {
@@ -53,11 +53,10 @@ function StatCard({ card, index }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
         <span
           style={{
-            fontSize: 'var(--caption-size)',
+            fontSize: '12px',
             color: 'var(--text-secondary)',
             fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.14em',
+            letterSpacing: '0.01em',
             display: 'flex',
             alignItems: 'center',
             gap: '6px'
@@ -92,8 +91,18 @@ function StatCard({ card, index }) {
         >
           {typeof card.value === 'number' ? String(displayValue).padStart(card.pad || 0, '0') : card.value}
         </span>
-        {card.suffix && (
-          <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+        {(card.suffix || card.SuffixIcon) && (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '11px',
+              fontWeight: 700,
+              color: card.suffixColor || 'var(--text-muted)'
+            }}
+          >
+            {card.SuffixIcon && <card.SuffixIcon size={12} />}
             {card.suffix}
           </span>
         )}
@@ -124,13 +133,18 @@ export default function StatsBar({ stats }) {
     );
   }
 
+  const confidencePct = Math.round((stats.avgConfidence || 0) * 100);
+  const confidenceLabel = confidencePct >= 90 ? 'Optimal' : confidencePct >= 75 ? 'Good' : confidencePct >= 50 ? 'Fair' : 'Low';
+  const highCount = stats.bySeverity?.high ?? 0;
+  const criticalCount = stats.bySeverity?.critical ?? 0;
+
   const cards = [
     { label: 'Total', value: stats.totalIncidents ?? 0, color: 'var(--accent)', icon: BarChart2 },
-    { label: 'Critical', value: stats.bySeverity?.critical ?? 0, color: 'var(--critical)', icon: ShieldAlert, pad: 2 },
-    { label: 'High', value: stats.bySeverity?.high ?? 0, color: 'var(--high)', icon: AlertTriangle, pad: 2 },
-    { label: 'Pending', value: stats.byStatus?.['pending-confirmation'] ?? 0, color: 'var(--low)', icon: Clock, pad: 2 },
-    { label: 'Resolved', value: stats.byStatus?.resolved ?? 0, color: '#cbd5e1', icon: CheckCircle2 },
-    { label: 'Avg Confidence', value: Math.round((stats.avgConfidence || 0) * 100) + '%', color: '#cbd5e1', icon: Percent }
+    { label: 'Critical', value: criticalCount, color: 'var(--critical)', icon: ShieldAlert, pad: 2, suffix: criticalCount > 0 ? 'Alert' : 'Clear', suffixColor: criticalCount > 0 ? 'var(--critical)' : 'var(--text-muted)' },
+    { label: 'High', value: highCount, color: 'var(--high)', icon: AlertTriangle, pad: 2, suffix: highCount > 0 ? 'Active' : 'Clear', suffixColor: highCount > 0 ? 'var(--high)' : 'var(--text-muted)' },
+    { label: 'Pending', value: stats.byStatus?.['pending-confirmation'] ?? 0, color: 'var(--low)', icon: Clock, pad: 2, SuffixIcon: Hourglass, suffixColor: 'var(--low)' },
+    { label: 'Resolved', value: stats.byStatus?.resolved ?? 0, color: '#cbd5e1', icon: CheckCircle2, SuffixIcon: CheckCircle2, suffixColor: 'var(--low)' },
+    { label: 'Avg Confidence', value: confidencePct + '%', color: '#cbd5e1', icon: Percent, suffix: confidenceLabel, suffixColor: confidencePct >= 75 ? 'var(--low)' : confidencePct >= 50 ? 'var(--medium)' : 'var(--critical)' }
   ];
 
   return (

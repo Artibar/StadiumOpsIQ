@@ -86,6 +86,7 @@ export default function IncidentFeed({ incidents, onRefresh, lastUpdated }) {
             <span id="feed-title" className="flex items-center gap-2" style={{ fontSize: 'var(--section-title-size)', fontWeight: 700, letterSpacing: '0.02em' }}>
               <Radio size={14} className="text-[var(--low)]" />
               Live Incident Feed
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--critical)', animation: 'livePulse 1.6s ease-in-out infinite', flexShrink: 0 }} />
             </span>
             <span className="flex items-center gap-1.5" style={{ fontSize: 'var(--caption-size)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-muted)' }} aria-live="polite">
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--low)', animation: 'livePulse 1.8s ease-in-out infinite', flexShrink: 0 }} />
