@@ -497,7 +497,7 @@ export default function IncidentDetail() {
             )}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px', fontSize: 'var(--caption-size)' }}>
-              <MetaField label="AI Decision Model" value="Llama 3 70B (Groq)" />
+              {/* <MetaField label="AI Decision Model" value="Llama 3 70B (Groq)" /> */}
               {incident.pipelineDurationMs && <MetaField label="Processing Duration" value={`${incident.pipelineDurationMs} ms`} />}
               {report?.generatedAt && <MetaField label="Dossier Generation" value={formatTimestamp(report.generatedAt)} />}
               {incident.humanConfirmedAt && <MetaField label="Supervisor Approval" value={formatTimestamp(incident.humanConfirmedAt)} />}
