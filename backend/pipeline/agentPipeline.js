@@ -83,32 +83,6 @@ export async function runPipeline(description, stadiumName, zoneLocation, preGen
     allReasoningTrail.push(classificationOutput.reasoningEntry);
     console.log(`[PIPELINE] ✅ Agent 2 complete: ${classificationOutput.type} / ${classificationOutput.severity} / ${Math.round(classificationOutput.confidence * 100)}% confidence`);
     
-    // Check confidence threshold
-    if (classificationOutput.confidence < CONFIDENCE_THRESHOLD || classificationOutput.flaggedForHumanReview) {
-      console.log(`[PIPELINE] ⚠️ Low confidence — skipping Agents 3+4+5, flagging for human review`);
-      
-      const reasoningEntry = {
-        agentName: 'Pipeline Controller (Safety Bypass)',
-        step: 3,
-        thought: `[PIPELINE] Pipeline routed directly to review queue because Agent 2 confidence (${classificationOutput.confidence}) is below ${CONFIDENCE_THRESHOLD * 100}%.`,
-        action: 'ROUTE_TO_HUMAN_REVIEW',
-        result: 'Staged for supervisor review',
-        timestamp: new Date()
-      };
-      allReasoningTrail.push(reasoningEntry);
-
-      return buildIncidentObject(
-        description, stadiumName, zoneLocation,
-        intakeOutput, classificationOutput,
-        null, null,
-        'flagged-for-review',
-        `Low confidence classification (${Math.round(classificationOutput.confidence * 100)}%) — requires human review`,
-        ['flagForHumanReview'],
-        allReasoningTrail,
-        Date.now() - pipelineStart
-      );
-    }
-    
     // AGENT 3 — CONTEXT
     console.log('[PIPELINE] 🔵 Agent 3: Context Agent fetching live data...');
     const contextOutput = await runContextAgent(intakeOutput, classificationOutput);
@@ -133,14 +107,35 @@ export async function runPipeline(description, stadiumName, zoneLocation, preGen
     allReasoningTrail.push(reportOutput.reasoningEntry);
     console.log(`[PIPELINE] ✅ Agent 5 complete: Risk rating: ${reportOutput.report.riskRating}, Email sent: ${reportOutput.emailSent}`);
 
+    // If confidence was low or flagged, override final status to review queue
+    const isLowConfidence = classificationOutput.confidence < CONFIDENCE_THRESHOLD || classificationOutput.flaggedForHumanReview;
+    const finalStatus = isLowConfidence ? 'flagged-for-review' : decisionOutput.finalStatus;
+    const finalDecision = isLowConfidence 
+      ? `Low confidence classification (${Math.round(classificationOutput.confidence * 100)}%) — requires human review. AI recommendation: ${decisionOutput.finalDecision}`
+      : decisionOutput.finalDecision;
+    const actionsTaken = isLowConfidence 
+      ? [...decisionOutput.actionsTaken, 'flagForHumanReview']
+      : decisionOutput.actionsTaken;
+
+    if (isLowConfidence) {
+      allReasoningTrail.push({
+        agentName: 'Pipeline Controller (Safety Bypass)',
+        step: 6,
+        thought: `[PIPELINE] Incident flagged for human review because Agent 2 confidence (${Math.round(classificationOutput.confidence * 100)}%) is below ${CONFIDENCE_THRESHOLD * 100}%.`,
+        action: 'FLAG_FOR_REVIEW',
+        result: 'Staged for supervisor review with generated AI report',
+        timestamp: new Date()
+      });
+    }
+
     // Build and return complete incident object
     const finalIncident = buildIncidentObject(
       description, stadiumName, zoneLocation,
       intakeOutput, classificationOutput,
       contextOutput, decisionOutput,
-      decisionOutput.finalStatus,
-      decisionOutput.finalDecision,
-      decisionOutput.actionsTaken,
+      finalStatus,
+      finalDecision,
+      actionsTaken,
       allReasoningTrail,
       Date.now() - pipelineStart,
       reportOutput
