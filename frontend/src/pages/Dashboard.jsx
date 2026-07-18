@@ -23,7 +23,12 @@ export default function Dashboard() {
 
       setIncidents(Array.isArray(incidentsRes) ? incidentsRes : []);
       setStats(statsRes || null);
-      setStadiums(Array.isArray(stadiumsRes) ? stadiumsRes : []);
+      // The /api/stadiums endpoint proxies an external API that wraps the
+      // array in a { stadiums: [...] } object rather than returning a bare
+      // array, so we unwrap it here instead of checking Array.isArray on
+      // the raw response (which would always be false and silently drop
+      // every stadium).
+      setStadiums(Array.isArray(stadiumsRes?.stadiums) ? stadiumsRes.stadiums : []);
       setLastUpdated(new Date());
       setError('');
     } catch (err) {

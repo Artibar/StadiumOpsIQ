@@ -73,14 +73,16 @@ function IconInput({ icon: Icon, ...inputProps }) {
   );
 }
 
-// Normalizes a stadium entry into a stable { key, name } pair regardless of
-// whether `stadiums` is an array of plain strings or objects (e.g. { name }
-// or { stadiumName }), so the <select> never breaks on shape mismatches.
+// Normalizes a stadium entry into a stable { key, name, city } triple.
+// The worldcup26.ir source returns { name_en, city_en, id, _id, ... } —
+// this also tolerates plain strings or a couple of alternate field names
+// so the <select> doesn't silently break if the upstream API shape shifts.
 function normalizeStadium(s, idx) {
-  if (typeof s === 'string') return { key: s || idx, name: s };
-  const name = s?.name || s?.stadiumName || '';
-  const key = s?.id || s?._id || name || idx;
-  return { key, name };
+  if (typeof s === 'string') return { key: s || idx, name: s, city: '' };
+  const name = s?.name_en || s?.name || s?.stadiumName || '';
+  const city = s?.city_en || s?.city || '';
+  const key = s?._id || s?.id || name || idx;
+  return { key, name, city };
 }
 
 export default function IncidentForm({ stadiums, onIncidentCreated }) {
@@ -315,7 +317,9 @@ export default function IncidentForm({ stadiums, onIncidentCreated }) {
               {stadiumOptions.length === 0 ? 'Loading stadiums...' : 'Select stadium...'}
             </option>
             {stadiumOptions.map((s) => (
-              <option key={s.key} value={s.name}>{s.name}</option>
+              <option key={s.key} value={s.name}>
+                {s.city ? `${s.name} — ${s.city}` : s.name}
+              </option>
             ))}
           </select>
         </div>
